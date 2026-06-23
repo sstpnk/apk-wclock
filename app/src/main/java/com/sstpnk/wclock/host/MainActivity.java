@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -26,6 +27,7 @@ import java.util.Calendar;
 
 public final class MainActivity extends Activity {
     private RenderController renderController;
+    private ClockWeatherCollageView clockView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,9 +37,19 @@ public final class MainActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         hideSystemUi();
 
-        ClockWeatherCollageView view = new ClockWeatherCollageView(this);
-        renderController = new RenderController(view, new SettingsRepository(this), createWeatherRepository());
-        setContentView(view);
+        clockView = new ClockWeatherCollageView(this);
+        clockView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_UP && clockView.isSettingsButtonHit(event.getX(), event.getY())) {
+                    openSettings();
+                    return true;
+                }
+                return true;
+            }
+        });
+        renderController = new RenderController(clockView, new SettingsRepository(this), createWeatherRepository());
+        setContentView(clockView);
         requestPhotoPermissionIfNeeded();
     }
 
@@ -58,7 +70,7 @@ public final class MainActivity extends Activity {
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_ENTER) {
-            startActivity(new Intent(this, SettingsActivity.class));
+            openSettings();
             return true;
         }
         return super.onKeyUp(keyCode, event);
@@ -77,6 +89,10 @@ public final class MainActivity extends Activity {
     private WeatherRepository createWeatherRepository() {
         NetworkClient networkClient = new NetworkClient("WClock/0.1 contact: github.com/sstpnk/apk-wclock", 10000);
         return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider());
+    }
+
+    private void openSettings() {
+        startActivity(new Intent(this, SettingsActivity.class));
     }
 
     private void applyConfiguredBrightness() {
