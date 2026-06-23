@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.sstpnk.wclock'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.sstpnk.wclock'
+        minSdk 19
+        targetSdk 19
+        versionCode 1
+        versionName '0.1.0-beta1'
+        testInstrumentationRunner 'android.test.InstrumentationTestRunner'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}
