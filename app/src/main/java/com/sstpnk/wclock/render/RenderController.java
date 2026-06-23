@@ -46,7 +46,7 @@ public final class RenderController {
 
     public void stop() {
         running = false;
-        handler.removeCallbacks(frame);
+        handler.removeCallbacksAndMessages(null);
     }
 
     private void updateViewState() {

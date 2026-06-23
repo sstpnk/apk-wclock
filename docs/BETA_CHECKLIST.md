@@ -1,0 +1,20 @@
+# WClock Beta Checklist
+
+- [ ] `.\gradlew.bat testDebugUnitTest` passes.
+- [ ] `.\gradlew.bat assembleDebug` passes.
+- [ ] Dependency report contains no `play-services`.
+- [ ] Dependency report contains no runtime `androidx`.
+- [ ] APK installs on Android 4.4 emulator or device.
+- [ ] Fullscreen mode starts and keeps screen awake.
+- [ ] DreamService is visible in Android screensaver settings.
+- [ ] Settings are usable by D-pad only.
+- [ ] Folder browser selects a local image folder.
+- [ ] Empty folder does not crash the app.
+- [ ] Corrupt image file does not crash the app.
+- [ ] Open-Meteo weather appears for configured coordinates.
+- [ ] MET Norway fallback is tested by forcing Open-Meteo failure.
+- [ ] Offline mode keeps clock and collage visible.
+- [ ] Brightness follows schedule in fullscreen mode.
+- [ ] Overlay position changes within 5-15 minutes.
+- [ ] 8-hour fullscreen run completes without crash.
+- [ ] Known limitations are documented in README.
