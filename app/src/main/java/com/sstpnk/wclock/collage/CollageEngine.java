@@ -19,16 +19,21 @@ public final class CollageEngine {
     private final List<PhotoItem> photos = new ArrayList<PhotoItem>();
     private final List<ActivePhoto> activePhotos = new ArrayList<ActivePhoto>();
     private String loadedPath = "";
+    private boolean folderLoaded;
     private int nextPhotoIndex;
     private long lastAddMillis;
 
     public void setFolder(String path) {
-        if (path == null || path.equals(loadedPath)) {
+        String safePath = path == null ? "" : path;
+        if (safePath.equals(loadedPath) && folderLoaded) {
             return;
         }
         recycle();
-        loadedPath = path;
-        photos.addAll(scanner.scan(new File(path)));
+        loadedPath = safePath;
+        if (safePath.length() > 0) {
+            photos.addAll(scanner.scan(new File(safePath)));
+        }
+        folderLoaded = true;
     }
 
     public void draw(Canvas canvas, long nowMillis, int maxVisible, int changeSeconds) {
@@ -73,6 +78,8 @@ public final class CollageEngine {
         }
         activePhotos.clear();
         photos.clear();
+        loadedPath = "";
+        folderLoaded = false;
         nextPhotoIndex = 0;
         lastAddMillis = 0;
     }

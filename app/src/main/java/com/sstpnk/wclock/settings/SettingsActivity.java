@@ -25,6 +25,7 @@ public final class SettingsActivity extends Activity {
     private EditText maxPhotos;
     private EditText photoInterval;
     private EditText weatherProvider;
+    private EditText weatherIconStyle;
     private EditText weatherApiKey;
     private EditText openWeatherApiKey;
     private CheckBox showSeconds;
@@ -85,9 +86,11 @@ public final class SettingsActivity extends Activity {
         TextView weatherTitle = label("Погода", 18);
         root.addView(weatherTitle);
         weatherProvider = edit("Источник: open-meteo / met-norway / weatherapi / openweather", settings.weatherProvider);
+        weatherIconStyle = edit("Иконки погоды: outline / flat", settings.weatherIconStyle);
         weatherApiKey = edit("WeatherAPI.com ключ (если выбран)", settings.weatherApiKey);
         openWeatherApiKey = edit("OpenWeather ключ (если выбран)", settings.openWeatherApiKey);
         root.addView(weatherProvider);
+        root.addView(weatherIconStyle);
         root.addView(weatherApiKey);
         root.addView(openWeatherApiKey);
 
@@ -143,6 +146,7 @@ public final class SettingsActivity extends Activity {
         settings.photoChangeSeconds = parseInt(photoInterval.getText().toString(), settings.photoChangeSeconds);
         settings.showSeconds = showSeconds.isChecked();
         settings.weatherProvider = weatherProvider.getText().toString();
+        settings.weatherIconStyle = weatherIconStyle.getText().toString();
         settings.weatherApiKey = weatherApiKey.getText().toString();
         settings.openWeatherApiKey = openWeatherApiKey.getText().toString();
         repository.save(settings);

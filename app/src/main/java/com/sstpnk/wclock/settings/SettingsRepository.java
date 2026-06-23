@@ -23,6 +23,7 @@ public final class SettingsRepository {
         settings.maxVisiblePhotos = prefs.getInt("maxVisiblePhotos", defaults.maxVisiblePhotos);
         settings.photoChangeSeconds = prefs.getInt("photoChangeSeconds", defaults.photoChangeSeconds);
         settings.weatherProvider = prefs.getString("weatherProvider", defaults.weatherProvider);
+        settings.weatherIconStyle = prefs.getString("weatherIconStyle", defaults.weatherIconStyle);
         settings.weatherApiKey = prefs.getString("weatherApiKey", defaults.weatherApiKey);
         settings.openWeatherApiKey = prefs.getString("openWeatherApiKey", defaults.openWeatherApiKey);
         settings.showSeconds = prefs.getBoolean("showSeconds", defaults.showSeconds);
@@ -47,6 +48,7 @@ public final class SettingsRepository {
                 .putInt("maxVisiblePhotos", safe.maxVisiblePhotos)
                 .putInt("photoChangeSeconds", safe.photoChangeSeconds)
                 .putString("weatherProvider", safe.weatherProvider)
+                .putString("weatherIconStyle", safe.weatherIconStyle)
                 .putString("weatherApiKey", safe.weatherApiKey)
                 .putString("openWeatherApiKey", safe.openWeatherApiKey)
                 .putBoolean("showSeconds", safe.showSeconds)
@@ -93,6 +95,7 @@ public final class SettingsRepository {
         public int maxVisiblePhotos;
         public int photoChangeSeconds;
         public String weatherProvider;
+        public String weatherIconStyle;
         public String weatherApiKey;
         public String openWeatherApiKey;
         public boolean showSeconds;
@@ -114,6 +117,7 @@ public final class SettingsRepository {
             settings.maxVisiblePhotos = 18;
             settings.photoChangeSeconds = 20;
             settings.weatherProvider = "open-meteo";
+            settings.weatherIconStyle = "outline";
             settings.weatherApiKey = "";
             settings.openWeatherApiKey = "";
             settings.showSeconds = false;
@@ -137,6 +141,7 @@ public final class SettingsRepository {
             safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);
             safe.photoChangeSeconds = clampInt(photoChangeSeconds, 5, 600);
             safe.weatherProvider = normalizeProvider(weatherProvider);
+            safe.weatherIconStyle = normalizeIconStyle(weatherIconStyle);
             safe.weatherApiKey = weatherApiKey == null ? "" : weatherApiKey.trim();
             safe.openWeatherApiKey = openWeatherApiKey == null ? "" : openWeatherApiKey.trim();
             safe.showSeconds = showSeconds;
@@ -160,5 +165,16 @@ public final class SettingsRepository {
             return value;
         }
         return "open-meteo";
+    }
+
+    private static String normalizeIconStyle(String style) {
+        if (style == null) {
+            return "outline";
+        }
+        String value = style.trim().toLowerCase();
+        if ("flat".equals(value)) {
+            return value;
+        }
+        return "outline";
     }
 }

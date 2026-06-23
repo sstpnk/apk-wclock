@@ -52,7 +52,7 @@ public final class RenderController {
     private void updateViewState() {
         final SettingsRepository.Settings settings = settingsRepository.load();
         view.setPhotoFolderPath(settings.photoFolderPath);
-        view.setDisplaySettings(settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.showSeconds);
+        view.setDisplaySettings(settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.showSeconds, settings.weatherIconStyle);
         long now = System.currentTimeMillis();
         int intervalMillis = Math.max(1, settings.burnInMinMinutes) * 60 * 1000;
         int zoneIndex = (int) ((now / intervalMillis) % 6);

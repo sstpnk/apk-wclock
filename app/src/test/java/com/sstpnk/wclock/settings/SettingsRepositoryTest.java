@@ -17,6 +17,7 @@ public class SettingsRepositoryTest {
         assertEquals(18, settings.maxVisiblePhotos);
         assertEquals(20, settings.photoChangeSeconds);
         assertEquals("open-meteo", settings.weatherProvider);
+        assertEquals("outline", settings.weatherIconStyle);
         assertTrue(settings.burnInMinMinutes >= 5);
         assertTrue(settings.burnInMaxMinutes <= 15);
         assertTrue(settings.nightOverlayAlpha >= 0.0f);
