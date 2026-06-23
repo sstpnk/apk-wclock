@@ -55,6 +55,9 @@ public final class SettingsActivity extends Activity {
         root.addView(latitude);
         root.addView(longitude);
 
+        TextView diagnostics = label("Погода: Open-Meteo основной, MET Norway резервный. Ошибки сети не останавливают часы и коллаж.", 16);
+        root.addView(diagnostics);
+
         Button save = button("Сохранить");
         save.setOnClickListener(new View.OnClickListener() {
             @Override
