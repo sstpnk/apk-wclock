@@ -1,7 +1,10 @@
 package com.sstpnk.wclock.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -29,6 +32,7 @@ public final class FileBrowserActivity extends Activity {
         super.onCreate(savedInstanceState);
         current = Environment.getExternalStorageDirectory();
         setContentView(buildContent());
+        requestPhotoPermissionIfNeeded();
         load(current);
     }
 
@@ -96,5 +100,17 @@ public final class FileBrowserActivity extends Activity {
         adapter.clear();
         adapter.addAll(names);
         adapter.notifyDataSetChanged();
+    }
+
+    private void requestPhotoPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < 23) {
+            return;
+        }
+        String permission = Build.VERSION.SDK_INT >= 33
+                ? Manifest.permission.READ_MEDIA_IMAGES
+                : Manifest.permission.READ_EXTERNAL_STORAGE;
+        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{permission}, 22);
+        }
     }
 }

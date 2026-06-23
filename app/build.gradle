@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId 'com.sstpnk.wclock'
         minSdk 19
-        targetSdk 19
+        targetSdk 35
         versionCode 1
         versionName '0.1.0-beta1'
         testInstrumentationRunner 'android.test.InstrumentationTestRunner'

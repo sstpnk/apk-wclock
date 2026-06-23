@@ -1,7 +1,10 @@
 package com.sstpnk.wclock.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -25,6 +28,7 @@ public final class SettingsActivity extends Activity {
         repository = new SettingsRepository(this);
         settings = repository.load();
         setContentView(buildContent());
+        requestPhotoPermissionIfNeeded();
     }
 
     private View buildContent() {
@@ -121,6 +125,18 @@ public final class SettingsActivity extends Activity {
         if (requestCode == 10 && resultCode == RESULT_OK && data != null) {
             settings.photoFolderPath = data.getStringExtra("path");
             folderValue.setText("Папка: " + valueOrDash(settings.photoFolderPath));
+        }
+    }
+
+    private void requestPhotoPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < 23) {
+            return;
+        }
+        String permission = Build.VERSION.SDK_INT >= 33
+                ? Manifest.permission.READ_MEDIA_IMAGES
+                : Manifest.permission.READ_EXTERNAL_STORAGE;
+        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{permission}, 21);
         }
     }
 }

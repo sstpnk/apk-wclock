@@ -1,7 +1,10 @@
 package com.sstpnk.wclock.host;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -35,6 +38,7 @@ public final class MainActivity extends Activity {
         ClockWeatherCollageView view = new ClockWeatherCollageView(this);
         renderController = new RenderController(view, new SettingsRepository(this), createWeatherRepository());
         setContentView(view);
+        requestPhotoPermissionIfNeeded();
     }
 
     @Override
@@ -80,5 +84,17 @@ public final class MainActivity extends Activity {
         Calendar calendar = Calendar.getInstance();
         BrightnessSchedule schedule = new BrightnessSchedule(7, 19, 23, settings.dayBrightness, settings.eveningBrightness, settings.nightBrightness);
         new BrightnessController().apply(getWindow(), schedule.brightnessForHour(calendar.get(Calendar.HOUR_OF_DAY)));
+    }
+
+    private void requestPhotoPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < 23) {
+            return;
+        }
+        String permission = Build.VERSION.SDK_INT >= 33
+                ? Manifest.permission.READ_MEDIA_IMAGES
+                : Manifest.permission.READ_EXTERNAL_STORAGE;
+        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{permission}, 20);
+        }
     }
 }
