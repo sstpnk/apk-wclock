@@ -7,15 +7,19 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.view.View;
 
+import com.sstpnk.wclock.collage.CollageEngine;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 public final class ClockWeatherCollageView extends View {
+    private final CollageEngine collageEngine = new CollageEngine();
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF panel = new RectF();
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, d MMMM", new Locale("ru"));
+    private String photoFolderPath = "";
 
     public ClockWeatherCollageView(Context context) {
         super(context);
@@ -23,23 +27,17 @@ public final class ClockWeatherCollageView extends View {
         setFocusableInTouchMode(true);
     }
 
+    public void setPhotoFolderPath(String path) {
+        this.photoFolderPath = path == null ? "" : path;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         int width = getWidth();
         int height = getHeight();
-        canvas.drawColor(Color.rgb(16, 18, 20));
-
-        paint.setColor(Color.rgb(48, 72, 84));
-        for (int i = 0; i < 7; i++) {
-            float left = (i * width / 7.0f) - width * 0.05f;
-            float top = (i % 3) * height * 0.22f + height * 0.10f;
-            panel.set(left, top, left + width * 0.34f, top + height * 0.28f);
-            canvas.save();
-            canvas.rotate((i - 3) * 4.0f, panel.centerX(), panel.centerY());
-            canvas.drawRoundRect(panel, 8, 8, paint);
-            canvas.restore();
-        }
+        collageEngine.setFolder(photoFolderPath, 8, width, height);
+        collageEngine.draw(canvas, System.currentTimeMillis());
 
         long now = System.currentTimeMillis();
         drawPanel(canvas, 32, 32, width * 0.45f, height * 0.25f);
@@ -60,5 +58,11 @@ public final class ClockWeatherCollageView extends View {
         panel.set(left, top, right, bottom);
         paint.setColor(0x99000000);
         canvas.drawRoundRect(panel, 8, 8, paint);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        collageEngine.recycle();
+        super.onDetachedFromWindow();
     }
 }
