@@ -22,6 +22,10 @@ public final class SettingsRepository {
         settings.weatherRefreshMinutes = prefs.getInt("weatherRefreshMinutes", defaults.weatherRefreshMinutes);
         settings.maxVisiblePhotos = prefs.getInt("maxVisiblePhotos", defaults.maxVisiblePhotos);
         settings.photoChangeSeconds = prefs.getInt("photoChangeSeconds", defaults.photoChangeSeconds);
+        settings.weatherProvider = prefs.getString("weatherProvider", defaults.weatherProvider);
+        settings.weatherApiKey = prefs.getString("weatherApiKey", defaults.weatherApiKey);
+        settings.openWeatherApiKey = prefs.getString("openWeatherApiKey", defaults.openWeatherApiKey);
+        settings.showSeconds = prefs.getBoolean("showSeconds", defaults.showSeconds);
         settings.motionIntensity = prefs.getFloat("motionIntensity", defaults.motionIntensity);
         settings.burnInMinMinutes = prefs.getInt("burnInMinMinutes", defaults.burnInMinMinutes);
         settings.burnInMaxMinutes = prefs.getInt("burnInMaxMinutes", defaults.burnInMaxMinutes);
@@ -42,6 +46,10 @@ public final class SettingsRepository {
                 .putInt("weatherRefreshMinutes", safe.weatherRefreshMinutes)
                 .putInt("maxVisiblePhotos", safe.maxVisiblePhotos)
                 .putInt("photoChangeSeconds", safe.photoChangeSeconds)
+                .putString("weatherProvider", safe.weatherProvider)
+                .putString("weatherApiKey", safe.weatherApiKey)
+                .putString("openWeatherApiKey", safe.openWeatherApiKey)
+                .putBoolean("showSeconds", safe.showSeconds)
                 .putFloat("motionIntensity", safe.motionIntensity)
                 .putInt("burnInMinMinutes", safe.burnInMinMinutes)
                 .putInt("burnInMaxMinutes", safe.burnInMaxMinutes)
@@ -84,6 +92,10 @@ public final class SettingsRepository {
         public int weatherRefreshMinutes;
         public int maxVisiblePhotos;
         public int photoChangeSeconds;
+        public String weatherProvider;
+        public String weatherApiKey;
+        public String openWeatherApiKey;
+        public boolean showSeconds;
         public float motionIntensity;
         public int burnInMinMinutes;
         public int burnInMaxMinutes;
@@ -99,8 +111,12 @@ public final class SettingsRepository {
             settings.latitude = 55.7558;
             settings.longitude = 37.6173;
             settings.weatherRefreshMinutes = 30;
-            settings.maxVisiblePhotos = 8;
-            settings.photoChangeSeconds = 60;
+            settings.maxVisiblePhotos = 18;
+            settings.photoChangeSeconds = 20;
+            settings.weatherProvider = "open-meteo";
+            settings.weatherApiKey = "";
+            settings.openWeatherApiKey = "";
+            settings.showSeconds = false;
             settings.motionIntensity = 0.35f;
             settings.burnInMinMinutes = 5;
             settings.burnInMaxMinutes = 15;
@@ -118,8 +134,12 @@ public final class SettingsRepository {
             safe.latitude = isValidLatitude(latitude) ? latitude : 55.7558;
             safe.longitude = isValidLongitude(longitude) ? longitude : 37.6173;
             safe.weatherRefreshMinutes = clampInt(weatherRefreshMinutes, 10, 240);
-            safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 3, 16);
-            safe.photoChangeSeconds = clampInt(photoChangeSeconds, 20, 600);
+            safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);
+            safe.photoChangeSeconds = clampInt(photoChangeSeconds, 5, 600);
+            safe.weatherProvider = normalizeProvider(weatherProvider);
+            safe.weatherApiKey = weatherApiKey == null ? "" : weatherApiKey.trim();
+            safe.openWeatherApiKey = openWeatherApiKey == null ? "" : openWeatherApiKey.trim();
+            safe.showSeconds = showSeconds;
             safe.motionIntensity = clampFloat(motionIntensity, 0.0f, 1.0f);
             safe.burnInMinMinutes = clampInt(burnInMinMinutes, 5, 15);
             safe.burnInMaxMinutes = clampInt(burnInMaxMinutes, safe.burnInMinMinutes, 15);
@@ -129,5 +149,16 @@ public final class SettingsRepository {
             safe.nightOverlayAlpha = clampFloat(nightOverlayAlpha, 0.0f, 0.85f);
             return safe;
         }
+    }
+
+    private static String normalizeProvider(String provider) {
+        if (provider == null) {
+            return "open-meteo";
+        }
+        String value = provider.trim().toLowerCase();
+        if ("met-norway".equals(value) || "weatherapi".equals(value) || "openweather".equals(value)) {
+            return value;
+        }
+        return "open-meteo";
     }
 }

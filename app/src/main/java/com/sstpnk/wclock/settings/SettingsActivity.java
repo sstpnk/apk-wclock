@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.CheckBox;
 
 public final class SettingsActivity extends Activity {
     private SettingsRepository repository;
@@ -21,6 +22,12 @@ public final class SettingsActivity extends Activity {
     private EditText city;
     private EditText latitude;
     private EditText longitude;
+    private EditText maxPhotos;
+    private EditText photoInterval;
+    private EditText weatherProvider;
+    private EditText weatherApiKey;
+    private EditText openWeatherApiKey;
+    private CheckBox showSeconds;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +66,32 @@ public final class SettingsActivity extends Activity {
         root.addView(latitude);
         root.addView(longitude);
 
-        TextView diagnostics = label("Погода: Open-Meteo основной, MET Norway резервный. Ошибки сети не останавливают часы и коллаж.", 16);
+        TextView collageTitle = label("Коллаж", 18);
+        root.addView(collageTitle);
+        maxPhotos = edit("Фото одновременно (1-50)", Integer.toString(settings.maxVisiblePhotos));
+        photoInterval = edit("Интервал появления фото, сек", Integer.toString(settings.photoChangeSeconds));
+        root.addView(maxPhotos);
+        root.addView(photoInterval);
+
+        TextView clockTitle = label("Часы", 18);
+        root.addView(clockTitle);
+        showSeconds = new CheckBox(this);
+        showSeconds.setText("Показывать секунды");
+        showSeconds.setTextSize(18);
+        showSeconds.setChecked(settings.showSeconds);
+        showSeconds.setFocusable(true);
+        root.addView(showSeconds);
+
+        TextView weatherTitle = label("Погода", 18);
+        root.addView(weatherTitle);
+        weatherProvider = edit("Источник: open-meteo / met-norway / weatherapi / openweather", settings.weatherProvider);
+        weatherApiKey = edit("WeatherAPI.com ключ (если выбран)", settings.weatherApiKey);
+        openWeatherApiKey = edit("OpenWeather ключ (если выбран)", settings.openWeatherApiKey);
+        root.addView(weatherProvider);
+        root.addView(weatherApiKey);
+        root.addView(openWeatherApiKey);
+
+        TextView diagnostics = label("Open-Meteo и MET Norway работают без ключа. WeatherAPI.com и OpenWeather требуют ключ.", 16);
         root.addView(diagnostics);
 
         Button save = button("Сохранить");
@@ -107,6 +139,12 @@ public final class SettingsActivity extends Activity {
         settings.cityName = city.getText().toString();
         settings.latitude = parseDouble(latitude.getText().toString(), settings.latitude);
         settings.longitude = parseDouble(longitude.getText().toString(), settings.longitude);
+        settings.maxVisiblePhotos = parseInt(maxPhotos.getText().toString(), settings.maxVisiblePhotos);
+        settings.photoChangeSeconds = parseInt(photoInterval.getText().toString(), settings.photoChangeSeconds);
+        settings.showSeconds = showSeconds.isChecked();
+        settings.weatherProvider = weatherProvider.getText().toString();
+        settings.weatherApiKey = weatherApiKey.getText().toString();
+        settings.openWeatherApiKey = openWeatherApiKey.getText().toString();
         repository.save(settings);
         finish();
     }
@@ -114,6 +152,14 @@ public final class SettingsActivity extends Activity {
     private double parseDouble(String value, double fallback) {
         try {
             return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private int parseInt(String value, int fallback) {
+        try {
+            return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             return fallback;
         }

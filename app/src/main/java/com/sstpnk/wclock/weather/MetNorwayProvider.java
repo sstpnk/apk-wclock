@@ -52,7 +52,7 @@ public final class MetNorwayProvider implements WeatherProvider {
                     0,
                     details.optDouble("wind_speed", 0.0)));
         }
-        return new WeatherData(
+        WeatherData data = new WeatherData(
                 "MET Norway",
                 cityName,
                 updatedAtMillis,
@@ -65,6 +65,13 @@ public final class MetNorwayProvider implements WeatherProvider {
                 instant.optDouble("wind_speed", 0.0),
                 (int) instant.optDouble("wind_from_direction", 0.0),
                 forecast);
+        if (forecast.size() > 0) {
+            data.todayMinTempC = forecast.get(0).minTempC;
+            data.todayMaxTempC = forecast.get(0).maxTempC;
+        }
+        data.humidityPercent = (int) instant.optDouble("relative_humidity", 0.0);
+        data.pressureHpa = instant.optDouble("air_pressure_at_sea_level", 0.0);
+        return data;
     }
 
     private static int codeFromSymbol(String symbol) {

@@ -52,6 +52,7 @@ public final class RenderController {
     private void updateViewState() {
         final SettingsRepository.Settings settings = settingsRepository.load();
         view.setPhotoFolderPath(settings.photoFolderPath);
+        view.setDisplaySettings(settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.showSeconds);
         long now = System.currentTimeMillis();
         int intervalMillis = Math.max(1, settings.burnInMinMinutes) * 60 * 1000;
         int zoneIndex = (int) ((now / intervalMillis) % 6);
@@ -73,6 +74,7 @@ public final class RenderController {
                     public void run() {
                         weatherRefreshRunning = false;
                         view.setWeatherData(data);
+                        view.setWeatherStatus(data == null ? weatherRepository.lastError() : "");
                         view.invalidate();
                     }
                 });

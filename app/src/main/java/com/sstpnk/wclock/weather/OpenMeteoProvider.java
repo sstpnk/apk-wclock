@@ -16,7 +16,7 @@ public final class OpenMeteoProvider implements WeatherProvider {
     @Override
     public String buildUrl(double latitude, double longitude) {
         return String.format(Locale.US,
-                "https://api.open-meteo.com/v1/forecast?latitude=%.5f&longitude=%.5f&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=auto&forecast_days=5",
+                "https://api.open-meteo.com/v1/forecast?latitude=%.5f&longitude=%.5f&current=temperature_2m,apparent_temperature,relative_humidity_2m,surface_pressure,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=auto&forecast_days=5",
                 latitude, longitude);
     }
 
@@ -49,7 +49,7 @@ public final class OpenMeteoProvider implements WeatherProvider {
                     precipitation.optInt(i, 0),
                     wind.optDouble(i, 0.0)));
         }
-        return new WeatherData(
+        WeatherData data = new WeatherData(
                 "Open-Meteo",
                 cityName,
                 updatedAtMillis,
@@ -62,5 +62,13 @@ public final class OpenMeteoProvider implements WeatherProvider {
                 current.optDouble("wind_speed_10m", 0.0),
                 current.optInt("wind_direction_10m", 0),
                 forecast);
+        if (forecast.size() > 0) {
+            data.todayMinTempC = forecast.get(0).minTempC;
+            data.todayMaxTempC = forecast.get(0).maxTempC;
+            data.precipitationProbability = forecast.get(0).precipitationProbability;
+        }
+        data.humidityPercent = current.optInt("relative_humidity_2m", 0);
+        data.pressureHpa = current.optDouble("surface_pressure", 0.0);
+        return data;
     }
 }

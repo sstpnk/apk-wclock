@@ -17,6 +17,11 @@ public final class WeatherData {
     public final double windSpeed;
     public final int windDirection;
     public final List<ForecastDay> forecast;
+    public double todayMinTempC;
+    public double todayMaxTempC;
+    public int humidityPercent;
+    public double pressureHpa;
+    public int precipitationProbability;
 
     public WeatherData(String providerName, String cityName, long updatedAtMillis, boolean stale, double temperatureC, double feelsLikeC, int weatherCode, String descriptionRu, double precipitationMm, double windSpeed, int windDirection, List<ForecastDay> forecast) {
         this.providerName = providerName;

@@ -48,7 +48,8 @@ public final class MainActivity extends Activity {
                 return true;
             }
         });
-        renderController = new RenderController(clockView, new SettingsRepository(this), createWeatherRepository());
+        SettingsRepository settingsRepository = new SettingsRepository(this);
+        renderController = new RenderController(clockView, settingsRepository, createWeatherRepository(settingsRepository.load()));
         setContentView(clockView);
         requestPhotoPermissionIfNeeded();
     }
@@ -86,8 +87,11 @@ public final class MainActivity extends Activity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
     }
 
-    private WeatherRepository createWeatherRepository() {
+    private WeatherRepository createWeatherRepository(SettingsRepository.Settings settings) {
         NetworkClient networkClient = new NetworkClient("WClock/0.1 contact: github.com/sstpnk/apk-wclock", 10000);
+        if ("met-norway".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new MetNorwayProvider(), new OpenMeteoProvider());
+        }
         return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider());
     }
 

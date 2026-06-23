@@ -19,7 +19,8 @@ public final class WClockDreamService extends DreamService {
         setFullscreen(true);
         setScreenBright(false);
         ClockWeatherCollageView view = new ClockWeatherCollageView(this);
-        renderController = new RenderController(view, new SettingsRepository(this), createWeatherRepository());
+        SettingsRepository settingsRepository = new SettingsRepository(this);
+        renderController = new RenderController(view, settingsRepository, createWeatherRepository(settingsRepository.load()));
         setContentView(view);
     }
 
@@ -39,8 +40,11 @@ public final class WClockDreamService extends DreamService {
         super.onDreamingStopped();
     }
 
-    private WeatherRepository createWeatherRepository() {
+    private WeatherRepository createWeatherRepository(SettingsRepository.Settings settings) {
         NetworkClient networkClient = new NetworkClient("WClock/0.1 contact: github.com/sstpnk/apk-wclock", 10000);
+        if ("met-norway".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new MetNorwayProvider(), new OpenMeteoProvider());
+        }
         return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider());
     }
 }
