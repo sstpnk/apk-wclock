@@ -8,6 +8,8 @@ import com.sstpnk.wclock.settings.SettingsRepository;
 import com.sstpnk.wclock.util.NetworkClient;
 import com.sstpnk.wclock.weather.MetNorwayProvider;
 import com.sstpnk.wclock.weather.OpenMeteoProvider;
+import com.sstpnk.wclock.weather.OpenWeatherProvider;
+import com.sstpnk.wclock.weather.WeatherApiProvider;
 import com.sstpnk.wclock.weather.WeatherRepository;
 
 public final class WClockDreamService extends DreamService {
@@ -44,6 +46,12 @@ public final class WClockDreamService extends DreamService {
         NetworkClient networkClient = new NetworkClient("WClock/0.1 contact: github.com/sstpnk/apk-wclock", 10000);
         if ("met-norway".equals(settings.weatherProvider)) {
             return new WeatherRepository(networkClient, new MetNorwayProvider(), new OpenMeteoProvider());
+        }
+        if ("weatherapi".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new WeatherApiProvider(settings.weatherApiKey), new OpenMeteoProvider());
+        }
+        if ("openweather".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new OpenWeatherProvider(settings.openWeatherApiKey), new OpenMeteoProvider());
         }
         return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider());
     }
