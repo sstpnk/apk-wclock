@@ -8,9 +8,18 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.sstpnk.wclock.brightness.BrightnessController;
+import com.sstpnk.wclock.brightness.BrightnessSchedule;
 import com.sstpnk.wclock.render.ClockWeatherCollageView;
 import com.sstpnk.wclock.render.RenderController;
 import com.sstpnk.wclock.settings.SettingsActivity;
+import com.sstpnk.wclock.settings.SettingsRepository;
+import com.sstpnk.wclock.util.NetworkClient;
+import com.sstpnk.wclock.weather.MetNorwayProvider;
+import com.sstpnk.wclock.weather.OpenMeteoProvider;
+import com.sstpnk.wclock.weather.WeatherRepository;
+
+import java.util.Calendar;
 
 public final class MainActivity extends Activity {
     private RenderController renderController;
@@ -24,7 +33,7 @@ public final class MainActivity extends Activity {
         hideSystemUi();
 
         ClockWeatherCollageView view = new ClockWeatherCollageView(this);
-        renderController = new RenderController(view);
+        renderController = new RenderController(view, new SettingsRepository(this), createWeatherRepository());
         setContentView(view);
     }
 
@@ -32,6 +41,7 @@ public final class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         hideSystemUi();
+        applyConfiguredBrightness();
         renderController.start();
     }
 
@@ -58,5 +68,17 @@ public final class MainActivity extends Activity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    }
+
+    private WeatherRepository createWeatherRepository() {
+        NetworkClient networkClient = new NetworkClient("WClock/0.1 contact: github.com/sstpnk/apk-wclock", 10000);
+        return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider());
+    }
+
+    private void applyConfiguredBrightness() {
+        SettingsRepository.Settings settings = new SettingsRepository(this).load();
+        Calendar calendar = Calendar.getInstance();
+        BrightnessSchedule schedule = new BrightnessSchedule(7, 19, 23, settings.dayBrightness, settings.eveningBrightness, settings.nightBrightness);
+        new BrightnessController().apply(getWindow(), schedule.brightnessForHour(calendar.get(Calendar.HOUR_OF_DAY)));
     }
 }
