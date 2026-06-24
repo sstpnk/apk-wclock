@@ -30,6 +30,8 @@ import java.util.Calendar;
 public final class MainActivity extends Activity {
     private RenderController renderController;
     private ClockWeatherCollageView clockView;
+    private SettingsRepository settingsRepository;
+    private String weatherRepositorySignature = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,8 +52,8 @@ public final class MainActivity extends Activity {
                 return true;
             }
         });
-        SettingsRepository settingsRepository = new SettingsRepository(this);
-        renderController = new RenderController(clockView, settingsRepository, createWeatherRepository(settingsRepository.load()));
+        settingsRepository = new SettingsRepository(this);
+        resetRenderController(settingsRepository.load());
         setContentView(clockView);
         requestPhotoPermissionIfNeeded();
     }
@@ -61,6 +63,10 @@ public final class MainActivity extends Activity {
         super.onResume();
         hideSystemUi();
         applyConfiguredBrightness();
+        SettingsRepository.Settings settings = settingsRepository.load();
+        if (!weatherRepositorySignature.equals(weatherSignature(settings))) {
+            resetRenderController(settings);
+        }
         renderController.start();
     }
 
@@ -101,6 +107,18 @@ public final class MainActivity extends Activity {
             return new WeatherRepository(networkClient, new OpenWeatherProvider(settings.openWeatherApiKey), new OpenMeteoProvider());
         }
         return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider());
+    }
+
+    private void resetRenderController(SettingsRepository.Settings settings) {
+        if (renderController != null) {
+            renderController.stop();
+        }
+        weatherRepositorySignature = weatherSignature(settings);
+        renderController = new RenderController(clockView, settingsRepository, createWeatherRepository(settings));
+    }
+
+    private String weatherSignature(SettingsRepository.Settings settings) {
+        return settings.weatherProvider + "|" + settings.weatherApiKey + "|" + settings.openWeatherApiKey;
     }
 
     private void openSettings() {

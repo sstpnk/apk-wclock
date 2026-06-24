@@ -36,8 +36,11 @@ public final class CollageEngine {
         folderLoaded = true;
     }
 
-    public void draw(Canvas canvas, long nowMillis, int maxVisible, int changeSeconds) {
+    public void draw(Canvas canvas, long nowMillis, boolean enabled, int maxVisible, int changeSeconds) {
         canvas.drawColor(Color.rgb(12, 14, 16));
+        if (!enabled) {
+            return;
+        }
         int safeMax = Math.max(1, Math.min(50, maxVisible));
         int safeIntervalMs = Math.max(5, changeSeconds) * 1000;
         addNextIfNeeded(canvas, nowMillis, safeMax, safeIntervalMs);

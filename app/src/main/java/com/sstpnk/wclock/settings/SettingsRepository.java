@@ -20,8 +20,10 @@ public final class SettingsRepository {
         settings.latitude = doubleFromPrefs("latitude", defaults.latitude);
         settings.longitude = doubleFromPrefs("longitude", defaults.longitude);
         settings.weatherRefreshMinutes = prefs.getInt("weatherRefreshMinutes", defaults.weatherRefreshMinutes);
+        settings.collageEnabled = prefs.getBoolean("collageEnabled", defaults.collageEnabled);
         settings.maxVisiblePhotos = prefs.getInt("maxVisiblePhotos", defaults.maxVisiblePhotos);
         settings.photoChangeSeconds = prefs.getInt("photoChangeSeconds", defaults.photoChangeSeconds);
+        settings.locationMode = prefs.getString("locationMode", defaults.locationMode);
         settings.weatherProvider = prefs.getString("weatherProvider", defaults.weatherProvider);
         settings.weatherIconStyle = prefs.getString("weatherIconStyle", defaults.weatherIconStyle);
         settings.weatherApiKey = prefs.getString("weatherApiKey", defaults.weatherApiKey);
@@ -45,8 +47,10 @@ public final class SettingsRepository {
                 .putString("latitude", Double.toString(safe.latitude))
                 .putString("longitude", Double.toString(safe.longitude))
                 .putInt("weatherRefreshMinutes", safe.weatherRefreshMinutes)
+                .putBoolean("collageEnabled", safe.collageEnabled)
                 .putInt("maxVisiblePhotos", safe.maxVisiblePhotos)
                 .putInt("photoChangeSeconds", safe.photoChangeSeconds)
+                .putString("locationMode", safe.locationMode)
                 .putString("weatherProvider", safe.weatherProvider)
                 .putString("weatherIconStyle", safe.weatherIconStyle)
                 .putString("weatherApiKey", safe.weatherApiKey)
@@ -92,8 +96,10 @@ public final class SettingsRepository {
         public double latitude;
         public double longitude;
         public int weatherRefreshMinutes;
+        public boolean collageEnabled;
         public int maxVisiblePhotos;
         public int photoChangeSeconds;
+        public String locationMode;
         public String weatherProvider;
         public String weatherIconStyle;
         public String weatherApiKey;
@@ -114,8 +120,10 @@ public final class SettingsRepository {
             settings.latitude = 55.7558;
             settings.longitude = 37.6173;
             settings.weatherRefreshMinutes = 30;
+            settings.collageEnabled = true;
             settings.maxVisiblePhotos = 18;
             settings.photoChangeSeconds = 20;
+            settings.locationMode = "coordinates";
             settings.weatherProvider = "open-meteo";
             settings.weatherIconStyle = "outline";
             settings.weatherApiKey = "";
@@ -138,8 +146,10 @@ public final class SettingsRepository {
             safe.latitude = isValidLatitude(latitude) ? latitude : 55.7558;
             safe.longitude = isValidLongitude(longitude) ? longitude : 37.6173;
             safe.weatherRefreshMinutes = clampInt(weatherRefreshMinutes, 10, 240);
+            safe.collageEnabled = collageEnabled;
             safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);
             safe.photoChangeSeconds = clampInt(photoChangeSeconds, 5, 600);
+            safe.locationMode = normalizeLocationMode(locationMode);
             safe.weatherProvider = normalizeProvider(weatherProvider);
             safe.weatherIconStyle = normalizeIconStyle(weatherIconStyle);
             safe.weatherApiKey = weatherApiKey == null ? "" : weatherApiKey.trim();
@@ -165,6 +175,17 @@ public final class SettingsRepository {
             return value;
         }
         return "open-meteo";
+    }
+
+    private static String normalizeLocationMode(String mode) {
+        if (mode == null) {
+            return "coordinates";
+        }
+        String value = mode.trim().toLowerCase();
+        if ("city".equals(value)) {
+            return value;
+        }
+        return "coordinates";
     }
 
     private static String normalizeIconStyle(String style) {

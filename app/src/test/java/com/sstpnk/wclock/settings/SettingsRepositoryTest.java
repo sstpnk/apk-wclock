@@ -14,8 +14,10 @@ public class SettingsRepositoryTest {
         assertEquals(55.7558, settings.latitude, 0.0001);
         assertEquals(37.6173, settings.longitude, 0.0001);
         assertEquals(30, settings.weatherRefreshMinutes);
+        assertTrue(settings.collageEnabled);
         assertEquals(18, settings.maxVisiblePhotos);
         assertEquals(20, settings.photoChangeSeconds);
+        assertEquals("coordinates", settings.locationMode);
         assertEquals("open-meteo", settings.weatherProvider);
         assertEquals("outline", settings.weatherIconStyle);
         assertTrue(settings.burnInMinMinutes >= 5);
