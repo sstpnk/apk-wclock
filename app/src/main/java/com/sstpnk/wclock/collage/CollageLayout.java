@@ -5,17 +5,24 @@ import android.graphics.RectF;
 import java.util.Random;
 
 public final class CollageLayout {
-    public RectF frameForIndex(int index, int width, int height) {
-        float shortSide = Math.max(160.0f, Math.min(width, height) * 0.32f);
-        float longSide = shortSide * 1.35f;
+    public RectF frameForIndex(int index, int width, int height, int bitmapWidth, int bitmapHeight) {
+        float frameWidth = Math.max(1.0f, bitmapWidth);
+        float frameHeight = Math.max(1.0f, bitmapHeight);
+        float maxArea = width * height * 0.25f;
+        float area = frameWidth * frameHeight;
+        if (area > maxArea) {
+            float scale = (float) Math.sqrt(maxArea / area);
+            frameWidth *= scale;
+            frameHeight *= scale;
+        }
         Random random = new Random(index * 1103515245L + 12345L);
-        float minX = -shortSide * 0.28f;
-        float maxX = width - shortSide * 0.72f;
-        float minY = -longSide * 0.28f;
-        float maxY = height - longSide * 0.72f;
+        float minX = -frameWidth * 0.10f;
+        float maxX = width - frameWidth * 0.90f;
+        float minY = -frameHeight * 0.10f;
+        float maxY = height - frameHeight * 0.90f;
         float x = minX + random.nextFloat() * Math.max(1.0f, maxX - minX);
         float y = minY + random.nextFloat() * Math.max(1.0f, maxY - minY);
-        return new RectF(x, y, x + shortSide, y + longSide);
+        return new RectF(x, y, x + frameWidth, y + frameHeight);
     }
 
     public float rotationForIndex(int index) {

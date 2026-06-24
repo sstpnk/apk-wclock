@@ -100,13 +100,18 @@ public final class CollageEngine {
         int height = canvas.getHeight();
         for (int i = 0; i < activePhotos.size(); i++) {
             ActivePhoto photo = activePhotos.get(i);
-            RectF frame = layout.frameForIndex(photo.layoutIndex, width, height);
+            RectF frame = layout.frameForIndex(photo.layoutIndex, width, height, photo.bitmap.getWidth(), photo.bitmap.getHeight());
+            applyEntrance(frame, photo, nowMillis, width);
             float drift = (float) Math.sin((nowMillis / 120000.0) + i) * 12.0f;
             frame.offset(drift, -drift * 0.5f);
             int alpha = alphaFor(photo, nowMillis, safeMax, safeIntervalMs);
+            float border = Math.max(3.0f, Math.min(width, height) * 0.006f);
             paint.setColor(0x70000000);
             paint.setAlpha(alpha);
             canvas.drawRect(frame.left + 8, frame.top + 8, frame.right + 8, frame.bottom + 8, paint);
+            paint.setColor(0xF0F4F1EA);
+            paint.setAlpha(alpha);
+            canvas.drawRect(frame.left - border, frame.top - border, frame.right + border, frame.bottom + border, paint);
             paint.setColor(Color.WHITE);
             paint.setAlpha(alpha);
             canvas.drawBitmap(photo.bitmap, null, frame, paint);
@@ -126,13 +131,31 @@ public final class CollageEngine {
         removeFrameExtras();
         int width = canvas.getWidth();
         int height = canvas.getHeight();
+        long transitionAge = activePhotos.size() > 1
+                ? nowMillis - activePhotos.get(activePhotos.size() - 1).bornMillis
+                : Long.MAX_VALUE;
         for (int i = 0; i < activePhotos.size(); i++) {
             ActivePhoto photo = activePhotos.get(i);
             RectF frame = frameRectForBitmap(photo.bitmap, width, height, nowMillis, photo.layoutIndex);
-            paint.setAlpha(activePhotos.size() == 1 ? 255 : alphaForFrame(photo, nowMillis, i == activePhotos.size() - 1));
+            paint.setAlpha(activePhotos.size() == 1 ? 255 : alphaForFrameTransition(transitionAge, i == activePhotos.size() - 1));
             canvas.drawBitmap(photo.bitmap, null, frame, paint);
         }
         paint.setAlpha(255);
+        removeFadedFrameExtras(transitionAge);
+    }
+
+    private void applyEntrance(RectF frame, ActivePhoto photo, long nowMillis, int screenWidth) {
+        long age = nowMillis - photo.bornMillis;
+        long duration = 1400L;
+        if (age >= duration) {
+            return;
+        }
+        float progress = Math.max(0.0f, Math.min(1.0f, age / (float) duration));
+        progress = 1.0f - (1.0f - progress) * (1.0f - progress);
+        boolean fromLeft = photo.layoutIndex % 2 == 0;
+        float startLeft = fromLeft ? -frame.width() - 20.0f : screenWidth + 20.0f;
+        float dx = (startLeft - frame.left) * (1.0f - progress);
+        frame.offset(dx, 0.0f);
     }
 
     private void addNextIfNeeded(Canvas canvas, long nowMillis, int maxVisible, int intervalMs) {
@@ -189,6 +212,13 @@ public final class CollageEngine {
         }
     }
 
+    private void removeFadedFrameExtras(long transitionAge) {
+        if (activePhotos.size() > 1 && transitionAge > 1400L) {
+            ActivePhoto first = activePhotos.remove(0);
+            recycle(first);
+        }
+    }
+
     private void recycle(ActivePhoto photo) {
         if (photo.bitmap != null && !photo.bitmap.isRecycled()) {
             photo.bitmap.recycle();
@@ -210,9 +240,9 @@ public final class CollageEngine {
         return 255;
     }
 
-    private int alphaForFrame(ActivePhoto photo, long nowMillis, boolean newest) {
-        long age = nowMillis - photo.bornMillis;
-        long fade = 1200L;
+    private int alphaForFrameTransition(long transitionAge, boolean newest) {
+        long fade = 1400L;
+        long age = Math.max(0L, Math.min(fade, transitionAge));
         if (newest) {
             return (int) Math.min(255, 255 * age / fade);
         }
@@ -225,9 +255,10 @@ public final class CollageEngine {
         float drawHeight = bitmap.getHeight() * scale;
         float maxX = Math.max(0.0f, drawWidth - width);
         float maxY = Math.max(0.0f, drawHeight - height);
-        float phase = (float) ((nowMillis / 22000.0) + index);
-        float left = -maxX * (0.5f + 0.5f * (float) Math.sin(phase));
-        float top = -maxY * (0.5f + 0.5f * (float) Math.cos(phase * 0.8f));
+        float progress = ((nowMillis / 18000.0f) + (index * 0.37f)) % 1.0f;
+        float pingPong = progress < 0.5f ? progress * 2.0f : (1.0f - progress) * 2.0f;
+        float left = maxX > maxY ? -maxX * pingPong : -maxX * 0.5f;
+        float top = maxY >= maxX ? -maxY * pingPong : -maxY * 0.5f;
         return new RectF(left, top, left + drawWidth, top + drawHeight);
     }
 

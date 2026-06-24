@@ -48,10 +48,12 @@ public class CollageEngineRenderTest {
         engine.setSource(folder.getAbsolutePath(), "");
         assertTrue("Photowall source folder must produce photos", engine.photoCountForTest() > 0);
         engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
+        engine.draw(canvas, 2500L, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
         assertTrue("Photowall draw must activate a decoded photo", engine.activePhotoCountForTest() > 0);
 
         int redPixels = countDominantRedPixels(target);
         assertTrue("Photowall must render visible source image pixels, redPixels=" + redPixels + ", maxRed=" + maxRed(target) + ", nonBackground=" + countNonBackgroundPixels(target), redPixels > 1200);
+        assertTrue("Photowall must draw a light photo border", countLightBorderPixels(target) > 300);
     }
 
     @Test
@@ -69,6 +71,24 @@ public class CollageEngineRenderTest {
 
         int greenPixels = countDominantGreenPixels(target);
         assertTrue("Frame mode must render visible source image pixels, greenPixels=" + greenPixels, greenPixels > 20000);
+    }
+
+    @Test
+    public void frameModeCrossfadesOldAndNewPhotos() throws Exception {
+        File folder = createImageFolder("frame-crossfade", Color.rgb(230, 40, 40));
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                new SequenceBitmapDecoder());
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_FRAME, 1, 1);
+        engine.draw(canvas, 2500L, true, CollageEngine.MODE_FRAME, 1, 1);
+        assertTrue("Crossfade must keep old image visible", countDominantRedPixels(target) > 5000);
+
+        engine.draw(canvas, 3400L, true, CollageEngine.MODE_FRAME, 1, 1);
+        assertTrue("Crossfade must fade in new image", countDominantGreenPixels(target) > 5000);
     }
 
     private File createImageFolder(String name, int color) throws Exception {
@@ -98,6 +118,19 @@ public class CollageEngineRenderTest {
 
         @Override
         public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
+            Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawColor(color);
+            return bitmap;
+        }
+    }
+
+    private static final class SequenceBitmapDecoder implements BitmapDecoder {
+        private int index;
+
+        @Override
+        public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
+            int color = index++ == 0 ? Color.rgb(230, 40, 40) : Color.rgb(40, 220, 70);
             Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
             canvas.drawColor(color);
@@ -147,6 +180,19 @@ public class CollageEngineRenderTest {
         for (int y = 0; y < bitmap.getHeight(); y++) {
             for (int x = 0; x < bitmap.getWidth(); x++) {
                 if (bitmap.getPixel(x, y) != background) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private int countLightBorderPixels(Bitmap bitmap) {
+        int count = 0;
+        for (int y = 0; y < bitmap.getHeight(); y++) {
+            for (int x = 0; x < bitmap.getWidth(); x++) {
+                int pixel = bitmap.getPixel(x, y);
+                if (Color.red(pixel) > 190 && Color.green(pixel) > 185 && Color.blue(pixel) > 170) {
                     count++;
                 }
             }

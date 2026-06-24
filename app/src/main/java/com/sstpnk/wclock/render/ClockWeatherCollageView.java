@@ -235,7 +235,7 @@ public final class ClockWeatherCollageView extends View {
         weatherIconPainter.draw(canvas, day.weatherCode, centerX, centerY + dp(2), Math.min(width * 0.48f, dp(32)), weatherIconStyle);
         setText(dp(12), 0xC8FFFFFF, false);
         paint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText(Math.round(day.maxTempC) + "°/" + Math.round(day.minTempC) + "°", centerX, centerY + dp(38), paint);
+        canvas.drawText(forecastTemperature(day), centerX, centerY + dp(38), paint);
         paint.setTextAlign(Paint.Align.LEFT);
     }
 
@@ -296,6 +296,15 @@ public final class ClockWeatherCollageView extends View {
             return value.substring(8, 10) + "." + value.substring(5, 7);
         }
         return value == null ? "" : value;
+    }
+
+    private String forecastTemperature(ForecastDay day) {
+        long max = Math.round(day.maxTempC);
+        long min = Math.round(day.minTempC);
+        if (Math.abs(day.maxTempC - day.minTempC) < 0.5) {
+            return max + "°";
+        }
+        return max + "°/" + min + "°";
     }
 
     private float clamp(float value, float min, float max) {
