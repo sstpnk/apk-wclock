@@ -18,7 +18,7 @@ public final class CollageEngine {
     public static final String MODE_PHOTOWALL = "photowall";
 
     private final PhotoScanner scanner = new PhotoScanner();
-    private final BitmapLoader loader = new BitmapLoader();
+    private final BitmapDecoder loader;
     private final CollageLayout layout = new CollageLayout();
     private final ContentResolver resolver;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
@@ -31,7 +31,12 @@ public final class CollageEngine {
     private long lastAddMillis;
 
     public CollageEngine(ContentResolver resolver) {
+        this(resolver, new BitmapLoader());
+    }
+
+    CollageEngine(ContentResolver resolver, BitmapDecoder loader) {
         this.resolver = resolver;
+        this.loader = loader;
     }
 
     public void setSource(String path, String uriString) {
@@ -78,6 +83,14 @@ public final class CollageEngine {
         lastAddMillis = 0;
     }
 
+    int photoCountForTest() {
+        return photos.size();
+    }
+
+    int activePhotoCountForTest() {
+        return activePhotos.size();
+    }
+
     private void drawPhotoWall(Canvas canvas, long nowMillis, int maxVisible, int changeSeconds) {
         int safeMax = Math.max(1, Math.min(50, maxVisible));
         int safeIntervalMs = Math.max(1, changeSeconds) * 1000;
@@ -91,19 +104,17 @@ public final class CollageEngine {
             float drift = (float) Math.sin((nowMillis / 120000.0) + i) * 12.0f;
             frame.offset(drift, -drift * 0.5f);
             int alpha = alphaFor(photo, nowMillis, safeMax, safeIntervalMs);
-            canvas.save();
-            canvas.rotate(layout.rotationForIndex(photo.layoutIndex), frame.centerX(), frame.centerY());
-            paint.setAlpha(alpha);
             paint.setColor(0x70000000);
+            paint.setAlpha(alpha);
             canvas.drawRect(frame.left + 8, frame.top + 8, frame.right + 8, frame.bottom + 8, paint);
+            paint.setColor(Color.WHITE);
             paint.setAlpha(alpha);
             canvas.drawBitmap(photo.bitmap, null, frame, paint);
             int ageShade = Math.min(105, (int) ((nowMillis - photo.bornMillis) / Math.max(1, safeIntervalMs)) * 8);
-            paint.setAlpha(ageShade);
             paint.setColor(Color.BLACK);
+            paint.setAlpha(ageShade);
             canvas.drawRect(frame, paint);
             paint.setAlpha(255);
-            canvas.restore();
         }
     }
 
@@ -118,7 +129,7 @@ public final class CollageEngine {
         for (int i = 0; i < activePhotos.size(); i++) {
             ActivePhoto photo = activePhotos.get(i);
             RectF frame = frameRectForBitmap(photo.bitmap, width, height, nowMillis, photo.layoutIndex);
-            paint.setAlpha(alphaForFrame(photo, nowMillis, i == activePhotos.size() - 1));
+            paint.setAlpha(activePhotos.size() == 1 ? 255 : alphaForFrame(photo, nowMillis, i == activePhotos.size() - 1));
             canvas.drawBitmap(photo.bitmap, null, frame, paint);
         }
         paint.setAlpha(255);
@@ -189,7 +200,7 @@ public final class CollageEngine {
         long fadeIn = 900L;
         long maxAge = Math.max(intervalMs * 4L, intervalMs * (long) (maxVisible + 2));
         if (age < fadeIn) {
-            return (int) Math.max(150, 255 * age / fadeIn);
+            return (int) Math.max(220, 255 * age / fadeIn);
         }
         long fadeStart = (long) (maxAge * 0.78f);
         if (age > fadeStart) {

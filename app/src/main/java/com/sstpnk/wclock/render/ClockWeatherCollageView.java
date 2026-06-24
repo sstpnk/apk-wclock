@@ -63,7 +63,7 @@ public final class ClockWeatherCollageView extends View {
         this.collageEnabled = collageEnabled;
         this.photoDisplayMode = "frame".equals(photoDisplayMode) ? "frame" : "photowall";
         this.maxVisiblePhotos = Math.max(1, Math.min(50, maxVisiblePhotos));
-        this.photoChangeSeconds = Math.max(5, photoChangeSeconds);
+        this.photoChangeSeconds = Math.max(1, photoChangeSeconds);
         this.showSeconds = showSeconds;
         this.weatherIconStyle = "flat".equals(weatherIconStyle) ? "flat" : "outline";
     }
@@ -267,7 +267,7 @@ public final class ClockWeatherCollageView extends View {
     }
 
     private boolean hasTodayRange() {
-        return Math.abs(weatherData.todayMaxTempC) > 0.01 || Math.abs(weatherData.todayMinTempC) > 0.01;
+        return Math.abs(weatherData.todayMaxTempC - weatherData.todayMinTempC) >= 0.5;
     }
 
     private String valueOrDash(int value, String suffix) {

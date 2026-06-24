@@ -5,9 +5,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 
-public final class BitmapLoader {
+public final class BitmapLoader implements BitmapDecoder {
+    @Override
     public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
         if (item == null) {
             return null;
@@ -19,16 +21,32 @@ public final class BitmapLoader {
     }
 
     private Bitmap decodeFile(File file, int maxWidth, int maxHeight) {
-        BitmapFactory.Options bounds = new BitmapFactory.Options();
-        bounds.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(file.getAbsolutePath(), bounds);
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+        if (file == null) {
             return null;
         }
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, maxWidth, maxHeight);
-        options.inPreferredConfig = Bitmap.Config.RGB_565;
-        return BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+        InputStream boundsStream = null;
+        InputStream bitmapStream = null;
+        try {
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            boundsStream = new FileInputStream(file);
+            BitmapFactory.decodeStream(boundsStream, null, bounds);
+            closeQuietly(boundsStream);
+            boundsStream = null;
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                return null;
+            }
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, maxWidth, maxHeight);
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            bitmapStream = new FileInputStream(file);
+            return BitmapFactory.decodeStream(bitmapStream, null, options);
+        } catch (Exception e) {
+            return null;
+        } finally {
+            closeQuietly(boundsStream);
+            closeQuietly(bitmapStream);
+        }
     }
 
     private Bitmap decodeUri(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
