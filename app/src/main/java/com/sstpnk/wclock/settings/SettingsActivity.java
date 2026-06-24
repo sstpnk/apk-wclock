@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -32,6 +33,8 @@ public final class SettingsActivity extends Activity {
     private static final int REFRESH_180 = 404;
     private static final int REFRESH_360 = 405;
     private static final int REFRESH_720 = 406;
+    private static final int MODE_PHOTOWALL = 501;
+    private static final int MODE_FRAME = 502;
 
     private SettingsRepository repository;
     private SettingsRepository.Settings settings;
@@ -45,6 +48,7 @@ public final class SettingsActivity extends Activity {
     private EditText openWeatherApiKey;
     private CheckBox collageEnabled;
     private CheckBox showSeconds;
+    private RadioGroup photoDisplayMode;
     private RadioGroup locationMode;
     private RadioGroup weatherProvider;
     private RadioGroup weatherIconStyle;
@@ -77,10 +81,17 @@ public final class SettingsActivity extends Activity {
         folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(new Intent(SettingsActivity.this, FileBrowserActivity.class), 10);
+                openFolderPicker();
             }
         });
         root.addView(folder);
+        root.addView(fieldLabel("Режим фотографий"));
+        photoDisplayMode = new RadioGroup(this);
+        photoDisplayMode.setOrientation(RadioGroup.HORIZONTAL);
+        photoDisplayMode.addView(radio(MODE_PHOTOWALL, "Фотостена"));
+        photoDisplayMode.addView(radio(MODE_FRAME, "Фоторамка"));
+        photoDisplayMode.check("frame".equals(settings.photoDisplayMode) ? MODE_FRAME : MODE_PHOTOWALL);
+        root.addView(photoDisplayMode);
         root.addView(fieldLabel("Количество фотографий на экране"));
         maxPhotos = edit("1-50", Integer.toString(settings.maxVisiblePhotos));
         root.addView(maxPhotos);
@@ -223,6 +234,7 @@ public final class SettingsActivity extends Activity {
 
     private void saveAndFinish() {
         settings.collageEnabled = collageEnabled.isChecked();
+        settings.photoDisplayMode = photoDisplayMode.getCheckedRadioButtonId() == MODE_FRAME ? "frame" : "photowall";
         settings.cityName = city.getText().toString();
         settings.latitude = parseDouble(latitude.getText().toString(), settings.latitude);
         settings.longitude = parseDouble(longitude.getText().toString(), settings.longitude);
@@ -237,6 +249,18 @@ public final class SettingsActivity extends Activity {
         settings.openWeatherApiKey = openWeatherApiKey.getText().toString();
         repository.save(settings);
         finish();
+    }
+
+    private void openFolderPicker() {
+        if (Build.VERSION.SDK_INT >= 21) {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                    | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+            startActivityForResult(intent, 11);
+            return;
+        }
+        startActivityForResult(new Intent(SettingsActivity.this, FileBrowserActivity.class), 10);
     }
 
     private int providerId(String value) {
@@ -324,7 +348,20 @@ public final class SettingsActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 10 && resultCode == RESULT_OK && data != null) {
             settings.photoFolderPath = data.getStringExtra("path");
+            settings.photoFolderUri = "";
             folderValue.setText("Папка: " + valueOrDash(settings.photoFolderPath));
+        } else if (requestCode == 11 && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                int flags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                try {
+                    getContentResolver().takePersistableUriPermission(uri, flags & Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (Exception ignored) {
+                }
+                settings.photoFolderUri = uri.toString();
+                settings.photoFolderPath = "";
+                folderValue.setText("Папка: " + uri.getLastPathSegment());
+            }
         }
     }
 

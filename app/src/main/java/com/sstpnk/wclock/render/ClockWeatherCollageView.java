@@ -21,15 +21,17 @@ public final class ClockWeatherCollageView extends View {
     private static final float EDGE_PADDING_DP = 24.0f;
     private static final float SETTINGS_SIZE_DP = 30.0f;
 
-    private final CollageEngine collageEngine = new CollageEngine();
+    private final CollageEngine collageEngine;
     private final WeatherIconPainter weatherIconPainter = new WeatherIconPainter();
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF panel = new RectF();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, d MMMM", new Locale("ru"));
     private String photoFolderPath = "";
+    private String photoFolderUri = "";
     private WeatherData weatherData;
     private int burnInZoneIndex;
     private boolean collageEnabled = true;
+    private String photoDisplayMode = "photowall";
     private int maxVisiblePhotos = 18;
     private int photoChangeSeconds = 20;
     private boolean showSeconds;
@@ -39,12 +41,14 @@ public final class ClockWeatherCollageView extends View {
 
     public ClockWeatherCollageView(Context context) {
         super(context);
+        collageEngine = new CollageEngine(context.getContentResolver());
         setFocusable(true);
         setFocusableInTouchMode(true);
     }
 
-    public void setPhotoFolderPath(String path) {
+    public void setPhotoSource(String path, String uri) {
         this.photoFolderPath = path == null ? "" : path;
+        this.photoFolderUri = uri == null ? "" : uri;
     }
 
     public void setWeatherData(WeatherData weatherData) {
@@ -55,8 +59,9 @@ public final class ClockWeatherCollageView extends View {
         this.burnInZoneIndex = burnInZoneIndex;
     }
 
-    public void setDisplaySettings(boolean collageEnabled, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle) {
+    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle) {
         this.collageEnabled = collageEnabled;
+        this.photoDisplayMode = "frame".equals(photoDisplayMode) ? "frame" : "photowall";
         this.maxVisiblePhotos = Math.max(1, Math.min(50, maxVisiblePhotos));
         this.photoChangeSeconds = Math.max(5, photoChangeSeconds);
         this.showSeconds = showSeconds;
@@ -74,8 +79,8 @@ public final class ClockWeatherCollageView extends View {
         int width = getWidth();
         int height = getHeight();
         long now = System.currentTimeMillis();
-        collageEngine.setFolder(collageEnabled ? photoFolderPath : "");
-        collageEngine.draw(canvas, now, collageEnabled, maxVisiblePhotos, photoChangeSeconds);
+        collageEngine.setSource(collageEnabled ? photoFolderPath : "", collageEnabled ? photoFolderUri : "");
+        collageEngine.draw(canvas, now, collageEnabled, photoDisplayMode, maxVisiblePhotos, photoChangeSeconds);
 
         RectF clockPanel = clockPanel(width, height);
         drawPanel(canvas, clockPanel.left, clockPanel.top, clockPanel.right, clockPanel.bottom, 0x70000000);
@@ -101,14 +106,16 @@ public final class ClockWeatherCollageView extends View {
 
     private RectF clockPanel(int width, int height) {
         float margin = dp(EDGE_PADDING_DP);
+        float clockSize = clamp(width * 0.055f, dp(58), dp(118));
+        float contentWidth = clockSize * (showSeconds ? 4.35f : 3.10f) + dp(58);
         if (width > height) {
-            float panelWidth = clamp(width * (showSeconds ? 0.30f : 0.24f), dp(showSeconds ? 390 : 310), dp(showSeconds ? 600 : 500));
+            float panelWidth = Math.min(width * 0.42f, contentWidth);
             float panelHeight = clamp(height * 0.24f, dp(160), dp(230));
             float left = margin + (burnInZoneIndex % 2) * dp(18);
             float top = Math.max(margin, height - margin - panelHeight - (burnInZoneIndex / 2) * dp(14));
             return new RectF(left, top, left + panelWidth, top + panelHeight);
         }
-        float panelWidth = Math.min(width - margin * 2, clamp(width * (showSeconds ? 0.88f : 0.66f), dp(showSeconds ? 360 : 300), dp(showSeconds ? 720 : 560)));
+        float panelWidth = Math.min(width - margin * 2, contentWidth);
         float panelHeight = clamp(height * 0.15f, dp(140), dp(210));
         float weatherHeight = clamp(height * 0.32f, dp(280), dp(390));
         float groupTop = Math.max(margin, height - margin - panelHeight - dp(14) - weatherHeight - dp(34));

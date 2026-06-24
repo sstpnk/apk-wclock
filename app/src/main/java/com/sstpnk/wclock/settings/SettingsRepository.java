@@ -16,11 +16,13 @@ public final class SettingsRepository {
         Settings defaults = Settings.defaults();
         Settings settings = new Settings();
         settings.photoFolderPath = prefs.getString("photoFolderPath", defaults.photoFolderPath);
+        settings.photoFolderUri = prefs.getString("photoFolderUri", defaults.photoFolderUri);
         settings.cityName = prefs.getString("cityName", defaults.cityName);
         settings.latitude = doubleFromPrefs("latitude", defaults.latitude);
         settings.longitude = doubleFromPrefs("longitude", defaults.longitude);
         settings.weatherRefreshMinutes = prefs.getInt("weatherRefreshMinutes", defaults.weatherRefreshMinutes);
         settings.collageEnabled = prefs.getBoolean("collageEnabled", defaults.collageEnabled);
+        settings.photoDisplayMode = prefs.getString("photoDisplayMode", defaults.photoDisplayMode);
         settings.maxVisiblePhotos = prefs.getInt("maxVisiblePhotos", defaults.maxVisiblePhotos);
         settings.photoChangeSeconds = prefs.getInt("photoChangeSeconds", defaults.photoChangeSeconds);
         settings.locationMode = prefs.getString("locationMode", defaults.locationMode);
@@ -43,11 +45,13 @@ public final class SettingsRepository {
         Settings safe = settings.normalized();
         prefs.edit()
                 .putString("photoFolderPath", safe.photoFolderPath)
+                .putString("photoFolderUri", safe.photoFolderUri)
                 .putString("cityName", safe.cityName)
                 .putString("latitude", Double.toString(safe.latitude))
                 .putString("longitude", Double.toString(safe.longitude))
                 .putInt("weatherRefreshMinutes", safe.weatherRefreshMinutes)
                 .putBoolean("collageEnabled", safe.collageEnabled)
+                .putString("photoDisplayMode", safe.photoDisplayMode)
                 .putInt("maxVisiblePhotos", safe.maxVisiblePhotos)
                 .putInt("photoChangeSeconds", safe.photoChangeSeconds)
                 .putString("locationMode", safe.locationMode)
@@ -92,11 +96,13 @@ public final class SettingsRepository {
 
     public static final class Settings {
         public String photoFolderPath;
+        public String photoFolderUri;
         public String cityName;
         public double latitude;
         public double longitude;
         public int weatherRefreshMinutes;
         public boolean collageEnabled;
+        public String photoDisplayMode;
         public int maxVisiblePhotos;
         public int photoChangeSeconds;
         public String locationMode;
@@ -116,11 +122,13 @@ public final class SettingsRepository {
         public static Settings defaults() {
             Settings settings = new Settings();
             settings.photoFolderPath = "";
+            settings.photoFolderUri = "";
             settings.cityName = "Москва";
             settings.latitude = 55.7558;
             settings.longitude = 37.6173;
             settings.weatherRefreshMinutes = 30;
             settings.collageEnabled = true;
+            settings.photoDisplayMode = "photowall";
             settings.maxVisiblePhotos = 18;
             settings.photoChangeSeconds = 5;
             settings.locationMode = "coordinates";
@@ -142,11 +150,13 @@ public final class SettingsRepository {
         Settings normalized() {
             Settings safe = new Settings();
             safe.photoFolderPath = photoFolderPath == null ? "" : photoFolderPath;
+            safe.photoFolderUri = photoFolderUri == null ? "" : photoFolderUri;
             safe.cityName = cityName == null || cityName.trim().length() == 0 ? "Москва" : cityName.trim();
             safe.latitude = isValidLatitude(latitude) ? latitude : 55.7558;
             safe.longitude = isValidLongitude(longitude) ? longitude : 37.6173;
             safe.weatherRefreshMinutes = clampInt(weatherRefreshMinutes, 15, 720);
             safe.collageEnabled = collageEnabled;
+            safe.photoDisplayMode = normalizePhotoDisplayMode(photoDisplayMode);
             safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);
             safe.photoChangeSeconds = clampInt(photoChangeSeconds, 1, 60);
             safe.locationMode = normalizeLocationMode(locationMode);
@@ -186,6 +196,17 @@ public final class SettingsRepository {
             return value;
         }
         return "coordinates";
+    }
+
+    private static String normalizePhotoDisplayMode(String mode) {
+        if (mode == null) {
+            return "photowall";
+        }
+        String value = mode.trim().toLowerCase();
+        if ("frame".equals(value)) {
+            return value;
+        }
+        return "photowall";
     }
 
     private static String normalizeIconStyle(String style) {
