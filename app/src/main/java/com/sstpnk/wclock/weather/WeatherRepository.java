@@ -8,6 +8,9 @@ public final class WeatherRepository {
     private final WeatherProvider fallback;
     private WeatherData lastSuccessful;
     private String lastError = "";
+    private static WeatherData cachedData;
+    private static String cachedKey = "";
+    private static long cachedAtMillis;
 
     public WeatherRepository(NetworkClient networkClient, WeatherProvider primary, WeatherProvider fallback) {
         this.networkClient = networkClient;
@@ -17,6 +20,21 @@ public final class WeatherRepository {
 
     public WeatherData refresh(String cityName, double latitude, double longitude, long nowMillis) {
         return tryProviders(cityName, latitude, longitude, nowMillis, true);
+    }
+
+    public WeatherData refreshCached(String cityName, double latitude, double longitude, long nowMillis, long refreshIntervalMillis, String cacheKey) {
+        if (cachedData != null && cacheKey.equals(cachedKey) && nowMillis - cachedAtMillis < refreshIntervalMillis) {
+            lastSuccessful = cachedData;
+            lastError = "";
+            return cachedData;
+        }
+        WeatherData data = tryProviders(cityName, latitude, longitude, nowMillis, true);
+        if (data != null && !data.stale) {
+            cachedData = data;
+            cachedKey = cacheKey;
+            cachedAtMillis = nowMillis;
+        }
+        return data;
     }
 
     public WeatherData refreshForTest(String cityName, double latitude, double longitude, long nowMillis) {

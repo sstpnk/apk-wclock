@@ -122,7 +122,7 @@ public final class SettingsRepository {
             settings.weatherRefreshMinutes = 30;
             settings.collageEnabled = true;
             settings.maxVisiblePhotos = 18;
-            settings.photoChangeSeconds = 20;
+            settings.photoChangeSeconds = 5;
             settings.locationMode = "coordinates";
             settings.weatherProvider = "open-meteo";
             settings.weatherIconStyle = "outline";
@@ -145,10 +145,10 @@ public final class SettingsRepository {
             safe.cityName = cityName == null || cityName.trim().length() == 0 ? "Москва" : cityName.trim();
             safe.latitude = isValidLatitude(latitude) ? latitude : 55.7558;
             safe.longitude = isValidLongitude(longitude) ? longitude : 37.6173;
-            safe.weatherRefreshMinutes = clampInt(weatherRefreshMinutes, 10, 240);
+            safe.weatherRefreshMinutes = clampInt(weatherRefreshMinutes, 15, 720);
             safe.collageEnabled = collageEnabled;
             safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);
-            safe.photoChangeSeconds = clampInt(photoChangeSeconds, 5, 600);
+            safe.photoChangeSeconds = clampInt(photoChangeSeconds, 1, 60);
             safe.locationMode = normalizeLocationMode(locationMode);
             safe.weatherProvider = normalizeProvider(weatherProvider);
             safe.weatherIconStyle = normalizeIconStyle(weatherIconStyle);

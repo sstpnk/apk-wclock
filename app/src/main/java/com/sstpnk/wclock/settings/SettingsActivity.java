@@ -26,6 +26,12 @@ public final class SettingsActivity extends Activity {
     private static final int PROVIDER_OPENWEATHER = 204;
     private static final int ICON_OUTLINE = 301;
     private static final int ICON_FLAT = 302;
+    private static final int REFRESH_15 = 401;
+    private static final int REFRESH_30 = 402;
+    private static final int REFRESH_60 = 403;
+    private static final int REFRESH_180 = 404;
+    private static final int REFRESH_360 = 405;
+    private static final int REFRESH_720 = 406;
 
     private SettingsRepository repository;
     private SettingsRepository.Settings settings;
@@ -42,6 +48,7 @@ public final class SettingsActivity extends Activity {
     private RadioGroup locationMode;
     private RadioGroup weatherProvider;
     private RadioGroup weatherIconStyle;
+    private RadioGroup weatherRefresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +85,7 @@ public final class SettingsActivity extends Activity {
         maxPhotos = edit("1-50", Integer.toString(settings.maxVisiblePhotos));
         root.addView(maxPhotos);
         root.addView(fieldLabel("Интервал появления фотографий, сек"));
-        photoInterval = edit("5-600", Integer.toString(settings.photoChangeSeconds));
+        photoInterval = edit("1-60", Integer.toString(settings.photoChangeSeconds));
         root.addView(photoInterval);
 
         root.addView(section("Локация"));
@@ -112,6 +119,18 @@ public final class SettingsActivity extends Activity {
         weatherProvider.check(providerId(settings.weatherProvider));
         root.addView(weatherProvider);
 
+        root.addView(fieldLabel("Частота обновления"));
+        weatherRefresh = new RadioGroup(this);
+        weatherRefresh.setOrientation(RadioGroup.VERTICAL);
+        weatherRefresh.addView(radio(REFRESH_15, "15 минут"));
+        weatherRefresh.addView(radio(REFRESH_30, "30 минут"));
+        weatherRefresh.addView(radio(REFRESH_60, "1 час"));
+        weatherRefresh.addView(radio(REFRESH_180, "3 часа"));
+        weatherRefresh.addView(radio(REFRESH_360, "6 часов"));
+        weatherRefresh.addView(radio(REFRESH_720, "12 часов"));
+        weatherRefresh.check(refreshId(settings.weatherRefreshMinutes));
+        root.addView(weatherRefresh);
+
         root.addView(fieldLabel("WeatherAPI.com ключ"));
         weatherApiKey = edit("если выбран WeatherAPI.com", settings.weatherApiKey);
         root.addView(weatherApiKey);
@@ -135,6 +154,9 @@ public final class SettingsActivity extends Activity {
             }
         });
         root.addView(save);
+        TextView bottomSpace = label("", 1);
+        bottomSpace.setPadding(0, 0, 0, dp(56));
+        root.addView(bottomSpace);
         return scrollView;
     }
 
@@ -209,6 +231,7 @@ public final class SettingsActivity extends Activity {
         settings.showSeconds = showSeconds.isChecked();
         settings.locationMode = locationMode.getCheckedRadioButtonId() == LOCATION_CITY ? "city" : "coordinates";
         settings.weatherProvider = providerValue(weatherProvider.getCheckedRadioButtonId());
+        settings.weatherRefreshMinutes = refreshValue(weatherRefresh.getCheckedRadioButtonId());
         settings.weatherIconStyle = weatherIconStyle.getCheckedRadioButtonId() == ICON_FLAT ? "flat" : "outline";
         settings.weatherApiKey = weatherApiKey.getText().toString();
         settings.openWeatherApiKey = openWeatherApiKey.getText().toString();
@@ -240,6 +263,44 @@ public final class SettingsActivity extends Activity {
             return "openweather";
         }
         return "open-meteo";
+    }
+
+    private int refreshId(int minutes) {
+        if (minutes <= 15) {
+            return REFRESH_15;
+        }
+        if (minutes <= 30) {
+            return REFRESH_30;
+        }
+        if (minutes <= 60) {
+            return REFRESH_60;
+        }
+        if (minutes <= 180) {
+            return REFRESH_180;
+        }
+        if (minutes <= 360) {
+            return REFRESH_360;
+        }
+        return REFRESH_720;
+    }
+
+    private int refreshValue(int id) {
+        if (id == REFRESH_15) {
+            return 15;
+        }
+        if (id == REFRESH_60) {
+            return 60;
+        }
+        if (id == REFRESH_180) {
+            return 180;
+        }
+        if (id == REFRESH_360) {
+            return 360;
+        }
+        if (id == REFRESH_720) {
+            return 720;
+        }
+        return 30;
     }
 
     private double parseDouble(String value, double fallback) {

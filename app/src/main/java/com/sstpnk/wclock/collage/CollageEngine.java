@@ -46,7 +46,6 @@ public final class CollageEngine {
         addNextIfNeeded(canvas, nowMillis, safeMax, safeIntervalMs);
         removeExpired(nowMillis, safeMax, safeIntervalMs);
         if (activePhotos.size() == 0) {
-            drawPlaceholder(canvas);
             return;
         }
         int width = canvas.getWidth();
@@ -123,10 +122,10 @@ public final class CollageEngine {
 
     private int alphaFor(ActivePhoto photo, long nowMillis, int maxVisible, int intervalMs) {
         long age = nowMillis - photo.bornMillis;
-        long fadeIn = 2500L;
+        long fadeIn = 900L;
         long maxAge = Math.max(intervalMs * 4L, intervalMs * (long) (maxVisible + 2));
         if (age < fadeIn) {
-            return (int) Math.max(30, 255 * age / fadeIn);
+            return (int) Math.max(150, 255 * age / fadeIn);
         }
         long fadeStart = (long) (maxAge * 0.78f);
         if (age > fadeStart) {
@@ -134,19 +133,6 @@ public final class CollageEngine {
             return (int) Math.max(0, 255 - 255 * (age - fadeStart) / fadeSpan);
         }
         return 255;
-    }
-
-    private void drawPlaceholder(Canvas canvas) {
-        paint.setColor(Color.rgb(48, 72, 84));
-        int width = canvas.getWidth();
-        int height = canvas.getHeight();
-        for (int i = 0; i < 7; i++) {
-            RectF frame = layout.frameForIndex(i, width, height);
-            canvas.save();
-            canvas.rotate(layout.rotationForIndex(i), frame.centerX(), frame.centerY());
-            canvas.drawRect(frame, paint);
-            canvas.restore();
-        }
     }
 
     private static final class ActivePhoto {

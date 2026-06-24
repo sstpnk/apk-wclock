@@ -68,7 +68,9 @@ public final class RenderController {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                final WeatherData data = weatherRepository.refresh(settings.cityName, settings.latitude, settings.longitude, now);
+                long refreshMillis = settings.weatherRefreshMinutes * 60L * 1000L;
+                String cacheKey = settings.weatherProvider + "|" + settings.cityName + "|" + settings.latitude + "|" + settings.longitude;
+                final WeatherData data = weatherRepository.refreshCached(settings.cityName, settings.latitude, settings.longitude, now, refreshMillis, cacheKey);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
