@@ -10,6 +10,8 @@ public final class WeatherRepository {
     private final List<WeatherProvider> providers = new ArrayList<WeatherProvider>();
     private WeatherData lastSuccessful;
     private String lastError = "";
+    private String lastDiagnostics = "";
+    private static String lastDiagnosticsText = "";
     private static WeatherData cachedData;
     private static String cachedKey = "";
     private static long cachedAtMillis;
@@ -58,16 +60,28 @@ public final class WeatherRepository {
         return lastError;
     }
 
+    public String lastDiagnostics() {
+        return lastDiagnostics;
+    }
+
+    public static String lastDiagnosticsText() {
+        return lastDiagnosticsText;
+    }
+
     private WeatherData tryProviders(String cityName, double latitude, double longitude, long nowMillis, boolean fetchNetwork) {
         StringBuilder errors = new StringBuilder();
+        StringBuilder diagnostics = new StringBuilder();
         for (int i = 0; i < providers.size(); i++) {
             WeatherProvider provider = providers.get(i);
             try {
                 WeatherData data = fetch(provider, cityName, latitude, longitude, nowMillis, fetchNetwork);
                 lastSuccessful = data;
                 lastError = i == 0 ? "" : errors.toString();
+                appendDiagnostic(diagnostics, provider.name(), "OK");
+                rememberDiagnostics(diagnostics.toString());
                 return data;
             } catch (Exception error) {
+                appendDiagnostic(diagnostics, provider.name(), error.getMessage());
                 if (errors.length() > 0) {
                     errors.append("; ");
                 }
@@ -75,7 +89,20 @@ public final class WeatherRepository {
             }
         }
         lastError = "Weather failed: " + errors.toString();
+        rememberDiagnostics(diagnostics.toString());
         return staleCopy(lastSuccessful);
+    }
+
+    private void rememberDiagnostics(String value) {
+        lastDiagnostics = value == null ? "" : value;
+        lastDiagnosticsText = lastDiagnostics;
+    }
+
+    private static void appendDiagnostic(StringBuilder builder, String providerName, String result) {
+        if (builder.length() > 0) {
+            builder.append("; ");
+        }
+        builder.append(providerName).append(": ").append(result == null || result.length() == 0 ? "error" : result);
     }
 
     private WeatherData fetch(WeatherProvider provider, String cityName, double latitude, double longitude, long nowMillis, boolean fetchNetwork) throws Exception {

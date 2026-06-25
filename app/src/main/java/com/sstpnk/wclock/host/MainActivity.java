@@ -110,6 +110,9 @@ public final class MainActivity extends Activity {
         if ("openweather".equals(settings.weatherProvider)) {
             return new WeatherRepository(networkClient, new OpenWeatherProvider(settings.openWeatherApiKey), new OpenMeteoProvider(), new WttrInProvider());
         }
+        if ("wttr-in".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new WttrInProvider(), new OpenMeteoProvider(), new MetNorwayProvider());
+        }
         return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider(), new WttrInProvider());
     }
 

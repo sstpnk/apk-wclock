@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.sstpnk.wclock.BuildConfig;
 import com.sstpnk.wclock.util.CrashReporter;
+import com.sstpnk.wclock.weather.WeatherRepository;
 
 public final class SettingsActivity extends Activity {
     private static final int LOCATION_CITY = 101;
@@ -28,6 +29,7 @@ public final class SettingsActivity extends Activity {
     private static final int PROVIDER_MET_NORWAY = 202;
     private static final int PROVIDER_WEATHERAPI = 203;
     private static final int PROVIDER_OPENWEATHER = 204;
+    private static final int PROVIDER_WTTR_IN = 205;
     private static final int ICON_OUTLINE = 301;
     private static final int ICON_FLAT = 302;
     private static final int REFRESH_15 = 401;
@@ -140,10 +142,12 @@ public final class SettingsActivity extends Activity {
         weatherProvider.setOrientation(RadioGroup.VERTICAL);
         weatherProvider.addView(radio(PROVIDER_OPEN_METEO, "Open-Meteo, без ключа"));
         weatherProvider.addView(radio(PROVIDER_MET_NORWAY, "MET Norway, без ключа"));
+        weatherProvider.addView(radio(PROVIDER_WTTR_IN, "wttr.in, без ключа, HTTP"));
         weatherProvider.addView(radio(PROVIDER_WEATHERAPI, "WeatherAPI.com, нужен ключ"));
         weatherProvider.addView(radio(PROVIDER_OPENWEATHER, "OpenWeather, нужен ключ"));
         weatherProvider.check(providerId(settings.weatherProvider));
         root.addView(weatherProvider);
+        root.addView(label("Последняя попытка: " + valueOrDash(WeatherRepository.lastDiagnosticsText()), 12));
 
         root.addView(fieldLabel("Частота обновления"));
         weatherRefresh = new RadioGroup(this);
@@ -289,6 +293,9 @@ public final class SettingsActivity extends Activity {
         if ("openweather".equals(value)) {
             return PROVIDER_OPENWEATHER;
         }
+        if ("wttr-in".equals(value)) {
+            return PROVIDER_WTTR_IN;
+        }
         return PROVIDER_OPEN_METEO;
     }
 
@@ -301,6 +308,9 @@ public final class SettingsActivity extends Activity {
         }
         if (id == PROVIDER_OPENWEATHER) {
             return "openweather";
+        }
+        if (id == PROVIDER_WTTR_IN) {
+            return "wttr-in";
         }
         return "open-meteo";
     }

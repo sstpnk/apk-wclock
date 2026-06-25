@@ -49,4 +49,13 @@ public class SettingsRepositoryTest {
         settings.photoOrderMode = null;
         assertEquals("random", settings.normalized().photoOrderMode);
     }
+
+    @Test
+    public void weatherProviderAcceptsWttrIn() {
+        SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
+
+        settings.weatherProvider = "wttr-in";
+
+        assertEquals("wttr-in", settings.normalized().weatherProvider);
+    }
 }

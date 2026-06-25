@@ -28,6 +28,20 @@ public class WeatherRepositoryTest {
 
         assertEquals("http", data.providerName);
         assertEquals(3.0, data.temperatureC, 0.01);
+        assertEquals("primary: fail; fallback: fail; http: OK", repository.lastDiagnostics());
+        assertEquals("primary: fail; fallback: fail; http: OK", WeatherRepository.lastDiagnosticsText());
+    }
+
+    @Test
+    public void diagnosticsIncludeEveryProviderFailureWhenAllFail() {
+        WeatherProvider failingPrimary = new FakeProvider("primary", true, 1.0);
+        WeatherProvider failingFallback = new FakeProvider("fallback", true, 2.0);
+        WeatherProvider failingHttp = new FakeProvider("http", true, 3.0);
+        WeatherRepository repository = new WeatherRepository(null, failingPrimary, failingFallback, failingHttp);
+
+        repository.refreshForTest("РњРѕСЃРєРІР°", 55.7, 37.6, 1000L);
+
+        assertEquals("primary: fail; fallback: fail; http: fail", repository.lastDiagnostics());
     }
 
     private static final class FakeProvider implements WeatherProvider {

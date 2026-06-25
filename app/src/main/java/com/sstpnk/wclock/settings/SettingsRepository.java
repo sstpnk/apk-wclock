@@ -186,7 +186,7 @@ public final class SettingsRepository {
             return "open-meteo";
         }
         String value = provider.trim().toLowerCase();
-        if ("met-norway".equals(value) || "weatherapi".equals(value) || "openweather".equals(value)) {
+        if ("met-norway".equals(value) || "weatherapi".equals(value) || "openweather".equals(value) || "wttr-in".equals(value)) {
             return value;
         }
         return "open-meteo";
