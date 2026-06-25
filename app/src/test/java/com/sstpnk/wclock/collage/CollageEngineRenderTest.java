@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.RectF;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -16,7 +17,9 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.lang.reflect.Method;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
@@ -91,6 +94,26 @@ public class CollageEngineRenderTest {
         assertTrue("Crossfade must fade in new image", countDominantGreenPixels(target) > 5000);
     }
 
+    @Test
+    public void frameModeExtendsDisplayUntilWidePhotoHasBeenPannedThrough() throws Exception {
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                new WideBitmapDecoder());
+        Bitmap bitmap = Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888);
+        Method duration = CollageEngine.class.getDeclaredMethod("frameDisplayDurationMillis", Bitmap.class, int.class, int.class, int.class);
+        Method rect = CollageEngine.class.getDeclaredMethod("frameRectForBitmap", Bitmap.class, int.class, int.class, long.class, long.class, long.class);
+        duration.setAccessible(true);
+        rect.setAccessible(true);
+
+        long displayMs = (Long) duration.invoke(engine, bitmap, 600, 600, 5000);
+        RectF start = (RectF) rect.invoke(engine, bitmap, 600, 600, 1000L, 1000L, displayMs);
+        RectF end = (RectF) rect.invoke(engine, bitmap, 600, 600, 1000L + displayMs, 1000L, displayMs);
+
+        assertTrue("Wide photo needs more time than the configured interval to show every horizontal segment", displayMs > 5000L);
+        assertEquals("Pan starts at the left edge", 0.0f, start.left, 0.01f);
+        assertTrue("Pan ends after moving to the right edge of the oversized bitmap", end.left < -590.0f);
+    }
+
     private File createImageFolder(String name, int color) throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         File folder = new File(context.getCacheDir(), name + "-" + System.nanoTime());
@@ -134,6 +157,16 @@ public class CollageEngineRenderTest {
             Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
             canvas.drawColor(color);
+            return bitmap;
+        }
+    }
+
+    private static final class WideBitmapDecoder implements BitmapDecoder {
+        @Override
+        public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
+            Bitmap bitmap = Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawColor(Color.rgb(40, 120, 220));
             return bitmap;
         }
     }

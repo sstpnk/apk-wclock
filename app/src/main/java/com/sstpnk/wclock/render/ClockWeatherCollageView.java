@@ -36,7 +36,7 @@ public final class ClockWeatherCollageView extends View {
     private int photoChangeSeconds = 20;
     private boolean showSeconds;
     private String weatherIconStyle = "outline";
-    private String weatherStatus = "Загрузка погоды";
+    private String weatherStatus = "\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b";
     private long weatherStatusMillis;
 
     public ClockWeatherCollageView(Context context) {
@@ -90,9 +90,8 @@ public final class ClockWeatherCollageView extends View {
             RectF weatherPanel = weatherPanel(width, height, clockPanel);
             drawPanel(canvas, weatherPanel.left, weatherPanel.top, weatherPanel.right, weatherPanel.bottom, 0x72000000);
             drawWeather(canvas, weatherPanel, width);
-        } else {
-            drawWeatherStatus(canvas, width, height);
         }
+        drawWeatherStatus(canvas, width, height);
 
         drawSettingsButton(canvas, width, height);
     }
@@ -186,22 +185,22 @@ public final class ClockWeatherCollageView extends View {
 
         weatherIconPainter.draw(canvas, weatherData.weatherCode, left + iconSize * 0.50f, top + iconSize * 0.66f, iconSize, weatherIconStyle);
         setText(clamp(width * 0.018f, dp(20), dp(34)), 0xCCFFFFFF, false);
-        canvas.drawText(weatherData.cityName + "  " + Math.round(weatherData.temperatureC) + "°", left + iconSize + dp(18), top + dp(30), paint);
+        canvas.drawText(weatherData.cityName + "  " + Math.round(weatherData.temperatureC) + "\u00b0", left + iconSize + dp(18), top + dp(30), paint);
 
         setText(clamp(width * 0.0125f, dp(14), dp(22)), 0x96FFFFFF, false);
         canvas.drawText(weatherData.descriptionRu, left + iconSize + dp(18), top + dp(44), paint);
 
         float y = top + dp(70);
         if (hasTodayRange()) {
-            canvas.drawText("день " + Math.round(weatherData.todayMaxTempC) + "° / ночь " + Math.round(weatherData.todayMinTempC) + "°", left, y, paint);
+            canvas.drawText("\u0434\u0435\u043d\u044c " + Math.round(weatherData.todayMaxTempC) + "\u00b0 / \u043d\u043e\u0447\u044c " + Math.round(weatherData.todayMinTempC) + "\u00b0", left, y, paint);
             y += dp(12);
         }
         if (weatherData.humidityPercent > 0 || weatherData.pressureHpa > 0.0) {
-            canvas.drawText("влажн. " + valueOrDash(weatherData.humidityPercent, "%") + "   давл. " + pressureText(weatherData.pressureHpa), left, y, paint);
+            canvas.drawText("\u0432\u043b\u0430\u0436\u043d. " + valueOrDash(weatherData.humidityPercent, "%") + "   \u0434\u0430\u0432\u043b. " + pressureText(weatherData.pressureHpa), left, y, paint);
             y += dp(12);
         }
         if (weatherData.precipitationProbability > 0) {
-            canvas.drawText("осадки " + weatherData.precipitationProbability + "%", left, y, paint);
+            canvas.drawText("\u043e\u0441\u0430\u0434\u043a\u0438 " + weatherData.precipitationProbability + "%", left, y, paint);
             y += dp(12);
         }
 
@@ -258,12 +257,33 @@ public final class ClockWeatherCollageView extends View {
     }
 
     private void drawWeatherStatus(Canvas canvas, int width, int height) {
-        String text = weatherStatus.length() == 0 ? "Загрузка погоды" : weatherStatus;
-        if (text.indexOf("failed") >= 0 && System.currentTimeMillis() - weatherStatusMillis > 60000L) {
+        String text = visibleWeatherStatusText(System.currentTimeMillis());
+        if (text.length() == 0) {
             return;
         }
         setText(dp(10), 0x554A4F55, false);
         canvas.drawText(text, dp(18), height - dp(18), paint);
+    }
+
+    private String visibleWeatherStatusText(long nowMillis) {
+        String text = userFriendlyWeatherStatus(weatherStatus);
+        if (text.length() == 0 && weatherData == null) {
+            return "\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b";
+        }
+        if (text.startsWith("\u041e\u0448\u0438\u0431\u043a\u0430") && nowMillis - weatherStatusMillis > 60000L) {
+            return "";
+        }
+        return text;
+    }
+
+    private String userFriendlyWeatherStatus(String status) {
+        if (status == null || status.length() == 0) {
+            return "";
+        }
+        if (status.indexOf("failed") >= 0 || status.indexOf("Failed") >= 0 || status.indexOf("timeout") >= 0 || status.indexOf("Exception") >= 0) {
+            return "\u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438 \u043f\u043e\u0433\u043e\u0434\u044b";
+        }
+        return status;
     }
 
     private boolean hasTodayRange() {
@@ -275,7 +295,7 @@ public final class ClockWeatherCollageView extends View {
     }
 
     private String pressureText(double value) {
-        return value <= 0.0 ? "--" : Math.round(value * 0.750062) + " мм рт. ст.";
+        return value <= 0.0 ? "--" : Math.round(value * 0.750062) + " \u043c\u043c \u0440\u0442. \u0441\u0442.";
     }
 
     private Paint.FontMetrics setText(float size, int color, boolean bold) {
@@ -302,9 +322,9 @@ public final class ClockWeatherCollageView extends View {
         long max = Math.round(day.maxTempC);
         long min = Math.round(day.minTempC);
         if (Math.abs(day.maxTempC - day.minTempC) < 0.5) {
-            return max + "°";
+            return max + "\u00b0";
         }
-        return max + "°/" + min + "°";
+        return max + "\u00b0/" + min + "\u00b0";
     }
 
     private float clamp(float value, float min, float max) {

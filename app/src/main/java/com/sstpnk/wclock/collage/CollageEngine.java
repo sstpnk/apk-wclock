@@ -122,18 +122,25 @@ public final class CollageEngine {
 
     private void drawFrameMode(Canvas canvas, long nowMillis, int changeSeconds) {
         int safeIntervalMs = Math.max(1, changeSeconds) * 1000;
-        if (activePhotos.size() == 0 || nowMillis - lastAddMillis >= safeIntervalMs) {
-            addFramePhoto(canvas, nowMillis);
-        }
-        removeFrameExtras();
         int width = canvas.getWidth();
         int height = canvas.getHeight();
+        if (activePhotos.size() == 0) {
+            addFramePhoto(canvas, nowMillis);
+        } else if (activePhotos.size() == 1) {
+            ActivePhoto current = activePhotos.get(0);
+            long displayDuration = frameDisplayDurationMillis(current.bitmap, width, height, safeIntervalMs);
+            if (nowMillis - current.bornMillis >= displayDuration) {
+                addFramePhoto(canvas, nowMillis);
+            }
+        }
+        removeFrameExtras();
         long transitionAge = activePhotos.size() > 1
                 ? nowMillis - activePhotos.get(activePhotos.size() - 1).bornMillis
                 : Long.MAX_VALUE;
         for (int i = 0; i < activePhotos.size(); i++) {
             ActivePhoto photo = activePhotos.get(i);
-            RectF frame = frameRectForBitmap(photo.bitmap, width, height, nowMillis, photo.layoutIndex);
+            long displayDuration = frameDisplayDurationMillis(photo.bitmap, width, height, safeIntervalMs);
+            RectF frame = frameRectForBitmap(photo.bitmap, width, height, nowMillis, photo.bornMillis, displayDuration);
             paint.setAlpha(activePhotos.size() == 1 ? 255 : alphaForFrameTransition(transitionAge, i == activePhotos.size() - 1));
             canvas.drawBitmap(photo.bitmap, null, frame, paint);
         }
@@ -260,17 +267,35 @@ public final class CollageEngine {
         return (int) Math.max(0, 255 - 255 * age / fade);
     }
 
-    private RectF frameRectForBitmap(Bitmap bitmap, int width, int height, long nowMillis, int index) {
+    private long frameDisplayDurationMillis(Bitmap bitmap, int width, int height, int intervalMs) {
+        RectF base = frameBaseRect(bitmap, width, height);
+        float horizontalScreens = base.width() / Math.max(1.0f, width);
+        float verticalScreens = base.height() / Math.max(1.0f, height);
+        float screens = Math.max(horizontalScreens, verticalScreens);
+        if (screens <= 1.01f) {
+            return intervalMs;
+        }
+        return Math.max(intervalMs, (long) (intervalMs * screens));
+    }
+
+    private RectF frameRectForBitmap(Bitmap bitmap, int width, int height, long nowMillis, long bornMillis, long displayDurationMs) {
+        RectF base = frameBaseRect(bitmap, width, height);
+        float drawWidth = base.width();
+        float drawHeight = base.height();
+        float maxX = Math.max(0.0f, drawWidth - width);
+        float maxY = Math.max(0.0f, drawHeight - height);
+        float progress = displayDurationMs <= 0L ? 1.0f : (nowMillis - bornMillis) / (float) displayDurationMs;
+        progress = Math.max(0.0f, Math.min(1.0f, progress));
+        float left = maxX >= maxY ? -maxX * progress : -maxX * 0.5f;
+        float top = maxY > maxX ? -maxY * progress : -maxY * 0.5f;
+        return new RectF(left, top, left + drawWidth, top + drawHeight);
+    }
+
+    private RectF frameBaseRect(Bitmap bitmap, int width, int height) {
         float scale = Math.max(width / (float) bitmap.getWidth(), height / (float) bitmap.getHeight());
         float drawWidth = bitmap.getWidth() * scale;
         float drawHeight = bitmap.getHeight() * scale;
-        float maxX = Math.max(0.0f, drawWidth - width);
-        float maxY = Math.max(0.0f, drawHeight - height);
-        float progress = ((nowMillis / 12000.0f) + (index * 0.37f)) % 1.0f;
-        float pingPong = progress < 0.5f ? progress * 2.0f : (1.0f - progress) * 2.0f;
-        float left = maxX > maxY ? -maxX * pingPong : -maxX * 0.5f;
-        float top = maxY >= maxX ? -maxY * pingPong : -maxY * 0.5f;
-        return new RectF(left, top, left + drawWidth, top + drawHeight);
+        return new RectF(0.0f, 0.0f, drawWidth, drawHeight);
     }
 
     private static final class ActivePhoto {

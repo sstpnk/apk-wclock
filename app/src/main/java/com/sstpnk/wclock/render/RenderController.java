@@ -71,6 +71,8 @@ public final class RenderController {
 
     private void refreshWeather(final SettingsRepository.Settings settings, final long now) {
         weatherRefreshRunning = true;
+        view.setWeatherStatus("\u0417\u0430\u043f\u0440\u043e\u0441 \u043f\u043e\u0433\u043e\u0434\u044b");
+        view.invalidate();
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
