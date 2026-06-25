@@ -66,6 +66,7 @@ public final class MainActivity extends Activity {
         SettingsRepository.Settings settings = settingsRepository.load();
         if (!weatherRepositorySignature.equals(weatherSignature(settings))) {
             resetRenderController(settings);
+            renderController.forceRefreshNow();
         }
         renderController.start();
     }

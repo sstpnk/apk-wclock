@@ -8,7 +8,7 @@ import com.sstpnk.wclock.weather.WeatherData;
 import com.sstpnk.wclock.weather.WeatherRepository;
 
 public final class RenderController {
-    private static final long FRAME_DELAY_MS = 1000L;
+    private static final long FRAME_DELAY_MS = 40L;
 
     private final ClockWeatherCollageView view;
     private final SettingsRepository settingsRepository;
@@ -47,6 +47,12 @@ public final class RenderController {
     public void stop() {
         running = false;
         handler.removeCallbacksAndMessages(null);
+    }
+
+    public void forceRefreshNow() {
+        final SettingsRepository.Settings settings = settingsRepository.load();
+        lastWeatherRefresh = System.currentTimeMillis();
+        refreshWeather(settings, lastWeatherRefresh);
     }
 
     private void updateViewState() {

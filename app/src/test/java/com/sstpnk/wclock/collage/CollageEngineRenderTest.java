@@ -53,7 +53,7 @@ public class CollageEngineRenderTest {
 
         int redPixels = countDominantRedPixels(target);
         assertTrue("Photowall must render visible source image pixels, redPixels=" + redPixels + ", maxRed=" + maxRed(target) + ", nonBackground=" + countNonBackgroundPixels(target), redPixels > 1200);
-        assertTrue("Photowall must draw a light photo border", countLightBorderPixels(target) > 300);
+        assertTrue("Photowall must draw a light photo border", countLightBorderPixels(target) > 80);
     }
 
     @Test

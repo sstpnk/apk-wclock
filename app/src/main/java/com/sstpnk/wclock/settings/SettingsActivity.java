@@ -18,6 +18,8 @@ import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.sstpnk.wclock.BuildConfig;
+
 public final class SettingsActivity extends Activity {
     private static final int LOCATION_CITY = 101;
     private static final int LOCATION_COORDINATES = 102;
@@ -71,6 +73,7 @@ public final class SettingsActivity extends Activity {
         scrollView.addView(root);
 
         root.addView(label("Настройки WClock", 28));
+        root.addView(label("Сборка " + BuildConfig.BUILD_NUMBER, 14));
 
         root.addView(section("Коллаж"));
         collageEnabled = checkbox("Включить коллаж", settings.collageEnabled);

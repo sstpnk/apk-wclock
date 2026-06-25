@@ -102,24 +102,21 @@ public final class CollageEngine {
             ActivePhoto photo = activePhotos.get(i);
             RectF frame = layout.frameForIndex(photo.layoutIndex, width, height, photo.bitmap.getWidth(), photo.bitmap.getHeight());
             applyEntrance(frame, photo, nowMillis, width);
-            float drift = (float) Math.sin((nowMillis / 120000.0) + i) * 12.0f;
-            frame.offset(drift, -drift * 0.5f);
             int alpha = alphaFor(photo, nowMillis, safeMax, safeIntervalMs);
             float border = Math.max(3.0f, Math.min(width, height) * 0.006f);
+            canvas.save();
+            canvas.rotate(rotationForPhoto(photo, nowMillis), frame.centerX(), frame.centerY());
             paint.setColor(0x70000000);
             paint.setAlpha(alpha);
             canvas.drawRect(frame.left + 8, frame.top + 8, frame.right + 8, frame.bottom + 8, paint);
-            paint.setColor(0xF0F4F1EA);
+            paint.setColor(0xFFF4F1EA);
             paint.setAlpha(alpha);
             canvas.drawRect(frame.left - border, frame.top - border, frame.right + border, frame.bottom + border, paint);
             paint.setColor(Color.WHITE);
             paint.setAlpha(alpha);
             canvas.drawBitmap(photo.bitmap, null, frame, paint);
-            int ageShade = Math.min(105, (int) ((nowMillis - photo.bornMillis) / Math.max(1, safeIntervalMs)) * 8);
-            paint.setColor(Color.BLACK);
-            paint.setAlpha(ageShade);
-            canvas.drawRect(frame, paint);
             paint.setAlpha(255);
+            canvas.restore();
         }
     }
 
@@ -156,6 +153,19 @@ public final class CollageEngine {
         float startLeft = fromLeft ? -frame.width() - 20.0f : screenWidth + 20.0f;
         float dx = (startLeft - frame.left) * (1.0f - progress);
         frame.offset(dx, 0.0f);
+    }
+
+    private float rotationForPhoto(ActivePhoto photo, long nowMillis) {
+        float finalRotation = layout.rotationForIndex(photo.layoutIndex);
+        long age = nowMillis - photo.bornMillis;
+        long duration = 1400L;
+        if (age >= duration) {
+            return finalRotation;
+        }
+        float progress = Math.max(0.0f, Math.min(1.0f, age / (float) duration));
+        progress = 1.0f - (1.0f - progress) * (1.0f - progress);
+        float startOffset = photo.layoutIndex % 2 == 0 ? -22.0f : 22.0f;
+        return finalRotation + startOffset * (1.0f - progress);
     }
 
     private void addNextIfNeeded(Canvas canvas, long nowMillis, int maxVisible, int intervalMs) {
@@ -230,12 +240,13 @@ public final class CollageEngine {
         long fadeIn = 900L;
         long maxAge = Math.max(intervalMs * 4L, intervalMs * (long) (maxVisible + 2));
         if (age < fadeIn) {
-            return (int) Math.max(220, 255 * age / fadeIn);
+            return (int) Math.max(180, 255 * age / fadeIn);
         }
-        long fadeStart = (long) (maxAge * 0.78f);
+        long fadeOut = Math.min(1800L, Math.max(900L, intervalMs * 2L));
+        long fadeStart = maxAge - fadeOut;
         if (age > fadeStart) {
-            long fadeSpan = Math.max(1, maxAge - fadeStart);
-            return (int) Math.max(0, 255 - 255 * (age - fadeStart) / fadeSpan);
+            long fadeAge = Math.max(0L, age - fadeStart);
+            return (int) Math.max(0, 255 - 255 * fadeAge / fadeOut);
         }
         return 255;
     }
@@ -250,12 +261,12 @@ public final class CollageEngine {
     }
 
     private RectF frameRectForBitmap(Bitmap bitmap, int width, int height, long nowMillis, int index) {
-        float scale = Math.max(width / (float) bitmap.getWidth(), height / (float) bitmap.getHeight()) * 1.08f;
+        float scale = Math.max(width / (float) bitmap.getWidth(), height / (float) bitmap.getHeight());
         float drawWidth = bitmap.getWidth() * scale;
         float drawHeight = bitmap.getHeight() * scale;
         float maxX = Math.max(0.0f, drawWidth - width);
         float maxY = Math.max(0.0f, drawHeight - height);
-        float progress = ((nowMillis / 18000.0f) + (index * 0.37f)) % 1.0f;
+        float progress = ((nowMillis / 12000.0f) + (index * 0.37f)) % 1.0f;
         float pingPong = progress < 0.5f ? progress * 2.0f : (1.0f - progress) * 2.0f;
         float left = maxX > maxY ? -maxX * pingPong : -maxX * 0.5f;
         float top = maxY >= maxX ? -maxY * pingPong : -maxY * 0.5f;

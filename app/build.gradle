@@ -2,6 +2,13 @@ plugins {
     id 'com.android.application'
 }
 
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
+def nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
+def buildNumber = nowUtc.format(DateTimeFormatter.ofPattern("yyMMddHHmm")).substring(1)
+
 android {
     namespace 'com.sstpnk.wclock'
     compileSdk 35
@@ -13,11 +20,16 @@ android {
         versionCode 1
         versionName '0.1.0-beta1'
         testInstrumentationRunner 'android.test.InstrumentationTestRunner'
+        buildConfigField 'String', 'BUILD_NUMBER', "\"${buildNumber}\""
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     testOptions {
