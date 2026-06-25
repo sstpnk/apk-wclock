@@ -37,6 +37,8 @@ public final class SettingsActivity extends Activity {
     private static final int REFRESH_720 = 406;
     private static final int MODE_PHOTOWALL = 501;
     private static final int MODE_FRAME = 502;
+    private static final int ORDER_RANDOM = 601;
+    private static final int ORDER_SEQUENTIAL = 602;
 
     private SettingsRepository repository;
     private SettingsRepository.Settings settings;
@@ -51,6 +53,7 @@ public final class SettingsActivity extends Activity {
     private CheckBox collageEnabled;
     private CheckBox showSeconds;
     private RadioGroup photoDisplayMode;
+    private RadioGroup photoOrderMode;
     private RadioGroup locationMode;
     private RadioGroup weatherProvider;
     private RadioGroup weatherIconStyle;
@@ -95,6 +98,13 @@ public final class SettingsActivity extends Activity {
         photoDisplayMode.addView(radio(MODE_FRAME, "Фоторамка"));
         photoDisplayMode.check("frame".equals(settings.photoDisplayMode) ? MODE_FRAME : MODE_PHOTOWALL);
         root.addView(photoDisplayMode);
+        root.addView(fieldLabel("Порядок выбора фотографий"));
+        photoOrderMode = new RadioGroup(this);
+        photoOrderMode.setOrientation(RadioGroup.HORIZONTAL);
+        photoOrderMode.addView(radio(ORDER_RANDOM, "Случайно"));
+        photoOrderMode.addView(radio(ORDER_SEQUENTIAL, "Последовательно"));
+        photoOrderMode.check("sequential".equals(settings.photoOrderMode) ? ORDER_SEQUENTIAL : ORDER_RANDOM);
+        root.addView(photoOrderMode);
         root.addView(fieldLabel("Количество фотографий на экране"));
         maxPhotos = edit("1-50", Integer.toString(settings.maxVisiblePhotos));
         root.addView(maxPhotos);
@@ -238,6 +248,7 @@ public final class SettingsActivity extends Activity {
     private void saveAndFinish() {
         settings.collageEnabled = collageEnabled.isChecked();
         settings.photoDisplayMode = photoDisplayMode.getCheckedRadioButtonId() == MODE_FRAME ? "frame" : "photowall";
+        settings.photoOrderMode = photoOrderMode.getCheckedRadioButtonId() == ORDER_SEQUENTIAL ? "sequential" : "random";
         settings.cityName = city.getText().toString();
         settings.latitude = parseDouble(latitude.getText().toString(), settings.latitude);
         settings.longitude = parseDouble(longitude.getText().toString(), settings.longitude);

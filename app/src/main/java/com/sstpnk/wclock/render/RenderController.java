@@ -8,7 +8,8 @@ import com.sstpnk.wclock.weather.WeatherData;
 import com.sstpnk.wclock.weather.WeatherRepository;
 
 public final class RenderController {
-    private static final long FRAME_DELAY_MS = 40L;
+    static final long FRAME_DELAY_MS = 33L;
+    private static final long WEATHER_STATUS_MIN_VISIBLE_MS = 1500L;
 
     private final ClockWeatherCollageView view;
     private final SettingsRepository settingsRepository;
@@ -58,7 +59,7 @@ public final class RenderController {
     private void updateViewState() {
         final SettingsRepository.Settings settings = settingsRepository.load();
         view.setPhotoSource(settings.photoFolderPath, settings.photoFolderUri);
-        view.setDisplaySettings(settings.collageEnabled, settings.photoDisplayMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.showSeconds, settings.weatherIconStyle);
+        view.setDisplaySettings(settings.collageEnabled, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.showSeconds, settings.weatherIconStyle);
         long now = System.currentTimeMillis();
         int intervalMillis = Math.max(1, settings.burnInMinMinutes) * 60 * 1000;
         int zoneIndex = (int) ((now / intervalMillis) % 6);
@@ -71,6 +72,7 @@ public final class RenderController {
 
     private void refreshWeather(final SettingsRepository.Settings settings, final long now) {
         weatherRefreshRunning = true;
+        final long statusShownAt = System.currentTimeMillis();
         view.setWeatherStatus("\u0417\u0430\u043f\u0440\u043e\u0441 \u043f\u043e\u0433\u043e\u0434\u044b");
         view.invalidate();
         Thread thread = new Thread(new Runnable() {
@@ -82,15 +84,30 @@ public final class RenderController {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        weatherRefreshRunning = false;
-                        view.setWeatherData(data);
-                        view.setWeatherStatus(data == null ? weatherRepository.lastError() : "");
-                        view.invalidate();
+                        long delay = weatherCompletionDelayMillis(statusShownAt, System.currentTimeMillis());
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                weatherRefreshRunning = false;
+                                view.setWeatherData(data);
+                                view.setWeatherStatus(weatherStatusAfterRefresh(data, weatherRepository.lastError()));
+                                view.invalidate();
+                            }
+                        }, delay);
                     }
                 });
             }
         }, "wclock-weather-refresh");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    static long weatherCompletionDelayMillis(long statusShownAtMillis, long nowMillis) {
+        long elapsed = Math.max(0L, nowMillis - statusShownAtMillis);
+        return Math.max(0L, WEATHER_STATUS_MIN_VISIBLE_MS - elapsed);
+    }
+
+    static String weatherStatusAfterRefresh(WeatherData data, String lastError) {
+        return data == null || data.stale ? lastError : "";
     }
 }

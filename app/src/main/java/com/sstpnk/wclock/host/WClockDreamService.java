@@ -5,6 +5,7 @@ import android.service.dreams.DreamService;
 import com.sstpnk.wclock.render.ClockWeatherCollageView;
 import com.sstpnk.wclock.render.RenderController;
 import com.sstpnk.wclock.settings.SettingsRepository;
+import com.sstpnk.wclock.util.CrashReporter;
 import com.sstpnk.wclock.util.NetworkClient;
 import com.sstpnk.wclock.weather.MetNorwayProvider;
 import com.sstpnk.wclock.weather.OpenMeteoProvider;
@@ -18,6 +19,7 @@ public final class WClockDreamService extends DreamService {
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
+        CrashReporter.install(this);
         setFullscreen(true);
         setScreenBright(false);
         ClockWeatherCollageView view = new ClockWeatherCollageView(this);

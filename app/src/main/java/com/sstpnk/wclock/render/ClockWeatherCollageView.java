@@ -32,6 +32,7 @@ public final class ClockWeatherCollageView extends View {
     private int burnInZoneIndex;
     private boolean collageEnabled = true;
     private String photoDisplayMode = "photowall";
+    private String photoOrderMode = "random";
     private int maxVisiblePhotos = 18;
     private int photoChangeSeconds = 20;
     private boolean showSeconds;
@@ -60,8 +61,13 @@ public final class ClockWeatherCollageView extends View {
     }
 
     public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle) {
+        setDisplaySettings(collageEnabled, photoDisplayMode, "random", maxVisiblePhotos, photoChangeSeconds, showSeconds, weatherIconStyle);
+    }
+
+    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle) {
         this.collageEnabled = collageEnabled;
         this.photoDisplayMode = "frame".equals(photoDisplayMode) ? "frame" : "photowall";
+        this.photoOrderMode = "sequential".equals(photoOrderMode) ? "sequential" : "random";
         this.maxVisiblePhotos = Math.max(1, Math.min(50, maxVisiblePhotos));
         this.photoChangeSeconds = Math.max(1, photoChangeSeconds);
         this.showSeconds = showSeconds;
@@ -80,7 +86,7 @@ public final class ClockWeatherCollageView extends View {
         int height = getHeight();
         long now = System.currentTimeMillis();
         collageEngine.setSource(collageEnabled ? photoFolderPath : "", collageEnabled ? photoFolderUri : "");
-        collageEngine.draw(canvas, now, collageEnabled, photoDisplayMode, maxVisiblePhotos, photoChangeSeconds);
+        collageEngine.draw(canvas, now, collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds);
 
         RectF clockPanel = clockPanel(width, height);
         drawPanel(canvas, clockPanel.left, clockPanel.top, clockPanel.right, clockPanel.bottom, 0x70000000);
@@ -261,7 +267,7 @@ public final class ClockWeatherCollageView extends View {
         if (text.length() == 0) {
             return;
         }
-        setText(dp(10), 0x554A4F55, false);
+        setText(dp(10), 0x887C838A, false);
         canvas.drawText(text, dp(18), height - dp(18), paint);
     }
 

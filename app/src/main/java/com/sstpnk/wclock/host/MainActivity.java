@@ -18,6 +18,7 @@ import com.sstpnk.wclock.render.ClockWeatherCollageView;
 import com.sstpnk.wclock.render.RenderController;
 import com.sstpnk.wclock.settings.SettingsActivity;
 import com.sstpnk.wclock.settings.SettingsRepository;
+import com.sstpnk.wclock.util.CrashReporter;
 import com.sstpnk.wclock.util.NetworkClient;
 import com.sstpnk.wclock.weather.MetNorwayProvider;
 import com.sstpnk.wclock.weather.OpenMeteoProvider;
@@ -36,6 +37,7 @@ public final class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CrashReporter.install(this);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -119,7 +121,13 @@ public final class MainActivity extends Activity {
     }
 
     private String weatherSignature(SettingsRepository.Settings settings) {
-        return settings.weatherProvider + "|" + settings.weatherApiKey + "|" + settings.openWeatherApiKey;
+        return settings.weatherProvider
+                + "|" + settings.weatherApiKey
+                + "|" + settings.openWeatherApiKey
+                + "|" + settings.cityName
+                + "|" + settings.latitude
+                + "|" + settings.longitude
+                + "|" + settings.weatherRefreshMinutes;
     }
 
     private void openSettings() {

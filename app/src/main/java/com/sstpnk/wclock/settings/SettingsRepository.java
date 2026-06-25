@@ -23,6 +23,7 @@ public final class SettingsRepository {
         settings.weatherRefreshMinutes = prefs.getInt("weatherRefreshMinutes", defaults.weatherRefreshMinutes);
         settings.collageEnabled = prefs.getBoolean("collageEnabled", defaults.collageEnabled);
         settings.photoDisplayMode = prefs.getString("photoDisplayMode", defaults.photoDisplayMode);
+        settings.photoOrderMode = prefs.getString("photoOrderMode", defaults.photoOrderMode);
         settings.maxVisiblePhotos = prefs.getInt("maxVisiblePhotos", defaults.maxVisiblePhotos);
         settings.photoChangeSeconds = prefs.getInt("photoChangeSeconds", defaults.photoChangeSeconds);
         settings.locationMode = prefs.getString("locationMode", defaults.locationMode);
@@ -52,6 +53,7 @@ public final class SettingsRepository {
                 .putInt("weatherRefreshMinutes", safe.weatherRefreshMinutes)
                 .putBoolean("collageEnabled", safe.collageEnabled)
                 .putString("photoDisplayMode", safe.photoDisplayMode)
+                .putString("photoOrderMode", safe.photoOrderMode)
                 .putInt("maxVisiblePhotos", safe.maxVisiblePhotos)
                 .putInt("photoChangeSeconds", safe.photoChangeSeconds)
                 .putString("locationMode", safe.locationMode)
@@ -103,6 +105,7 @@ public final class SettingsRepository {
         public int weatherRefreshMinutes;
         public boolean collageEnabled;
         public String photoDisplayMode;
+        public String photoOrderMode;
         public int maxVisiblePhotos;
         public int photoChangeSeconds;
         public String locationMode;
@@ -129,6 +132,7 @@ public final class SettingsRepository {
             settings.weatherRefreshMinutes = 30;
             settings.collageEnabled = true;
             settings.photoDisplayMode = "photowall";
+            settings.photoOrderMode = "random";
             settings.maxVisiblePhotos = 18;
             settings.photoChangeSeconds = 5;
             settings.locationMode = "coordinates";
@@ -157,6 +161,7 @@ public final class SettingsRepository {
             safe.weatherRefreshMinutes = clampInt(weatherRefreshMinutes, 15, 720);
             safe.collageEnabled = collageEnabled;
             safe.photoDisplayMode = normalizePhotoDisplayMode(photoDisplayMode);
+            safe.photoOrderMode = normalizePhotoOrderMode(photoOrderMode);
             safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);
             safe.photoChangeSeconds = clampInt(photoChangeSeconds, 1, 60);
             safe.locationMode = normalizeLocationMode(locationMode);
@@ -207,6 +212,17 @@ public final class SettingsRepository {
             return value;
         }
         return "photowall";
+    }
+
+    private static String normalizePhotoOrderMode(String mode) {
+        if (mode == null) {
+            return "random";
+        }
+        String value = mode.trim().toLowerCase();
+        if ("sequential".equals(value)) {
+            return value;
+        }
+        return "random";
     }
 
     private static String normalizeIconStyle(String style) {

@@ -17,6 +17,8 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.lang.reflect.Method;
 
 import static org.junit.Assert.assertEquals;
@@ -114,11 +116,36 @@ public class CollageEngineRenderTest {
         assertTrue("Pan ends after moving to the right edge of the oversized bitmap", end.left < -590.0f);
     }
 
+    @Test
+    public void sequentialOrderDecodesPhotosByScannedOrder() throws Exception {
+        File folder = createImageFolder("sequential-order", Color.rgb(230, 40, 40));
+        createImageFile(folder, "a-second.png", Color.rgb(40, 220, 70));
+        RecordingBitmapDecoder decoder = new RecordingBitmapDecoder();
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                decoder);
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 10, 1);
+        engine.draw(canvas, 2500L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 10, 1);
+
+        assertEquals("a-second.png", decoder.names.get(0));
+        assertEquals("source.png", decoder.names.get(1));
+    }
+
     private File createImageFolder(String name, int color) throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         File folder = new File(context.getCacheDir(), name + "-" + System.nanoTime());
         assertTrue(folder.mkdirs());
         File image = new File(folder, "source.png");
+        createImageFile(folder, image.getName(), color);
+        return folder;
+    }
+
+    private void createImageFile(File folder, String name, int color) throws Exception {
+        File image = new File(folder, name);
         Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         canvas.drawColor(color);
@@ -129,7 +156,6 @@ public class CollageEngineRenderTest {
             output.close();
             bitmap.recycle();
         }
-        return folder;
     }
 
     private static final class SolidBitmapDecoder implements BitmapDecoder {
@@ -167,6 +193,19 @@ public class CollageEngineRenderTest {
             Bitmap bitmap = Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
             canvas.drawColor(Color.rgb(40, 120, 220));
+            return bitmap;
+        }
+    }
+
+    private static final class RecordingBitmapDecoder implements BitmapDecoder {
+        final List<String> names = new ArrayList<String>();
+
+        @Override
+        public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
+            names.add(item.name);
+            Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawColor(Color.rgb(230, 40, 40));
             return bitmap;
         }
     }

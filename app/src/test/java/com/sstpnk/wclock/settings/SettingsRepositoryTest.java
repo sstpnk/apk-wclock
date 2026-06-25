@@ -16,6 +16,7 @@ public class SettingsRepositoryTest {
         assertEquals(30, settings.weatherRefreshMinutes);
         assertTrue(settings.collageEnabled);
         assertEquals("photowall", settings.photoDisplayMode);
+        assertEquals("random", settings.photoOrderMode);
         assertEquals(18, settings.maxVisiblePhotos);
         assertEquals(5, settings.photoChangeSeconds);
         assertEquals("coordinates", settings.locationMode);
@@ -33,5 +34,19 @@ public class SettingsRepositoryTest {
         assertTrue(SettingsRepository.isValidLongitude(37.61));
         assertTrue(!SettingsRepository.isValidLatitude(120.0));
         assertTrue(!SettingsRepository.isValidLongitude(220.0));
+    }
+
+    @Test
+    public void photoOrderModeAcceptsOnlySequentialOtherwiseRandom() {
+        SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
+
+        settings.photoOrderMode = "sequential";
+        assertEquals("sequential", settings.normalized().photoOrderMode);
+
+        settings.photoOrderMode = "unknown";
+        assertEquals("random", settings.normalized().photoOrderMode);
+
+        settings.photoOrderMode = null;
+        assertEquals("random", settings.normalized().photoOrderMode);
     }
 }

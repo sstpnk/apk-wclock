@@ -12,16 +12,20 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 public final class CollageEngine {
     public static final String MODE_FRAME = "frame";
     public static final String MODE_PHOTOWALL = "photowall";
+    public static final String ORDER_RANDOM = "random";
+    public static final String ORDER_SEQUENTIAL = "sequential";
 
     private final PhotoScanner scanner = new PhotoScanner();
     private final BitmapDecoder loader;
     private final CollageLayout layout = new CollageLayout();
     private final ContentResolver resolver;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+    private final Random random = new Random();
     private final List<PhotoItem> photos = new ArrayList<PhotoItem>();
     private final List<ActivePhoto> activePhotos = new ArrayList<ActivePhoto>();
     private String loadedPath = "";
@@ -57,15 +61,19 @@ public final class CollageEngine {
     }
 
     public void draw(Canvas canvas, long nowMillis, boolean enabled, String mode, int maxVisible, int changeSeconds) {
+        draw(canvas, nowMillis, enabled, mode, ORDER_RANDOM, maxVisible, changeSeconds);
+    }
+
+    public void draw(Canvas canvas, long nowMillis, boolean enabled, String mode, String orderMode, int maxVisible, int changeSeconds) {
         canvas.drawColor(Color.rgb(12, 14, 16));
         if (!enabled || photos.size() == 0) {
             return;
         }
         if (MODE_FRAME.equals(mode)) {
-            drawFrameMode(canvas, nowMillis, changeSeconds);
+            drawFrameMode(canvas, nowMillis, orderMode, changeSeconds);
             return;
         }
-        drawPhotoWall(canvas, nowMillis, maxVisible, changeSeconds);
+        drawPhotoWall(canvas, nowMillis, orderMode, maxVisible, changeSeconds);
     }
 
     public void recycle() {
@@ -91,10 +99,10 @@ public final class CollageEngine {
         return activePhotos.size();
     }
 
-    private void drawPhotoWall(Canvas canvas, long nowMillis, int maxVisible, int changeSeconds) {
+    private void drawPhotoWall(Canvas canvas, long nowMillis, String orderMode, int maxVisible, int changeSeconds) {
         int safeMax = Math.max(1, Math.min(50, maxVisible));
         int safeIntervalMs = Math.max(1, changeSeconds) * 1000;
-        addNextIfNeeded(canvas, nowMillis, safeMax, safeIntervalMs);
+        addNextIfNeeded(canvas, nowMillis, orderMode, safeMax, safeIntervalMs);
         removeExpired(nowMillis, safeMax, safeIntervalMs);
         int width = canvas.getWidth();
         int height = canvas.getHeight();
@@ -120,17 +128,17 @@ public final class CollageEngine {
         }
     }
 
-    private void drawFrameMode(Canvas canvas, long nowMillis, int changeSeconds) {
+    private void drawFrameMode(Canvas canvas, long nowMillis, String orderMode, int changeSeconds) {
         int safeIntervalMs = Math.max(1, changeSeconds) * 1000;
         int width = canvas.getWidth();
         int height = canvas.getHeight();
         if (activePhotos.size() == 0) {
-            addFramePhoto(canvas, nowMillis);
+            addFramePhoto(canvas, nowMillis, orderMode);
         } else if (activePhotos.size() == 1) {
             ActivePhoto current = activePhotos.get(0);
             long displayDuration = frameDisplayDurationMillis(current.bitmap, width, height, safeIntervalMs);
             if (nowMillis - current.bornMillis >= displayDuration) {
-                addFramePhoto(canvas, nowMillis);
+                addFramePhoto(canvas, nowMillis, orderMode);
             }
         }
         removeFrameExtras();
@@ -175,31 +183,32 @@ public final class CollageEngine {
         return finalRotation + startOffset * (1.0f - progress);
     }
 
-    private void addNextIfNeeded(Canvas canvas, long nowMillis, int maxVisible, int intervalMs) {
+    private void addNextIfNeeded(Canvas canvas, long nowMillis, String orderMode, int maxVisible, int intervalMs) {
         if (activePhotos.size() >= maxVisible) {
             return;
         }
         if (lastAddMillis != 0 && nowMillis - lastAddMillis < intervalMs) {
             return;
         }
-        ActivePhoto photo = decodeNext(canvas, nowMillis);
+        ActivePhoto photo = decodeNext(canvas, nowMillis, orderMode);
         if (photo != null) {
             activePhotos.add(photo);
             lastAddMillis = nowMillis;
         }
     }
 
-    private void addFramePhoto(Canvas canvas, long nowMillis) {
-        ActivePhoto photo = decodeNext(canvas, nowMillis);
+    private void addFramePhoto(Canvas canvas, long nowMillis, String orderMode) {
+        ActivePhoto photo = decodeNext(canvas, nowMillis, orderMode);
         if (photo != null) {
             activePhotos.add(photo);
             lastAddMillis = nowMillis;
         }
     }
 
-    private ActivePhoto decodeNext(Canvas canvas, long nowMillis) {
+    private ActivePhoto decodeNext(Canvas canvas, long nowMillis, String orderMode) {
         for (int attempts = 0; attempts < photos.size(); attempts++) {
-            PhotoItem item = photos.get(nextPhotoIndex % photos.size());
+            int photoIndex = nextPhotoIndex(orderMode);
+            PhotoItem item = photos.get(photoIndex);
             int layoutIndex = nextPhotoIndex;
             nextPhotoIndex++;
             Bitmap bitmap = loader.decode(item, resolver, Math.max(320, canvas.getWidth()), Math.max(320, canvas.getHeight()));
@@ -208,6 +217,13 @@ public final class CollageEngine {
             }
         }
         return null;
+    }
+
+    private int nextPhotoIndex(String orderMode) {
+        if (ORDER_SEQUENTIAL.equals(orderMode)) {
+            return nextPhotoIndex % photos.size();
+        }
+        return random.nextInt(photos.size());
     }
 
     private void removeExpired(long nowMillis, int maxVisible, int intervalMs) {

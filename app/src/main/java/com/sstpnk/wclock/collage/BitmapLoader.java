@@ -1,8 +1,11 @@
 package com.sstpnk.wclock.collage;
 
 import android.content.ContentResolver;
+import android.os.Build;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,7 +43,8 @@ public final class BitmapLoader implements BitmapDecoder {
             options.inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, maxWidth, maxHeight);
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             bitmapStream = new FileInputStream(file);
-            return BitmapFactory.decodeStream(bitmapStream, null, options);
+            Bitmap bitmap = BitmapFactory.decodeStream(bitmapStream, null, options);
+            return rotateForOrientation(bitmap, readFileOrientation(file));
         } catch (Exception e) {
             return null;
         } finally {
@@ -66,7 +70,8 @@ public final class BitmapLoader implements BitmapDecoder {
             options.inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, maxWidth, maxHeight);
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             bitmapStream = resolver.openInputStream(item.uri);
-            return BitmapFactory.decodeStream(bitmapStream, null, options);
+            Bitmap bitmap = BitmapFactory.decodeStream(bitmapStream, null, options);
+            return rotateForOrientation(bitmap, readUriOrientation(item, resolver));
         } catch (Exception e) {
             return null;
         } finally {
@@ -83,6 +88,50 @@ public final class BitmapLoader implements BitmapDecoder {
             stream.close();
         } catch (Exception ignored) {
         }
+    }
+
+    private int readFileOrientation(File file) {
+        try {
+            return new ExifInterface(file.getAbsolutePath()).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        } catch (Exception e) {
+            return ExifInterface.ORIENTATION_NORMAL;
+        }
+    }
+
+    private int readUriOrientation(PhotoItem item, ContentResolver resolver) {
+        if (Build.VERSION.SDK_INT < 24 || item == null || item.uri == null) {
+            return ExifInterface.ORIENTATION_NORMAL;
+        }
+        InputStream stream = null;
+        try {
+            stream = resolver.openInputStream(item.uri);
+            return new ExifInterface(stream).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        } catch (Exception e) {
+            return ExifInterface.ORIENTATION_NORMAL;
+        } finally {
+            closeQuietly(stream);
+        }
+    }
+
+    Bitmap rotateForOrientation(Bitmap bitmap, int orientation) {
+        if (bitmap == null || orientation == ExifInterface.ORIENTATION_NORMAL || orientation == ExifInterface.ORIENTATION_UNDEFINED) {
+            return bitmap;
+        }
+        Matrix matrix = new Matrix();
+        if (orientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            matrix.postRotate(90.0f);
+        } else if (orientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            matrix.postRotate(180.0f);
+        } else if (orientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            matrix.postRotate(270.0f);
+        } else {
+            return bitmap;
+        }
+        Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        if (rotated != bitmap) {
+            bitmap.recycle();
+        }
+        return rotated;
     }
 
     int sampleSize(int sourceWidth, int sourceHeight, int maxWidth, int maxHeight) {
