@@ -287,7 +287,16 @@ public final class ClockWeatherCollageView extends View {
             return "";
         }
         if (status.indexOf("failed") >= 0 || status.indexOf("Failed") >= 0 || status.indexOf("timeout") >= 0 || status.indexOf("Exception") >= 0) {
-            return "\u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438 \u043f\u043e\u0433\u043e\u0434\u044b";
+            String detail = status
+                    .replace("Weather failed:", "")
+                    .replace("Primary failed:", "")
+                    .trim();
+            if (detail.length() > 96) {
+                detail = detail.substring(0, 96);
+            }
+            return detail.length() == 0
+                    ? "\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b"
+                    : "\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b: " + detail;
         }
         return status;
     }

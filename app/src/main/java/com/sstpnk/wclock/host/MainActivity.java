@@ -25,6 +25,7 @@ import com.sstpnk.wclock.weather.OpenMeteoProvider;
 import com.sstpnk.wclock.weather.OpenWeatherProvider;
 import com.sstpnk.wclock.weather.WeatherApiProvider;
 import com.sstpnk.wclock.weather.WeatherRepository;
+import com.sstpnk.wclock.weather.WttrInProvider;
 
 import java.util.Calendar;
 
@@ -101,15 +102,15 @@ public final class MainActivity extends Activity {
     private WeatherRepository createWeatherRepository(SettingsRepository.Settings settings) {
         NetworkClient networkClient = new NetworkClient("WClock/0.1 contact: github.com/sstpnk/apk-wclock", 10000);
         if ("met-norway".equals(settings.weatherProvider)) {
-            return new WeatherRepository(networkClient, new MetNorwayProvider(), new OpenMeteoProvider());
+            return new WeatherRepository(networkClient, new MetNorwayProvider(), new OpenMeteoProvider(), new WttrInProvider());
         }
         if ("weatherapi".equals(settings.weatherProvider)) {
-            return new WeatherRepository(networkClient, new WeatherApiProvider(settings.weatherApiKey), new OpenMeteoProvider());
+            return new WeatherRepository(networkClient, new WeatherApiProvider(settings.weatherApiKey), new OpenMeteoProvider(), new WttrInProvider());
         }
         if ("openweather".equals(settings.weatherProvider)) {
-            return new WeatherRepository(networkClient, new OpenWeatherProvider(settings.openWeatherApiKey), new OpenMeteoProvider());
+            return new WeatherRepository(networkClient, new OpenWeatherProvider(settings.openWeatherApiKey), new OpenMeteoProvider(), new WttrInProvider());
         }
-        return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider());
+        return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider(), new WttrInProvider());
     }
 
     private void resetRenderController(SettingsRepository.Settings settings) {

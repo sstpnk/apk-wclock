@@ -100,7 +100,7 @@ public final class CollageEngine {
     }
 
     private void drawPhotoWall(Canvas canvas, long nowMillis, String orderMode, int maxVisible, int changeSeconds) {
-        int safeMax = Math.max(1, Math.min(50, maxVisible));
+        int safeMax = maxVisibleForMemory(Math.max(1, Math.min(50, maxVisible)), Runtime.getRuntime().maxMemory());
         int safeIntervalMs = Math.max(1, changeSeconds) * 1000;
         addNextIfNeeded(canvas, nowMillis, orderMode, safeMax, safeIntervalMs);
         removeExpired(nowMillis, safeMax, safeIntervalMs);
@@ -211,12 +211,34 @@ public final class CollageEngine {
             PhotoItem item = photos.get(photoIndex);
             int layoutIndex = nextPhotoIndex;
             nextPhotoIndex++;
-            Bitmap bitmap = loader.decode(item, resolver, Math.max(320, canvas.getWidth()), Math.max(320, canvas.getHeight()));
+            Bitmap bitmap = null;
+            try {
+                bitmap = loader.decode(item, resolver, decodeMaxWidth(canvas), decodeMaxHeight(canvas));
+            } catch (OutOfMemoryError ignored) {
+            }
             if (bitmap != null) {
                 return new ActivePhoto(bitmap, nowMillis, layoutIndex);
             }
         }
         return null;
+    }
+
+    private int decodeMaxWidth(Canvas canvas) {
+        return Math.max(320, Math.min(canvas.getWidth(), 960));
+    }
+
+    private int decodeMaxHeight(Canvas canvas) {
+        return Math.max(320, Math.min(canvas.getHeight(), 720));
+    }
+
+    static int maxVisibleForMemory(int requested, long maxMemoryBytes) {
+        if (maxMemoryBytes <= 64L * 1024L * 1024L) {
+            return Math.min(requested, 8);
+        }
+        if (maxMemoryBytes <= 128L * 1024L * 1024L) {
+            return Math.min(requested, 12);
+        }
+        return requested;
     }
 
     private int nextPhotoIndex(String orderMode) {

@@ -2,20 +2,29 @@ package com.sstpnk.wclock.weather;
 
 import com.sstpnk.wclock.util.NetworkClient;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class WeatherRepository {
     private final NetworkClient networkClient;
-    private final WeatherProvider primary;
-    private final WeatherProvider fallback;
+    private final List<WeatherProvider> providers = new ArrayList<WeatherProvider>();
     private WeatherData lastSuccessful;
     private String lastError = "";
     private static WeatherData cachedData;
     private static String cachedKey = "";
     private static long cachedAtMillis;
 
-    public WeatherRepository(NetworkClient networkClient, WeatherProvider primary, WeatherProvider fallback) {
+    public WeatherRepository(NetworkClient networkClient, WeatherProvider primary, WeatherProvider fallback, WeatherProvider... extraFallbacks) {
         this.networkClient = networkClient;
-        this.primary = primary;
-        this.fallback = fallback;
+        this.providers.add(primary);
+        this.providers.add(fallback);
+        if (extraFallbacks != null) {
+            for (WeatherProvider provider : extraFallbacks) {
+                if (provider != null) {
+                    this.providers.add(provider);
+                }
+            }
+        }
     }
 
     public WeatherData refresh(String cityName, double latitude, double longitude, long nowMillis) {
@@ -50,22 +59,23 @@ public final class WeatherRepository {
     }
 
     private WeatherData tryProviders(String cityName, double latitude, double longitude, long nowMillis, boolean fetchNetwork) {
-        try {
-            WeatherData data = fetch(primary, cityName, latitude, longitude, nowMillis, fetchNetwork);
-            lastSuccessful = data;
-            lastError = "";
-            return data;
-        } catch (Exception primaryError) {
+        StringBuilder errors = new StringBuilder();
+        for (int i = 0; i < providers.size(); i++) {
+            WeatherProvider provider = providers.get(i);
             try {
-                WeatherData data = fetch(fallback, cityName, latitude, longitude, nowMillis, fetchNetwork);
+                WeatherData data = fetch(provider, cityName, latitude, longitude, nowMillis, fetchNetwork);
                 lastSuccessful = data;
-                lastError = "Primary failed: " + primaryError.getMessage();
+                lastError = i == 0 ? "" : errors.toString();
                 return data;
-            } catch (Exception fallbackError) {
-                lastError = "Weather failed: " + primaryError.getMessage() + "; fallback: " + fallbackError.getMessage();
-                return staleCopy(lastSuccessful);
+            } catch (Exception error) {
+                if (errors.length() > 0) {
+                    errors.append("; ");
+                }
+                errors.append(provider.name()).append(": ").append(error.getMessage());
             }
         }
+        lastError = "Weather failed: " + errors.toString();
+        return staleCopy(lastSuccessful);
     }
 
     private WeatherData fetch(WeatherProvider provider, String cityName, double latitude, double longitude, long nowMillis, boolean fetchNetwork) throws Exception {

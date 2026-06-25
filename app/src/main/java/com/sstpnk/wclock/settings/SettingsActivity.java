@@ -19,6 +19,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.sstpnk.wclock.BuildConfig;
+import com.sstpnk.wclock.util.CrashReporter;
 
 public final class SettingsActivity extends Activity {
     private static final int LOCATION_CITY = 101;
@@ -77,6 +78,7 @@ public final class SettingsActivity extends Activity {
 
         root.addView(label("Настройки WClock", 28));
         root.addView(label("Сборка " + BuildConfig.BUILD_NUMBER, 14));
+        root.addView(label("Лог последнего краша: " + CrashReporter.latestCrashLog(this).getAbsolutePath(), 12));
 
         root.addView(section("Коллаж"));
         collageEnabled = checkbox("Включить коллаж", settings.collageEnabled);

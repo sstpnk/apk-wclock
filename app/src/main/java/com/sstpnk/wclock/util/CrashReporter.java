@@ -37,7 +37,7 @@ public final class CrashReporter {
     static void write(Context context, Thread thread, Throwable throwable) {
         PrintWriter writer = null;
         try {
-            File file = new File(context.getFilesDir(), FILE_NAME);
+            File file = latestCrashLog(context);
             writer = new PrintWriter(new FileWriter(file, false));
             writer.println("WClock crash");
             writer.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US).format(new Date()));
@@ -51,5 +51,13 @@ public final class CrashReporter {
                 writer.close();
             }
         }
+    }
+
+    public static File latestCrashLog(Context context) {
+        File external = context.getExternalFilesDir(null);
+        if (external != null) {
+            return new File(external, FILE_NAME);
+        }
+        return new File(context.getFilesDir(), FILE_NAME);
     }
 }

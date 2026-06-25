@@ -135,6 +135,28 @@ public class CollageEngineRenderTest {
         assertEquals("source.png", decoder.names.get(1));
     }
 
+    @Test
+    public void decodeFailureDoesNotCrashPhotoWall() throws Exception {
+        File folder = createImageFolder("oom-safe", Color.rgb(230, 40, 40));
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                new FailingBitmapDecoder());
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
+
+        assertEquals(0, engine.activePhotoCountForTest());
+    }
+
+    @Test
+    public void lowMemoryDevicesUseSmallerPhotoWallLimit() {
+        assertEquals(8, CollageEngine.maxVisibleForMemory(18, 48L * 1024L * 1024L));
+        assertEquals(12, CollageEngine.maxVisibleForMemory(18, 96L * 1024L * 1024L));
+        assertEquals(18, CollageEngine.maxVisibleForMemory(18, 192L * 1024L * 1024L));
+    }
+
     private File createImageFolder(String name, int color) throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         File folder = new File(context.getCacheDir(), name + "-" + System.nanoTime());
@@ -207,6 +229,13 @@ public class CollageEngineRenderTest {
             Canvas canvas = new Canvas(bitmap);
             canvas.drawColor(Color.rgb(230, 40, 40));
             return bitmap;
+        }
+    }
+
+    private static final class FailingBitmapDecoder implements BitmapDecoder {
+        @Override
+        public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
+            throw new OutOfMemoryError("test bitmap pressure");
         }
     }
 

@@ -43,6 +43,6 @@ public class ClockWeatherCollageViewTest {
         view.setWeatherStatus("\u0417\u0430\u043f\u0440\u043e\u0441 \u043f\u043e\u0433\u043e\u0434\u044b");
 
         assertEquals("\u0417\u0430\u043f\u0440\u043e\u0441 \u043f\u043e\u0433\u043e\u0434\u044b", visibleStatus.invoke(view, System.currentTimeMillis()));
-        assertEquals("\u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438 \u043f\u043e\u0433\u043e\u0434\u044b", friendlyStatus.invoke(view, "Weather failed: timeout"));
+        assertEquals("\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b: timeout", friendlyStatus.invoke(view, "Weather failed: timeout"));
     }
 }

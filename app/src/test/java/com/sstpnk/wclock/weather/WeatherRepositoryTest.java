@@ -17,6 +17,19 @@ public class WeatherRepositoryTest {
         assertEquals(2.0, data.temperatureC, 0.01);
     }
 
+    @Test
+    public void usesSecondFallbackWhenHttpsProvidersFail() {
+        WeatherProvider failingPrimary = new FakeProvider("primary", true, 1.0);
+        WeatherProvider failingFallback = new FakeProvider("fallback", true, 2.0);
+        WeatherProvider httpFallback = new FakeProvider("http", false, 3.0);
+        WeatherRepository repository = new WeatherRepository(null, failingPrimary, failingFallback, httpFallback);
+
+        WeatherData data = repository.refreshForTest("РњРѕСЃРєРІР°", 55.7, 37.6, 1000L);
+
+        assertEquals("http", data.providerName);
+        assertEquals(3.0, data.temperatureC, 0.01);
+    }
+
     private static final class FakeProvider implements WeatherProvider {
         private final String name;
         private final boolean fail;
