@@ -6,6 +6,11 @@ import static org.junit.Assert.assertEquals;
 
 public class WttrInProviderTest {
     @Test
+    public void buildUrlUsesEncodedCoordinateSeparator() {
+        assertEquals("http://wttr.in/55.75580%2C37.61730?format=j1", new WttrInProvider().buildUrl(55.7558, 37.6173));
+    }
+
+    @Test
     public void parsesCurrentAndForecastFromHttpFallbackJson() throws Exception {
         String json = "{"
                 + "\"current_condition\":[{\"temp_C\":\"14\",\"FeelsLikeC\":\"12\",\"weatherCode\":\"116\",\"precipMM\":\"0.1\",\"windspeedKmph\":\"8\",\"winddirDegree\":\"270\",\"humidity\":\"70\",\"pressure\":\"1012\"}],"

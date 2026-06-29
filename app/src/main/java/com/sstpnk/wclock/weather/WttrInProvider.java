@@ -15,7 +15,7 @@ public final class WttrInProvider implements WeatherProvider {
 
     @Override
     public String buildUrl(double latitude, double longitude) {
-        return String.format(Locale.US, "http://wttr.in/%.5f,%.5f?format=j1", latitude, longitude);
+        return String.format(Locale.US, "http://wttr.in/%.5f%%2C%.5f?format=j1", latitude, longitude);
     }
 
     @Override

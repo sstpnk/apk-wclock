@@ -44,6 +44,16 @@ public class WeatherRepositoryTest {
         assertEquals("primary: fail; fallback: fail; http: fail", repository.lastDiagnostics());
     }
 
+    @Test
+    public void diagnosticsIncludeExceptionClassWhenMessageIsEmpty() {
+        WeatherProvider emptyMessage = new EmptyMessageProvider();
+        WeatherRepository repository = new WeatherRepository(null, emptyMessage, new FakeProvider("fallback", false, 2.0));
+
+        repository.refreshForTest("РњРѕСЃРєРІР°", 55.7, 37.6, 1000L);
+
+        assertEquals("empty: RuntimeException; fallback: OK", repository.lastDiagnostics());
+    }
+
     private static final class FakeProvider implements WeatherProvider {
         private final String name;
         private final boolean fail;
@@ -68,6 +78,20 @@ public class WeatherRepositoryTest {
                 throw new RuntimeException("fail");
             }
             return new WeatherData(name, cityName, updatedAtMillis, false, temp, temp, 0, "Ясно", 0.0, 0.0, 0, java.util.Collections.<ForecastDay>emptyList());
+        }
+    }
+
+    private static final class EmptyMessageProvider implements WeatherProvider {
+        public String name() {
+            return "empty";
+        }
+
+        public String buildUrl(double latitude, double longitude) {
+            return "memory://empty";
+        }
+
+        public WeatherData parse(String cityName, String body, long updatedAtMillis) {
+            throw new RuntimeException();
         }
     }
 }

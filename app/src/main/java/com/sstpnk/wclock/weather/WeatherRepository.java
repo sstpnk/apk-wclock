@@ -81,11 +81,11 @@ public final class WeatherRepository {
                 rememberDiagnostics(diagnostics.toString());
                 return data;
             } catch (Exception error) {
-                appendDiagnostic(diagnostics, provider.name(), error.getMessage());
+                appendDiagnostic(diagnostics, provider.name(), errorText(error));
                 if (errors.length() > 0) {
                     errors.append("; ");
                 }
-                errors.append(provider.name()).append(": ").append(error.getMessage());
+                errors.append(provider.name()).append(": ").append(errorText(error));
             }
         }
         lastError = "Weather failed: " + errors.toString();
@@ -103,6 +103,17 @@ public final class WeatherRepository {
             builder.append("; ");
         }
         builder.append(providerName).append(": ").append(result == null || result.length() == 0 ? "error" : result);
+    }
+
+    private static String errorText(Exception error) {
+        if (error == null) {
+            return "error";
+        }
+        String message = error.getMessage();
+        if (message != null && message.trim().length() > 0) {
+            return message.trim();
+        }
+        return error.getClass().getSimpleName();
     }
 
     private WeatherData fetch(WeatherProvider provider, String cityName, double latitude, double longitude, long nowMillis, boolean fetchNetwork) throws Exception {
