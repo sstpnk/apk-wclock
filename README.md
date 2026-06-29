@@ -50,6 +50,25 @@ Debug APK output:
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
+Release APK output:
+
+```powershell
+.\gradlew.bat testDebugUnitTest assembleRelease
+```
+
+```text
+app/build/outputs/apk/release/app-release.apk
+```
+
+To create a signed release APK, keep `release-signing.properties` outside git:
+
+```properties
+release.storeFile=C:\\path\\to\\wclock-release.jks
+release.storePassword=...
+release.keyAlias=wclock
+release.keyPassword=...
+```
+
 Each build exposes a UTC build number in settings. Format: last digit of year, month, day, hour, minute. Example: `606250947`.
 
 ## Project Layout

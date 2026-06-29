@@ -4,7 +4,7 @@ Target: `v0.1.0`
 
 ## Before Publishing
 
-- Run `.\gradlew.bat testDebugUnitTest assembleDebug`.
+- Run `.\gradlew.bat testDebugUnitTest assembleDebug assembleRelease`.
 - Install the APK on:
   - Android 4.4 tablet or emulator.
   - Modern Android phone.
@@ -18,7 +18,7 @@ Target: `v0.1.0`
   - Weather provider change shows `Запрос погоды` at the bottom and refreshes data.
   - Weather failure shows a short user-facing error for about one minute.
   - Brightness schedule applies without Google Play Services.
-- Decide whether to publish a debug APK, unsigned release APK, or signed release APK.
+- Publish a signed release APK.
 - Create a Git tag only when the public release is approved.
 - Create GitHub Release only after final manual device testing.
 

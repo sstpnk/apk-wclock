@@ -5,9 +5,21 @@ plugins {
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
+import java.util.Properties
 
 def nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
 def buildNumber = nowUtc.format(DateTimeFormatter.ofPattern("yyMMddHHmm")).substring(1)
+def releaseSigning = new Properties()
+def releaseSigningFile = rootProject.file("release-signing.properties")
+if (releaseSigningFile.exists()) {
+    releaseSigningFile.withInputStream { releaseSigning.load(it) }
+}
+
+def releaseSigningValue = { String name ->
+    def envName = "W_CLOCK_" + name.replace('.', '_').toUpperCase(Locale.US)
+    return releaseSigning.getProperty(name) ?: System.getenv(envName)
+}
 
 android {
     namespace 'com.sstpnk.wclock'
@@ -30,6 +42,29 @@ android {
 
     buildFeatures {
         buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            def storeFilePath = releaseSigningValue("release.storeFile")
+            if (storeFilePath) {
+                storeFile rootProject.file(storeFilePath)
+                storePassword releaseSigningValue("release.storePassword")
+                keyAlias releaseSigningValue("release.keyAlias")
+                keyPassword releaseSigningValue("release.keyPassword")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 
     testOptions {
