@@ -130,14 +130,16 @@ public final class ClockWeatherCollageView extends View {
     private RectF weatherPanel(int width, int height, RectF clockPanel) {
         float margin = dp(EDGE_PADDING_DP);
         if (width > height) {
-            float left = clockPanel.right + margin;
-            float right = width - margin;
-            float panelHeight = clamp(height * 0.42f, dp(260), dp(390));
-            float top = Math.max(margin, height - margin - panelHeight - (burnInZoneIndex / 2) * dp(14));
+            float panelWidth = clamp(width * 0.40f, dp(360), dp(500));
+            float right = width - margin - (burnInZoneIndex % 2) * dp(14);
+            float left = Math.max(clockPanel.right + margin, right - panelWidth);
+            float panelHeight = clamp(height * 0.27f, dp(190), dp(260));
+            float centerY = height * 0.53f - (burnInZoneIndex / 2) * dp(12);
+            float top = clamp(centerY - panelHeight * 0.50f, margin, height - margin - panelHeight - dp(64));
             return new RectF(left, top, right, top + panelHeight);
         }
         float top = clockPanel.bottom + dp(14);
-        float panelHeight = clamp(height * 0.32f, dp(280), dp(390));
+        float panelHeight = clamp(height * 0.26f, dp(230), dp(340));
         return new RectF(margin, top, width - margin, top + panelHeight);
     }
 
@@ -184,42 +186,43 @@ public final class ClockWeatherCollageView extends View {
     }
 
     private void drawWeather(Canvas canvas, RectF bounds, int width) {
-        float padding = dp(22);
+        float padding = dp(16);
         float left = bounds.left + padding;
-        float top = bounds.top + dp(16);
-        float iconSize = clamp(width * 0.028f, dp(36), dp(64));
+        float top = bounds.top + dp(12);
+        float iconSize = clamp(width * 0.025f, dp(32), dp(54));
 
         weatherIconPainter.draw(canvas, weatherData.weatherCode, left + iconSize * 0.50f, top + iconSize * 0.66f, iconSize, weatherIconStyle);
-        setText(clamp(width * 0.018f, dp(20), dp(34)), 0xCCFFFFFF, false);
-        canvas.drawText(weatherData.cityName + "  " + Math.round(weatherData.temperatureC) + "\u00b0", left + iconSize + dp(18), top + dp(30), paint);
+        setText(clamp(width * 0.016f, dp(18), dp(30)), 0xCCFFFFFF, false);
+        canvas.drawText(weatherData.cityName + "  " + Math.round(weatherData.temperatureC) + "\u00b0", left + iconSize + dp(14), top + dp(27), paint);
 
-        setText(clamp(width * 0.0125f, dp(14), dp(22)), 0x96FFFFFF, false);
-        canvas.drawText(weatherData.descriptionRu, left + iconSize + dp(18), top + dp(44), paint);
+        setText(clamp(width * 0.011f, dp(13), dp(20)), 0x96FFFFFF, false);
+        canvas.drawText(weatherData.descriptionRu, left + iconSize + dp(14), top + dp(41), paint);
 
-        float y = top + dp(70);
+        float y = top + dp(62);
         if (hasTodayRange()) {
             canvas.drawText("\u0434\u0435\u043d\u044c " + Math.round(weatherData.todayMaxTempC) + "\u00b0 / \u043d\u043e\u0447\u044c " + Math.round(weatherData.todayMinTempC) + "\u00b0", left, y, paint);
-            y += dp(12);
+            y += dp(11);
         }
         if (weatherData.humidityPercent > 0 || weatherData.pressureHpa > 0.0) {
             canvas.drawText("\u0432\u043b\u0430\u0436\u043d. " + valueOrDash(weatherData.humidityPercent, "%") + "   \u0434\u0430\u0432\u043b. " + pressureText(weatherData.pressureHpa), left, y, paint);
-            y += dp(12);
+            y += dp(11);
         }
         if (weatherData.precipitationProbability > 0) {
             canvas.drawText("\u043e\u0441\u0430\u0434\u043a\u0438 " + weatherData.precipitationProbability + "%", left, y, paint);
-            y += dp(12);
+            y += dp(11);
         }
 
         int count = Math.min(5, weatherData.forecast.size());
         if (count == 0) {
             return;
         }
-        float cardGap = dp(8);
+        float cardGap = dp(6);
         float cardsLeft = left;
         float cardsRight = bounds.right - padding;
         float cardWidth = (cardsRight - cardsLeft - cardGap * (count - 1)) / count;
-        float cardTop = Math.max(y + dp(10), bounds.top + bounds.height() * 0.48f);
-        float cardHeight = bounds.bottom - dp(16) - cardTop;
+        float desiredCardHeight = clamp(bounds.height() * 0.36f, dp(66), dp(92));
+        float cardTop = Math.max(y + dp(8), bounds.bottom - dp(12) - desiredCardHeight);
+        float cardHeight = bounds.bottom - dp(12) - cardTop;
         for (int i = 0; i < count; i++) {
             ForecastDay day = weatherData.forecast.get(i);
             float x = cardsLeft + i * (cardWidth + cardGap);
@@ -232,15 +235,15 @@ public final class ClockWeatherCollageView extends View {
             return;
         }
         drawPanel(canvas, left, top, left + width, top + height, 0x2C000000);
-        setText(dp(11), 0xA8FFFFFF, true);
+        setText(dp(10), 0xA8FFFFFF, true);
         paint.setTextAlign(Paint.Align.CENTER);
         float centerX = left + width * 0.50f;
         float centerY = top + height * 0.50f;
-        canvas.drawText(forecastDate(day.date), centerX, centerY - dp(18), paint);
-        weatherIconPainter.draw(canvas, day.weatherCode, centerX, centerY + dp(2), Math.min(width * 0.48f, dp(32)), weatherIconStyle);
-        setText(dp(12), 0xC8FFFFFF, false);
+        canvas.drawText(forecastDate(day.date), centerX, centerY - dp(16), paint);
+        weatherIconPainter.draw(canvas, day.weatherCode, centerX, centerY + dp(1), Math.min(width * 0.46f, dp(28)), weatherIconStyle);
+        setText(dp(11), 0xC8FFFFFF, false);
         paint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText(forecastTemperature(day), centerX, centerY + dp(38), paint);
+        canvas.drawText(forecastTemperature(day), centerX, centerY + dp(33), paint);
         paint.setTextAlign(Paint.Align.LEFT);
     }
 

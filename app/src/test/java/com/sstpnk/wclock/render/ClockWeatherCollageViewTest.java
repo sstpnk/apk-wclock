@@ -1,5 +1,7 @@
 package com.sstpnk.wclock.render;
 
+import android.graphics.RectF;
+
 import androidx.test.core.app.ApplicationProvider;
 
 import com.sstpnk.wclock.weather.ForecastDay;
@@ -14,6 +16,7 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28)
@@ -44,5 +47,22 @@ public class ClockWeatherCollageViewTest {
 
         assertEquals("\u0417\u0430\u043f\u0440\u043e\u0441 \u043f\u043e\u0433\u043e\u0434\u044b", visibleStatus.invoke(view, System.currentTimeMillis()));
         assertEquals("\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b: timeout", friendlyStatus.invoke(view, "Weather failed: timeout"));
+    }
+
+    @Test
+    public void landscapeWeatherPanelIsCompactAndRightAligned() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method clockPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("clockPanel", int.class, int.class);
+        Method weatherPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("weatherPanel", int.class, int.class, RectF.class);
+        clockPanelMethod.setAccessible(true);
+        weatherPanelMethod.setAccessible(true);
+
+        RectF clockPanel = (RectF) clockPanelMethod.invoke(view, 1040, 768);
+        RectF weatherPanel = (RectF) weatherPanelMethod.invoke(view, 1040, 768, clockPanel);
+
+        assertTrue("Weather panel should live in the right half on tablets", weatherPanel.left > 1040 * 0.52f);
+        assertTrue("Weather panel should leave more collage visible horizontally", weatherPanel.width() <= 1040 * 0.46f);
+        assertTrue("Weather panel should be compact vertically", weatherPanel.height() <= 768 * 0.34f);
+        assertTrue("Weather panel should not be pinned to the bottom edge", weatherPanel.bottom < 768 - 120);
     }
 }
