@@ -1,7 +1,12 @@
 package com.sstpnk.wclock.host;
 
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.service.dreams.DreamService;
 
+import com.sstpnk.wclock.brightness.AmbientBrightnessMapper;
 import com.sstpnk.wclock.render.ClockWeatherCollageView;
 import com.sstpnk.wclock.render.RenderController;
 import com.sstpnk.wclock.settings.SettingsRepository;
@@ -14,8 +19,12 @@ import com.sstpnk.wclock.weather.WeatherApiProvider;
 import com.sstpnk.wclock.weather.WeatherRepository;
 import com.sstpnk.wclock.weather.WttrInProvider;
 
-public final class WClockDreamService extends DreamService {
+public final class WClockDreamService extends DreamService implements SensorEventListener {
     private RenderController renderController;
+    private SettingsRepository settingsRepository;
+    private SensorManager sensorManager;
+    private Sensor lightSensor;
+    private boolean lightSensorRegistered;
 
     @Override
     public void onAttachedToWindow() {
@@ -24,7 +33,9 @@ public final class WClockDreamService extends DreamService {
         setFullscreen(true);
         setScreenBright(false);
         ClockWeatherCollageView view = new ClockWeatherCollageView(this);
-        SettingsRepository settingsRepository = new SettingsRepository(this);
+        settingsRepository = new SettingsRepository(this);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        lightSensor = sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         renderController = new RenderController(view, settingsRepository, createWeatherRepository(settingsRepository.load()));
         setContentView(view);
     }
@@ -32,6 +43,7 @@ public final class WClockDreamService extends DreamService {
     @Override
     public void onDreamingStarted() {
         super.onDreamingStarted();
+        registerLightSensorIfEnabled();
         if (renderController != null) {
             renderController.start();
         }
@@ -42,7 +54,45 @@ public final class WClockDreamService extends DreamService {
         if (renderController != null) {
             renderController.stop();
         }
+        unregisterLightSensor();
         super.onDreamingStopped();
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        unregisterLightSensor();
+        super.onDetachedFromWindow();
+    }
+
+    private void registerLightSensorIfEnabled() {
+        SettingsRepository.Settings settings = settingsRepository.load();
+        if (!settings.autoBrightnessEnabled || sensorManager == null || lightSensor == null || lightSensorRegistered) {
+            return;
+        }
+        lightSensorRegistered = sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    private void unregisterLightSensor() {
+        if (sensorManager != null && lightSensorRegistered) {
+            sensorManager.unregisterListener(this);
+            lightSensorRegistered = false;
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event == null || event.sensor == null || event.sensor.getType() != Sensor.TYPE_LIGHT || event.values == null || event.values.length == 0) {
+            return;
+        }
+        if (!settingsRepository.load().autoBrightnessEnabled) {
+            setScreenBright(false);
+            return;
+        }
+        setScreenBright(AmbientBrightnessMapper.dreamScreenBrightForLux(event.values[0]));
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
     private WeatherRepository createWeatherRepository(SettingsRepository.Settings settings) {

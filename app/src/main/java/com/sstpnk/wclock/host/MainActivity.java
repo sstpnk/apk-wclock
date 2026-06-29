@@ -4,6 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -12,6 +16,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.sstpnk.wclock.brightness.AmbientBrightnessMapper;
 import com.sstpnk.wclock.brightness.BrightnessController;
 import com.sstpnk.wclock.brightness.BrightnessSchedule;
 import com.sstpnk.wclock.render.ClockWeatherCollageView;
@@ -29,11 +34,15 @@ import com.sstpnk.wclock.weather.WttrInProvider;
 
 import java.util.Calendar;
 
-public final class MainActivity extends Activity {
+public final class MainActivity extends Activity implements SensorEventListener {
     private RenderController renderController;
     private ClockWeatherCollageView clockView;
     private SettingsRepository settingsRepository;
     private String weatherRepositorySignature = "";
+    private SensorManager sensorManager;
+    private Sensor lightSensor;
+    private boolean lightSensorRegistered;
+    private final BrightnessController brightnessController = new BrightnessController();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +65,8 @@ public final class MainActivity extends Activity {
             }
         });
         settingsRepository = new SettingsRepository(this);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        lightSensor = sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         resetRenderController(settingsRepository.load());
         setContentView(clockView);
         requestPhotoPermissionIfNeeded();
@@ -65,8 +76,8 @@ public final class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         hideSystemUi();
-        applyConfiguredBrightness();
         SettingsRepository.Settings settings = settingsRepository.load();
+        applyConfiguredBrightness(settings);
         if (!weatherRepositorySignature.equals(weatherSignature(settings))) {
             resetRenderController(settings);
             renderController.forceRefreshNow();
@@ -76,6 +87,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        unregisterLightSensor();
         renderController.stop();
         super.onPause();
     }
@@ -138,11 +150,51 @@ public final class MainActivity extends Activity {
         startActivity(new Intent(this, SettingsActivity.class));
     }
 
-    private void applyConfiguredBrightness() {
-        SettingsRepository.Settings settings = new SettingsRepository(this).load();
+    private void applyConfiguredBrightness(SettingsRepository.Settings settings) {
+        if (settings.autoBrightnessEnabled && registerLightSensor()) {
+            return;
+        }
+        applyScheduledBrightness(settings);
+    }
+
+    private void applyScheduledBrightness(SettingsRepository.Settings settings) {
         Calendar calendar = Calendar.getInstance();
         BrightnessSchedule schedule = new BrightnessSchedule(7, 19, 23, settings.dayBrightness, settings.eveningBrightness, settings.nightBrightness);
-        new BrightnessController().apply(getWindow(), schedule.brightnessForHour(calendar.get(Calendar.HOUR_OF_DAY)));
+        brightnessController.apply(getWindow(), schedule.brightnessForHour(calendar.get(Calendar.HOUR_OF_DAY)));
+    }
+
+    private boolean registerLightSensor() {
+        if (sensorManager == null || lightSensor == null) {
+            return false;
+        }
+        if (!lightSensorRegistered) {
+            lightSensorRegistered = sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        return lightSensorRegistered;
+    }
+
+    private void unregisterLightSensor() {
+        if (sensorManager != null && lightSensorRegistered) {
+            sensorManager.unregisterListener(this);
+            lightSensorRegistered = false;
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event == null || event.sensor == null || event.sensor.getType() != Sensor.TYPE_LIGHT || event.values == null || event.values.length == 0) {
+            return;
+        }
+        SettingsRepository.Settings settings = settingsRepository.load();
+        if (!settings.autoBrightnessEnabled) {
+            return;
+        }
+        AmbientBrightnessMapper mapper = new AmbientBrightnessMapper(settings.autoBrightnessMin, settings.autoBrightnessMax);
+        brightnessController.apply(getWindow(), mapper.brightnessForLux(event.values[0]));
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
     private void requestPhotoPermissionIfNeeded() {

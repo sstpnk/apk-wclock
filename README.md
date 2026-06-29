@@ -33,7 +33,7 @@ This repository is being prepared for public beta. A GitHub Release is not publi
   - Photo wall with animated photo entry, rotation, light frame, and smooth fade-out.
   - Photo frame with cover-fit scaling and pan across oversized photos before switching.
 - Manual location by city label and coordinates.
-- Schedule-based brightness control.
+- Brightness control by ambient light sensor with schedule fallback.
 
 ## Build
 
@@ -62,7 +62,7 @@ Each build exposes a UTC build number in settings. Format: last digit of year, m
 
 ## Beta Limitations
 
-- Brightness automation is schedule-based; ambient light sensor support is planned.
+- Fullscreen mode can use the ambient light sensor for brightness; schedule-based brightness remains the fallback.
 - Folder picking uses SAF on Android 5+ and an in-app file browser fallback for Android 4.4.
 - Weather descriptions are mapped locally in Russian for key provider codes.
 - This is not yet a Play Store-ready release.

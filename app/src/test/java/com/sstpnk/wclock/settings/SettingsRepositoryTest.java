@@ -22,6 +22,9 @@ public class SettingsRepositoryTest {
         assertEquals("coordinates", settings.locationMode);
         assertEquals("open-meteo", settings.weatherProvider);
         assertEquals("outline", settings.weatherIconStyle);
+        assertTrue(settings.autoBrightnessEnabled);
+        assertEquals(0.08f, settings.autoBrightnessMin, 0.001f);
+        assertEquals(0.90f, settings.autoBrightnessMax, 0.001f);
         assertTrue(settings.burnInMinMinutes >= 5);
         assertTrue(settings.burnInMaxMinutes <= 15);
         assertTrue(settings.nightOverlayAlpha >= 0.0f);
@@ -57,5 +60,17 @@ public class SettingsRepositoryTest {
         settings.weatherProvider = "wttr-in";
 
         assertEquals("wttr-in", settings.normalized().weatherProvider);
+    }
+
+    @Test
+    public void autoBrightnessRangeIsNormalized() {
+        SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
+
+        settings.autoBrightnessMin = 0.95f;
+        settings.autoBrightnessMax = 0.02f;
+
+        SettingsRepository.Settings safe = settings.normalized();
+        assertEquals(0.05f, safe.autoBrightnessMin, 0.001f);
+        assertEquals(0.95f, safe.autoBrightnessMax, 0.001f);
     }
 }

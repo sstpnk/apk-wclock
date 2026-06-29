@@ -53,8 +53,14 @@ public final class SettingsActivity extends Activity {
     private EditText photoInterval;
     private EditText weatherApiKey;
     private EditText openWeatherApiKey;
+    private EditText autoBrightnessMin;
+    private EditText autoBrightnessMax;
+    private EditText dayBrightness;
+    private EditText eveningBrightness;
+    private EditText nightBrightness;
     private CheckBox collageEnabled;
     private CheckBox showSeconds;
+    private CheckBox autoBrightnessEnabled;
     private RadioGroup photoDisplayMode;
     private RadioGroup photoOrderMode;
     private RadioGroup locationMode;
@@ -136,6 +142,25 @@ public final class SettingsActivity extends Activity {
         root.addView(section("Часы"));
         showSeconds = checkbox("Показывать секунды", settings.showSeconds);
         root.addView(showSeconds);
+
+        root.addView(section("Яркость"));
+        autoBrightnessEnabled = checkbox("Автояркость по датчику освещенности", settings.autoBrightnessEnabled);
+        root.addView(autoBrightnessEnabled);
+        root.addView(fieldLabel("Автояркость: минимум, 0.05-1.0"));
+        autoBrightnessMin = edit("0.08", Float.toString(settings.autoBrightnessMin));
+        root.addView(autoBrightnessMin);
+        root.addView(fieldLabel("Автояркость: максимум, 0.05-1.0"));
+        autoBrightnessMax = edit("0.90", Float.toString(settings.autoBrightnessMax));
+        root.addView(autoBrightnessMax);
+        root.addView(fieldLabel("Расписание: день"));
+        dayBrightness = edit("0.85", Float.toString(settings.dayBrightness));
+        root.addView(dayBrightness);
+        root.addView(fieldLabel("Расписание: вечер"));
+        eveningBrightness = edit("0.45", Float.toString(settings.eveningBrightness));
+        root.addView(eveningBrightness);
+        root.addView(fieldLabel("Расписание: ночь"));
+        nightBrightness = edit("0.12", Float.toString(settings.nightBrightness));
+        root.addView(nightBrightness);
 
         root.addView(section("Погода"));
         weatherProvider = new RadioGroup(this);
@@ -267,6 +292,12 @@ public final class SettingsActivity extends Activity {
         settings.weatherIconStyle = weatherIconStyle.getCheckedRadioButtonId() == ICON_FLAT ? "flat" : "outline";
         settings.weatherApiKey = weatherApiKey.getText().toString();
         settings.openWeatherApiKey = openWeatherApiKey.getText().toString();
+        settings.autoBrightnessEnabled = autoBrightnessEnabled.isChecked();
+        settings.autoBrightnessMin = parseFloat(autoBrightnessMin.getText().toString(), settings.autoBrightnessMin);
+        settings.autoBrightnessMax = parseFloat(autoBrightnessMax.getText().toString(), settings.autoBrightnessMax);
+        settings.dayBrightness = parseFloat(dayBrightness.getText().toString(), settings.dayBrightness);
+        settings.eveningBrightness = parseFloat(eveningBrightness.getText().toString(), settings.eveningBrightness);
+        settings.nightBrightness = parseFloat(nightBrightness.getText().toString(), settings.nightBrightness);
         repository.save(settings);
         finish();
     }
@@ -364,6 +395,14 @@ public final class SettingsActivity extends Activity {
     private int parseInt(String value, int fallback) {
         try {
             return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private float parseFloat(String value, float fallback) {
+        try {
+            return Float.parseFloat(value);
         } catch (NumberFormatException e) {
             return fallback;
         }

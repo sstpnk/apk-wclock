@@ -14,7 +14,9 @@
 - [ ] Open-Meteo weather appears for configured coordinates.
 - [ ] MET Norway fallback is tested by forcing Open-Meteo failure.
 - [ ] Offline mode keeps clock and collage visible.
-- [ ] Brightness follows schedule in fullscreen mode.
+- [ ] Brightness follows ambient light sensor in fullscreen mode when available.
+- [ ] Brightness falls back to schedule when ambient light sensor is unavailable.
+- [ ] DreamService responds to ambient light with platform bright/dim mode when available.
 - [ ] Overlay position changes within 5-15 minutes.
 - [ ] 8-hour fullscreen run completes without crash.
 - [ ] Known limitations are documented in README.

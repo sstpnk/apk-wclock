@@ -38,6 +38,9 @@ public final class SettingsRepository {
         settings.dayBrightness = prefs.getFloat("dayBrightness", defaults.dayBrightness);
         settings.eveningBrightness = prefs.getFloat("eveningBrightness", defaults.eveningBrightness);
         settings.nightBrightness = prefs.getFloat("nightBrightness", defaults.nightBrightness);
+        settings.autoBrightnessEnabled = prefs.getBoolean("autoBrightnessEnabled", defaults.autoBrightnessEnabled);
+        settings.autoBrightnessMin = prefs.getFloat("autoBrightnessMin", defaults.autoBrightnessMin);
+        settings.autoBrightnessMax = prefs.getFloat("autoBrightnessMax", defaults.autoBrightnessMax);
         settings.nightOverlayAlpha = prefs.getFloat("nightOverlayAlpha", defaults.nightOverlayAlpha);
         return settings.normalized();
     }
@@ -68,6 +71,9 @@ public final class SettingsRepository {
                 .putFloat("dayBrightness", safe.dayBrightness)
                 .putFloat("eveningBrightness", safe.eveningBrightness)
                 .putFloat("nightBrightness", safe.nightBrightness)
+                .putBoolean("autoBrightnessEnabled", safe.autoBrightnessEnabled)
+                .putFloat("autoBrightnessMin", safe.autoBrightnessMin)
+                .putFloat("autoBrightnessMax", safe.autoBrightnessMax)
                 .putFloat("nightOverlayAlpha", safe.nightOverlayAlpha)
                 .apply();
     }
@@ -120,6 +126,9 @@ public final class SettingsRepository {
         public float dayBrightness;
         public float eveningBrightness;
         public float nightBrightness;
+        public boolean autoBrightnessEnabled;
+        public float autoBrightnessMin;
+        public float autoBrightnessMax;
         public float nightOverlayAlpha;
 
         public static Settings defaults() {
@@ -147,6 +156,9 @@ public final class SettingsRepository {
             settings.dayBrightness = 0.85f;
             settings.eveningBrightness = 0.45f;
             settings.nightBrightness = 0.12f;
+            settings.autoBrightnessEnabled = true;
+            settings.autoBrightnessMin = 0.08f;
+            settings.autoBrightnessMax = 0.90f;
             settings.nightOverlayAlpha = 0.45f;
             return settings;
         }
@@ -176,6 +188,9 @@ public final class SettingsRepository {
             safe.dayBrightness = clampFloat(dayBrightness, 0.05f, 1.0f);
             safe.eveningBrightness = clampFloat(eveningBrightness, 0.05f, 1.0f);
             safe.nightBrightness = clampFloat(nightBrightness, 0.02f, 1.0f);
+            safe.autoBrightnessEnabled = autoBrightnessEnabled;
+            safe.autoBrightnessMin = clampFloat(Math.min(autoBrightnessMin, autoBrightnessMax), 0.05f, 1.0f);
+            safe.autoBrightnessMax = clampFloat(Math.max(autoBrightnessMin, autoBrightnessMax), safe.autoBrightnessMin, 1.0f);
             safe.nightOverlayAlpha = clampFloat(nightOverlayAlpha, 0.0f, 0.85f);
             return safe;
         }
