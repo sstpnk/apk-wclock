@@ -25,7 +25,7 @@ public final class CollageEngine {
     private final CollageLayout layout = new CollageLayout();
     private final ContentResolver resolver;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-    private final Random random = new Random();
+    private final Random random;
     private final List<PhotoItem> photos = new ArrayList<PhotoItem>();
     private final List<ActivePhoto> activePhotos = new ArrayList<ActivePhoto>();
     private String loadedPath = "";
@@ -39,8 +39,13 @@ public final class CollageEngine {
     }
 
     CollageEngine(ContentResolver resolver, BitmapDecoder loader) {
+        this(resolver, loader, new Random());
+    }
+
+    CollageEngine(ContentResolver resolver, BitmapDecoder loader, Random random) {
         this.resolver = resolver;
         this.loader = loader;
+        this.random = random == null ? new Random() : random;
     }
 
     public void setSource(String path, String uriString) {
@@ -217,7 +222,7 @@ public final class CollageEngine {
             } catch (OutOfMemoryError ignored) {
             }
             if (bitmap != null) {
-                return new ActivePhoto(bitmap, nowMillis, layoutIndex);
+                return new ActivePhoto(bitmap, nowMillis, layoutIndex, photoIndex);
             }
         }
         return null;
@@ -245,7 +250,23 @@ public final class CollageEngine {
         if (ORDER_SEQUENTIAL.equals(orderMode)) {
             return nextPhotoIndex % photos.size();
         }
-        return random.nextInt(photos.size());
+        int startIndex = random.nextInt(photos.size());
+        for (int offset = 0; offset < photos.size(); offset++) {
+            int candidate = (startIndex + offset) % photos.size();
+            if (!isActiveSourceIndex(candidate)) {
+                return candidate;
+            }
+        }
+        return startIndex;
+    }
+
+    private boolean isActiveSourceIndex(int sourceIndex) {
+        for (int i = 0; i < activePhotos.size(); i++) {
+            if (activePhotos.get(i).sourceIndex == sourceIndex) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void removeExpired(long nowMillis, int maxVisible, int intervalMs) {
@@ -340,11 +361,13 @@ public final class CollageEngine {
         final Bitmap bitmap;
         final long bornMillis;
         final int layoutIndex;
+        final int sourceIndex;
 
-        ActivePhoto(Bitmap bitmap, long bornMillis, int layoutIndex) {
+        ActivePhoto(Bitmap bitmap, long bornMillis, int layoutIndex, int sourceIndex) {
             this.bitmap = bitmap;
             this.bornMillis = bornMillis;
             this.layoutIndex = layoutIndex;
+            this.sourceIndex = sourceIndex;
         }
     }
 }

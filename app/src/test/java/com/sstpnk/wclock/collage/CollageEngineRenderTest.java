@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.lang.reflect.Method;
 
 import static org.junit.Assert.assertEquals;
@@ -136,6 +137,48 @@ public class CollageEngineRenderTest {
     }
 
     @Test
+    public void randomOrderAvoidsPhotosAlreadyOnScreenWhenAlternativesExist() throws Exception {
+        File folder = createImageFolder("random-unique", Color.rgb(230, 40, 40));
+        createImageFile(folder, "a-first.png", Color.rgb(40, 220, 70));
+        createImageFile(folder, "b-second.png", Color.rgb(40, 120, 220));
+        RecordingBitmapDecoder decoder = new RecordingBitmapDecoder();
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                decoder,
+                new ConstantZeroRandom());
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
+        engine.draw(canvas, 2500L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
+        engine.draw(canvas, 4000L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
+
+        assertEquals("a-first.png", decoder.names.get(0));
+        assertEquals("b-second.png", decoder.names.get(1));
+        assertEquals("source.png", decoder.names.get(2));
+    }
+
+    @Test
+    public void randomOrderAllowsRepeatsWhenEveryPhotoIsAlreadyOnScreen() throws Exception {
+        File folder = createImageFolder("random-repeat-small-folder", Color.rgb(230, 40, 40));
+        RecordingBitmapDecoder decoder = new RecordingBitmapDecoder();
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                decoder,
+                new ConstantZeroRandom());
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
+        engine.draw(canvas, 2500L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
+
+        assertEquals("source.png", decoder.names.get(0));
+        assertEquals("source.png", decoder.names.get(1));
+    }
+
+    @Test
     public void decodeFailureDoesNotCrashPhotoWall() throws Exception {
         File folder = createImageFolder("oom-safe", Color.rgb(230, 40, 40));
         CollageEngine engine = new CollageEngine(
@@ -236,6 +279,13 @@ public class CollageEngineRenderTest {
         @Override
         public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
             throw new OutOfMemoryError("test bitmap pressure");
+        }
+    }
+
+    private static final class ConstantZeroRandom extends Random {
+        @Override
+        public int nextInt(int bound) {
+            return 0;
         }
     }
 
