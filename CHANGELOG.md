@@ -1,8 +1,22 @@
 # Changelog
 
-## v0.1.0 - Public beta preparation
+## v0.1.1 - First test release
 
-Prepared but not yet published as a GitHub Release.
+### Fixed
+
+- Align clock and weather panels to the same lower edge in landscape mode.
+- Reduce excess clock panel padding.
+- Increase spacing between weather detail lines.
+- Group MET Norway hourly forecast data into distinct forecast days.
+- Add legacy Android TLS trust support for current MET Norway certificates.
+
+### Changed
+
+- Publish signed release APK builds with resource shrink and R8 minification.
+
+## v0.1.0 - Public beta
+
+Published as the initial signed GitHub Release.
 
 ### Added
 
@@ -22,6 +36,4 @@ Prepared but not yet published as a GitHub Release.
 
 ### Known Limitations
 
-- Ambient light sensor support is planned after the beta foundation.
 - Weather UI and settings are intentionally minimal for the first public beta.
-- GitHub Release and signed release APK are not published yet.

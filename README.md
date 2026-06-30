@@ -6,9 +6,9 @@ The project is designed for long-running ambient use: a full-screen clock and da
 
 ## Release Status
 
-Current prepared release: `v0.1.0`.
+Current release: `v0.1.1`.
 
-This repository is being prepared for public beta. A GitHub Release is not published yet.
+Published GitHub Releases: `v0.1.0`, `v0.1.1`.
 
 ## Requirements
 

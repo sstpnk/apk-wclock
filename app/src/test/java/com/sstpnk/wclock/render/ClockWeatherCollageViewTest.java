@@ -50,7 +50,7 @@ public class ClockWeatherCollageViewTest {
     }
 
     @Test
-    public void landscapeWeatherPanelIsCompactAndRightAligned() throws Exception {
+    public void landscapePanelsAreBottomAlignedAndWeatherIsRightAligned() throws Exception {
         ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
         Method clockPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("clockPanel", int.class, int.class);
         Method weatherPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("weatherPanel", int.class, int.class, RectF.class);
@@ -60,9 +60,36 @@ public class ClockWeatherCollageViewTest {
         RectF clockPanel = (RectF) clockPanelMethod.invoke(view, 1040, 768);
         RectF weatherPanel = (RectF) weatherPanelMethod.invoke(view, 1040, 768, clockPanel);
 
+        assertEquals(clockPanel.bottom, weatherPanel.bottom, 0.01f);
+        assertTrue("Panels should sit close to the bottom edge", clockPanel.bottom >= 768 - 26);
+        assertTrue("Clock panel should not keep excess vertical padding", clockPanel.height() <= 145);
         assertTrue("Weather panel should live in the right half on tablets", weatherPanel.left > 1040 * 0.52f);
         assertTrue("Weather panel should leave more collage visible horizontally", weatherPanel.width() <= 1040 * 0.46f);
         assertTrue("Weather panel should be compact vertically", weatherPanel.height() <= 768 * 0.34f);
-        assertTrue("Weather panel should not be pinned to the bottom edge", weatherPanel.bottom < 768 - 120);
+    }
+
+    @Test
+    public void burnInShiftKeepsLandscapePanelsBottomAligned() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method clockPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("clockPanel", int.class, int.class);
+        Method weatherPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("weatherPanel", int.class, int.class, RectF.class);
+        clockPanelMethod.setAccessible(true);
+        weatherPanelMethod.setAccessible(true);
+
+        view.setBurnInZoneIndex(3);
+        RectF clockPanel = (RectF) clockPanelMethod.invoke(view, 1040, 768);
+        RectF weatherPanel = (RectF) weatherPanelMethod.invoke(view, 1040, 768, clockPanel);
+
+        assertEquals(clockPanel.bottom, weatherPanel.bottom, 0.01f);
+        assertTrue("Burn-in shift should remain near the bottom edge", clockPanel.bottom >= 768 - 38);
+    }
+
+    @Test
+    public void weatherDetailsUseWiderLineGap() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method method = ClockWeatherCollageView.class.getDeclaredMethod("weatherDetailLineGap");
+        method.setAccessible(true);
+
+        assertEquals(16.5f, (Float) method.invoke(view), 0.01f);
     }
 }

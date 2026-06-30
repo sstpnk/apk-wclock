@@ -115,15 +115,15 @@ public final class ClockWeatherCollageView extends View {
         float contentWidth = clockSize * (showSeconds ? 4.35f : 3.10f) + dp(58);
         if (width > height) {
             float panelWidth = Math.min(width * 0.42f, contentWidth);
-            float panelHeight = clamp(height * 0.24f, dp(160), dp(230));
+            float panelHeight = clamp(height * 0.17f, dp(126), dp(176));
             float left = margin + (burnInZoneIndex % 2) * dp(18);
-            float top = Math.max(margin, height - margin - panelHeight - (burnInZoneIndex / 2) * dp(14));
-            return new RectF(left, top, left + panelWidth, top + panelHeight);
+            float bottom = bottomPanelEdge(height);
+            return new RectF(left, bottom - panelHeight, left + panelWidth, bottom);
         }
         float panelWidth = Math.min(width - margin * 2, contentWidth);
-        float panelHeight = clamp(height * 0.15f, dp(140), dp(210));
-        float weatherHeight = clamp(height * 0.32f, dp(280), dp(390));
-        float groupTop = Math.max(margin, height - margin - panelHeight - dp(14) - weatherHeight - dp(34));
+        float panelHeight = clamp(height * 0.13f, dp(124), dp(188));
+        float weatherHeight = clamp(height * 0.26f, dp(230), dp(340));
+        float groupTop = Math.max(margin, height - margin - panelHeight - dp(14) - weatherHeight);
         return new RectF(margin, groupTop, margin + panelWidth, groupTop + panelHeight);
     }
 
@@ -134,13 +134,16 @@ public final class ClockWeatherCollageView extends View {
             float right = width - margin - (burnInZoneIndex % 2) * dp(14);
             float left = Math.max(clockPanel.right + margin, right - panelWidth);
             float panelHeight = clamp(height * 0.27f, dp(190), dp(260));
-            float centerY = height * 0.53f - (burnInZoneIndex / 2) * dp(12);
-            float top = clamp(centerY - panelHeight * 0.50f, margin, height - margin - panelHeight - dp(64));
-            return new RectF(left, top, right, top + panelHeight);
+            float bottom = clockPanel.bottom;
+            return new RectF(left, bottom - panelHeight, right, bottom);
         }
         float top = clockPanel.bottom + dp(14);
         float panelHeight = clamp(height * 0.26f, dp(230), dp(340));
         return new RectF(margin, top, width - margin, top + panelHeight);
+    }
+
+    private float bottomPanelEdge(int height) {
+        return height - dp(EDGE_PADDING_DP) - (burnInZoneIndex / 2) * dp(10);
     }
 
     private void drawPanel(Canvas canvas, float left, float top, float right, float bottom, int color) {
@@ -201,15 +204,15 @@ public final class ClockWeatherCollageView extends View {
         float y = top + dp(62);
         if (hasTodayRange()) {
             canvas.drawText("\u0434\u0435\u043d\u044c " + Math.round(weatherData.todayMaxTempC) + "\u00b0 / \u043d\u043e\u0447\u044c " + Math.round(weatherData.todayMinTempC) + "\u00b0", left, y, paint);
-            y += dp(11);
+            y += weatherDetailLineGap();
         }
         if (weatherData.humidityPercent > 0 || weatherData.pressureHpa > 0.0) {
             canvas.drawText("\u0432\u043b\u0430\u0436\u043d. " + valueOrDash(weatherData.humidityPercent, "%") + "   \u0434\u0430\u0432\u043b. " + pressureText(weatherData.pressureHpa), left, y, paint);
-            y += dp(11);
+            y += weatherDetailLineGap();
         }
         if (weatherData.precipitationProbability > 0) {
             canvas.drawText("\u043e\u0441\u0430\u0434\u043a\u0438 " + weatherData.precipitationProbability + "%", left, y, paint);
-            y += dp(11);
+            y += weatherDetailLineGap();
         }
 
         int count = Math.min(5, weatherData.forecast.size());
@@ -314,6 +317,10 @@ public final class ClockWeatherCollageView extends View {
 
     private String pressureText(double value) {
         return value <= 0.0 ? "--" : Math.round(value * 0.750062) + " \u043c\u043c \u0440\u0442. \u0441\u0442.";
+    }
+
+    private float weatherDetailLineGap() {
+        return dp(16.5f);
     }
 
     private Paint.FontMetrics setText(float size, int color, boolean bold) {
