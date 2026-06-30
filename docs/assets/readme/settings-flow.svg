@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">WClock setup flow</title>
+  <desc id="desc">Illustration of the main setup sequence: install APK, choose photos, configure weather, tune brightness, enable screensaver.</desc>
+  <rect width="1200" height="420" rx="24" fill="#f6f8fa"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="58" y="72" font-size="32" font-weight="700" fill="#17202a">Быстрая настройка</text>
+    <text x="58" y="106" font-size="17" fill="#5b6670">Пять шагов, после которых планшет можно оставлять работать как часы, фоторамку и погодный экран.</text>
+    <g transform="translate(58 158)">
+      <g>
+        <circle cx="44" cy="44" r="42" fill="#dbeafe"/>
+        <text x="44" y="55" font-size="32" text-anchor="middle" font-weight="700" fill="#1d4ed8">1</text>
+        <text x="0" y="118" font-size="19" font-weight="700" fill="#17202a">Установить APK</text>
+        <text x="0" y="146" font-size="14" fill="#5b6670">Скачать release-файл</text>
+        <text x="0" y="166" font-size="14" fill="#5b6670">и установить на Android.</text>
+      </g>
+      <g transform="translate(220 0)">
+        <circle cx="44" cy="44" r="42" fill="#dcfce7"/>
+        <text x="44" y="55" font-size="32" text-anchor="middle" font-weight="700" fill="#15803d">2</text>
+        <text x="0" y="118" font-size="19" font-weight="700" fill="#17202a">Выбрать фото</text>
+        <text x="0" y="146" font-size="14" fill="#5b6670">Указать папку и режим:</text>
+        <text x="0" y="166" font-size="14" fill="#5b6670">стена или рамка.</text>
+      </g>
+      <g transform="translate(440 0)">
+        <circle cx="44" cy="44" r="42" fill="#fef3c7"/>
+        <text x="44" y="55" font-size="32" text-anchor="middle" font-weight="700" fill="#b45309">3</text>
+        <text x="0" y="118" font-size="19" font-weight="700" fill="#17202a">Настроить погоду</text>
+        <text x="0" y="146" font-size="14" fill="#5b6670">Город, координаты,</text>
+        <text x="0" y="166" font-size="14" fill="#5b6670">провайдер и интервал.</text>
+      </g>
+      <g transform="translate(660 0)">
+        <circle cx="44" cy="44" r="42" fill="#ede9fe"/>
+        <text x="44" y="55" font-size="32" text-anchor="middle" font-weight="700" fill="#6d28d9">4</text>
+        <text x="0" y="118" font-size="19" font-weight="700" fill="#17202a">Яркость</text>
+        <text x="0" y="146" font-size="14" fill="#5b6670">Датчик освещения</text>
+        <text x="0" y="166" font-size="14" fill="#5b6670">или расписание.</text>
+      </g>
+      <g transform="translate(880 0)">
+        <circle cx="44" cy="44" r="42" fill="#fee2e2"/>
+        <text x="44" y="55" font-size="32" text-anchor="middle" font-weight="700" fill="#b91c1c">5</text>
+        <text x="0" y="118" font-size="19" font-weight="700" fill="#17202a">Оставить работать</text>
+        <text x="0" y="146" font-size="14" fill="#5b6670">Полноэкранно или</text>
+        <text x="0" y="166" font-size="14" fill="#5b6670">как Daydream.</text>
+      </g>
+    </g>
+  </g>
+</svg>

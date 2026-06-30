@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">WClock on a tablet</title>
+  <desc id="desc">A tablet-style illustration of WClock showing a photo wall, clock, weather panel, and forecast.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#223142"/>
+      <stop offset="0.45" stop-color="#111820"/>
+      <stop offset="1" stop-color="#06090d"/>
+    </linearGradient>
+    <linearGradient id="photoA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2d7a6"/>
+      <stop offset="0.45" stop-color="#4a7f96"/>
+      <stop offset="1" stop-color="#18242e"/>
+    </linearGradient>
+    <linearGradient id="photoB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d9452d"/>
+      <stop offset="0.52" stop-color="#e8b448"/>
+      <stop offset="1" stop-color="#264b6b"/>
+    </linearGradient>
+    <linearGradient id="photoC" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8fc1a9"/>
+      <stop offset="1" stop-color="#2d3b31"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="520" fill="#f6f8fa"/>
+  <rect x="54" y="42" width="1092" height="436" rx="38" fill="#11161d"/>
+  <rect x="78" y="66" width="1044" height="388" rx="18" fill="url(#sky)"/>
+  <g filter="url(#shadow)" opacity="0.96">
+    <g transform="translate(94 84) rotate(-5 130 170)">
+      <rect width="250" height="330" rx="8" fill="#f8f8f3"/>
+      <rect x="10" y="10" width="230" height="310" rx="5" fill="url(#photoA)"/>
+      <circle cx="87" cy="88" r="44" fill="#f6d2b8" opacity="0.85"/>
+      <path d="M36 236 C88 170, 154 188, 220 126 L220 320 L36 320 Z" fill="#1b3a47" opacity="0.55"/>
+    </g>
+    <g transform="translate(318 82) rotate(3 150 180)">
+      <rect width="310" height="350" rx="8" fill="#f8f8f3"/>
+      <rect x="10" y="10" width="290" height="330" rx="5" fill="url(#photoB)"/>
+      <g opacity="0.55">
+        <rect x="42" y="22" width="18" height="305" fill="#152435"/>
+        <rect x="85" y="22" width="20" height="305" fill="#f5f0d8"/>
+        <rect x="126" y="22" width="17" height="305" fill="#c9202f"/>
+        <rect x="166" y="22" width="23" height="305" fill="#2b80a1"/>
+        <rect x="222" y="22" width="17" height="305" fill="#f07f2e"/>
+      </g>
+      <circle cx="155" cy="154" r="42" fill="#deb796" opacity="0.8"/>
+    </g>
+    <g transform="translate(610 76) rotate(-2 140 175)">
+      <rect width="290" height="352" rx="8" fill="#f8f8f3"/>
+      <rect x="10" y="10" width="270" height="332" rx="5" fill="url(#photoC)"/>
+      <path d="M10 230 C86 168, 168 178, 280 92 L280 342 L10 342 Z" fill="#1c422f" opacity="0.65"/>
+      <rect x="48" y="52" width="192" height="116" rx="8" fill="#f2efe2" opacity="0.5"/>
+    </g>
+    <g transform="translate(856 96) rotate(5 120 160)">
+      <rect width="230" height="312" rx="8" fill="#f8f8f3"/>
+      <rect x="10" y="10" width="210" height="292" rx="5" fill="#405468"/>
+      <path d="M10 210 C54 164, 128 150, 220 90 L220 302 L10 302 Z" fill="#88b4c4" opacity="0.75"/>
+    </g>
+  </g>
+  <g>
+    <rect x="110" y="330" width="260" height="100" rx="8" fill="#05080c" opacity="0.72"/>
+    <text x="134" y="390" font-family="Segoe UI, Arial, sans-serif" font-size="54" font-weight="700" fill="#fff">20 46</text>
+    <text x="137" y="415" font-family="Segoe UI, Arial, sans-serif" font-size="21" fill="#b8c0ca">понедельник, 29 июня</text>
+  </g>
+  <g>
+    <rect x="635" y="288" width="450" height="142" rx="8" fill="#05080c" opacity="0.70"/>
+    <circle cx="672" cy="326" r="13" fill="none" stroke="#f5c84c" stroke-width="4"/>
+    <g stroke="#f5c84c" stroke-width="3" stroke-linecap="round">
+      <line x1="672" y1="303" x2="672" y2="294"/>
+      <line x1="672" y1="358" x2="672" y2="349"/>
+      <line x1="649" y1="326" x2="640" y2="326"/>
+      <line x1="704" y1="326" x2="695" y2="326"/>
+    </g>
+    <text x="710" y="323" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#fff">Москва 20°</text>
+    <text x="710" y="348" font-family="Segoe UI, Arial, sans-serif" font-size="17" fill="#c3cbd3">Ясно</text>
+    <text x="660" y="382" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#c3cbd3">день 22° / ночь 16°</text>
+    <text x="660" y="410" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#c3cbd3">влажн. 64%   давл. 761 мм рт. ст.</text>
+    <g font-family="Segoe UI, Arial, sans-serif" text-anchor="middle">
+      <g transform="translate(858 374)">
+        <text y="-8" font-size="12" fill="#b8c0ca">30.06</text>
+        <circle cy="12" r="8" fill="none" stroke="#f5c84c" stroke-width="3"/>
+        <text y="42" font-size="13" fill="#e8edf2">24°/19°</text>
+      </g>
+      <g transform="translate(934 374)">
+        <text y="-8" font-size="12" fill="#b8c0ca">01.07</text>
+        <circle cy="12" r="8" fill="none" stroke="#f5c84c" stroke-width="3"/>
+        <text y="42" font-size="13" fill="#e8edf2">26°/20°</text>
+      </g>
+      <g transform="translate(1010 374)">
+        <text y="-8" font-size="12" fill="#b8c0ca">02.07</text>
+        <path d="M-10 16 H10" stroke="#a7b8c9" stroke-width="5" stroke-linecap="round"/>
+        <text y="42" font-size="13" fill="#e8edf2">18°/13°</text>
+      </g>
+    </g>
+  </g>
+</svg>

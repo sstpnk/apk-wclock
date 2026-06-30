@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">WClock screen modes</title>
+  <desc id="desc">Three illustrated screens: photo wall, photo frame, and settings.</desc>
+  <rect width="1200" height="520" fill="#ffffff"/>
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2d4b62"/>
+      <stop offset="1" stop-color="#090c12"/>
+    </linearGradient>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#cab27c"/>
+      <stop offset="0.48" stop-color="#5d8a94"/>
+      <stop offset="1" stop-color="#1b2531"/>
+    </linearGradient>
+    <linearGradient id="settings" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#11191f"/>
+      <stop offset="1" stop-color="#1f272e"/>
+    </linearGradient>
+  </defs>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <g transform="translate(52 54)">
+      <rect width="318" height="330" rx="22" fill="#11161d"/>
+      <rect x="16" y="16" width="286" height="248" rx="10" fill="url(#bg1)"/>
+      <g opacity="0.95">
+        <rect x="32" y="32" width="96" height="128" rx="5" fill="#f7f7ef" transform="rotate(-5 80 96)"/>
+        <rect x="42" y="42" width="76" height="108" rx="3" fill="#b8d4df" transform="rotate(-5 80 96)"/>
+        <rect x="122" y="42" width="112" height="146" rx="5" fill="#f7f7ef" transform="rotate(5 178 115)"/>
+        <rect x="132" y="52" width="92" height="126" rx="3" fill="#d85b36" transform="rotate(5 178 115)"/>
+        <rect x="205" y="72" width="80" height="144" rx="5" fill="#f7f7ef" transform="rotate(-3 245 144)"/>
+        <rect x="215" y="82" width="60" height="124" rx="3" fill="#83a77d" transform="rotate(-3 245 144)"/>
+      </g>
+      <rect x="30" y="196" width="110" height="52" rx="6" fill="#020408" opacity="0.75"/>
+      <text x="46" y="230" font-size="30" font-weight="700" fill="#fff">20 46</text>
+      <rect x="148" y="190" width="136" height="58" rx="6" fill="#020408" opacity="0.62"/>
+      <text x="162" y="216" font-size="15" font-weight="700" fill="#fff">Москва 20°</text>
+      <text x="162" y="238" font-size="12" fill="#c7d0d8">5 дней прогноза</text>
+      <text x="0" y="382" font-size="24" font-weight="700" fill="#1f2933">Фотостена</text>
+      <text x="0" y="414" font-size="16" fill="#5b6670">Несколько фото, плавная смена, случайный или последовательный порядок.</text>
+    </g>
+    <g transform="translate(442 54)">
+      <rect width="318" height="330" rx="22" fill="#11161d"/>
+      <rect x="16" y="16" width="286" height="248" rx="10" fill="url(#bg2)"/>
+      <path d="M16 186 C92 128, 210 118, 302 58 L302 264 L16 264 Z" fill="#1b2838" opacity="0.42"/>
+      <rect x="34" y="194" width="110" height="50" rx="6" fill="#020408" opacity="0.72"/>
+      <text x="50" y="226" font-size="28" font-weight="700" fill="#fff">08 12</text>
+      <rect x="178" y="188" width="104" height="56" rx="6" fill="#020408" opacity="0.58"/>
+      <text x="194" y="213" font-size="14" fill="#fff">Погода</text>
+      <text x="194" y="235" font-size="12" fill="#c7d0d8">MET Norway</text>
+      <text x="0" y="382" font-size="24" font-weight="700" fill="#1f2933">Фоторамка</text>
+      <text x="0" y="414" font-size="16" fill="#5b6670">Одно фото на весь фон с cover-fit и медленным панорамированием.</text>
+    </g>
+    <g transform="translate(832 54)">
+      <rect width="318" height="330" rx="22" fill="#11161d"/>
+      <rect x="16" y="16" width="286" height="248" rx="10" fill="url(#settings)"/>
+      <text x="40" y="58" font-size="20" font-weight="700" fill="#fff">Настройки</text>
+      <g font-size="13">
+        <text x="40" y="96" fill="#9fb0bf">Экран</text>
+        <rect x="40" y="108" width="222" height="2" fill="#33414d"/>
+        <text x="40" y="134" fill="#f3f6f8">Фотостена</text>
+        <text x="210" y="134" fill="#74c0fc">18 фото</text>
+        <text x="40" y="164" fill="#f3f6f8">Порядок</text>
+        <text x="210" y="164" fill="#74c0fc">случайно</text>
+        <text x="40" y="202" fill="#9fb0bf">Погода</text>
+        <rect x="40" y="214" width="222" height="2" fill="#33414d"/>
+        <text x="40" y="240" fill="#f3f6f8">MET Norway</text>
+      </g>
+      <text x="0" y="382" font-size="24" font-weight="700" fill="#1f2933">Настройки</text>
+      <text x="0" y="414" font-size="16" fill="#5b6670">Папка фото, погода, яркость, экран часов и режим заставки.</text>
+    </g>
+  </g>
+</svg>
