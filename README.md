@@ -1,66 +1,138 @@
 # WClock
 
-WClock is an Android clock, weather, and local-photo screensaver for tablets, phones, and Android TV devices.
+WClock - Android-приложение для настольных часов, фотозаставки и погоды на старых и новых устройствах. Основной сценарий - планшет или телефон, который постоянно стоит на столе, показывает время, локальные фотографии и актуальную погоду без зависимости от Google Play Services.
 
-The project is designed for long-running ambient use: a full-screen clock and date layer, current weather and five-day forecast, and a local photo background in either photo-wall or photo-frame mode.
+Приложение можно использовать как обычный полноэкранный экран часов или как системную заставку Android Daydream.
 
-## Release Status
+## Текущий релиз
 
-Current release: `v0.1.1`.
+- Последний релиз: `v0.1.1`.
+- APK: [WClock-v0.1.1.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.1/WClock-v0.1.1.apk).
+- Минимальная версия Android: 4.4 KitKat (`minSdk 19`).
+- `versionName`: `0.1.1`.
+- `versionCode`: `2`.
 
-Published GitHub Releases: `v0.1.0`, `v0.1.1`.
+## Назначение
 
-## Requirements
+WClock рассчитан на длительную фоновую работу:
 
-- Android 4.4 KitKat or newer (`minSdk 19`).
-- No Google Play Services dependency.
-- Works on touch devices and TV/remote-driven devices.
-- Internet access is required for weather updates.
-- Local image folder access is required for photo-wall and photo-frame modes.
+- домашние или офисные часы на планшете;
+- фоторамка с локальными фотографиями;
+- информер погоды с текущими условиями и прогнозом;
+- заставка Android для устройств, которые поддерживают Daydream.
 
-## Features
+Приложение не использует облачную синхронизацию, аккаунты, аналитику и сервисы Google. Фотографии читаются из выбранной локальной папки.
 
-- Full-screen launcher mode.
-- Android Daydream/screensaver service.
-- Clock and date overlay with burn-in position shifting.
-- Current weather and five-day forecast.
-- Weather providers:
-  - Open-Meteo, no API key.
-  - MET Norway, no API key.
-  - WeatherAPI.com, optional API key.
-  - OpenWeather, optional API key.
-- Local photo display:
-  - Photo wall with animated photo entry, rotation, light frame, and smooth fade-out.
-  - Photo frame with cover-fit scaling and pan across oversized photos before switching.
-- Manual location by city label and coordinates.
-- Brightness control by ambient light sensor with schedule fallback.
+## Возможности
 
-## Build
+### Часы
 
-Use JDK and Android Gradle Plugin compatible with this repository, then run:
+- Крупное отображение времени и даты.
+- Опциональное отображение секунд.
+- Полноэкранный режим с приглушенными подложками поверх фотографий.
+- Небольшие сдвиги интерфейса для снижения риска выгорания экрана.
+- Отдельный режим Android Daydream/screensaver.
+
+### Фотографии
+
+- Выбор локальной папки с изображениями.
+- Режим фотостены:
+  - несколько фотографий одновременно;
+  - плавное появление и исчезновение;
+  - легкий поворот карточек;
+  - рамка вокруг фото;
+  - случайный или последовательный порядок;
+  - защита от одновременного показа одной и той же фотографии в random-режиме, если фотографий хватает.
+- Режим фоторамки:
+  - одна фотография на весь фон;
+  - cover-fit масштабирование;
+  - медленное панорамирование крупных изображений перед переключением.
+- Корректная обработка EXIF-ориентации фотографий.
+
+### Погода
+
+- Текущая погода: температура, описание, влажность, давление.
+- Прогноз на несколько дней.
+- Источники погоды:
+  - MET Norway, без ключа;
+  - Open-Meteo, без ключа;
+  - wttr.in, без ключа, HTTP;
+  - WeatherAPI.com, нужен API-ключ;
+  - OpenWeather, нужен API-ключ.
+- Fallback между провайдерами при ошибке.
+- Диагностика последней попытки загрузки в настройках.
+- Поддержка legacy TLS для Android 4.4, чтобы MET Norway работал на старом системном сетевом стеке.
+
+### Яркость
+
+- Управление яркостью по датчику освещенности.
+- Резервный режим по расписанию: день, вечер, ночь.
+- Настройки яркости применяются в полноэкранном режиме и в режиме заставки.
+
+### Настройки
+
+- Город и координаты.
+- Источник погоды и частота обновления.
+- API-ключи для платных/ключевых провайдеров.
+- Стиль погодных иконок.
+- Папка фотографий.
+- Режим отображения фотографий.
+- Количество видимых фото и интервал смены.
+- Случайный или последовательный порядок фотографий.
+- Секунды в часах.
+- Автояркость и расписание яркости.
+
+## Установка
+
+1. Скачайте APK из последнего GitHub Release.
+2. Установите APK на устройство Android.
+3. Разрешите установку из выбранного источника, если Android попросит это сделать.
+4. Откройте WClock.
+5. В настройках выберите папку с фотографиями и укажите город/координаты.
+
+Для Android 4.4 используется встроенный fallback-выбор папки, потому что Storage Access Framework доступен не на всех старых устройствах одинаково.
+
+## Права
+
+Приложение запрашивает только права, нужные для своей работы:
+
+- `INTERNET` - загрузка погоды;
+- `ACCESS_NETWORK_STATE` - проверка сети;
+- `READ_EXTERNAL_STORAGE` или `READ_MEDIA_IMAGES` - чтение выбранных локальных фотографий;
+- `BIND_DREAM_SERVICE` - регистрация системной заставки.
+
+## Сборка из исходников
+
+Требуются JDK 17 и Android SDK, совместимые с Android Gradle Plugin из проекта.
+
+Проверка и debug-сборка:
 
 ```powershell
 .\gradlew.bat testDebugUnitTest
 .\gradlew.bat assembleDebug
 ```
 
-Debug APK output:
+Debug APK:
 
 ```text
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Release APK output:
+Release-сборка:
 
 ```powershell
 .\gradlew.bat testDebugUnitTest assembleRelease
 ```
 
+Release APK:
+
 ```text
 app/build/outputs/apk/release/app-release.apk
 ```
 
-To create a signed release APK, keep `release-signing.properties` outside git:
+## Подпись release APK
+
+Release signing не хранится в git. Для локальной подписанной сборки нужен файл `release-signing.properties` в корне проекта:
 
 ```properties
 release.storeFile=C:\\path\\to\\wclock-release.jks
@@ -69,25 +141,27 @@ release.keyAlias=wclock
 release.keyPassword=...
 ```
 
-Each build exposes a UTC build number in settings. Format: last digit of year, month, day, hour, minute. Example: `606250947`.
+Файлы `release-signing.properties`, `*.jks` и `*.keystore` добавлены в `.gitignore`.
 
-## Project Layout
+Важно: keystore нужно сохранить. APK, подписанные другим ключом, не смогут обновляться поверх уже установленной release-версии.
 
-- `app/src/main/java/com/sstpnk/wclock/host` - activity and screensaver hosts.
-- `app/src/main/java/com/sstpnk/wclock/render` - clock/weather rendering and frame loop.
-- `app/src/main/java/com/sstpnk/wclock/collage` - local image scanning, decoding, photo wall, and photo frame engine.
-- `app/src/main/java/com/sstpnk/wclock/weather` - weather providers and cache.
-- `app/src/main/java/com/sstpnk/wclock/settings` - settings UI and persistence.
+## Структура проекта
 
-## Beta Limitations
+- `app/src/main/java/com/sstpnk/wclock/host` - Activity и DreamService.
+- `app/src/main/java/com/sstpnk/wclock/render` - отрисовка часов, погоды и основного цикла.
+- `app/src/main/java/com/sstpnk/wclock/collage` - сканирование, декодирование и отображение фотографий.
+- `app/src/main/java/com/sstpnk/wclock/weather` - погодные провайдеры, fallback и кеш.
+- `app/src/main/java/com/sstpnk/wclock/settings` - UI настроек и сохранение параметров.
+- `app/src/test/java/com/sstpnk/wclock` - unit-тесты и Robolectric-тесты.
 
-- Fullscreen mode can use the ambient light sensor for brightness; schedule-based brightness remains the fallback.
-- Folder picking uses SAF on Android 5+ and an in-app file browser fallback for Android 4.4.
-- Weather descriptions are mapped locally in Russian for key provider codes.
-- This is not yet a Play Store-ready release.
+## Известные ограничения
 
-## License
+- Open-Meteo и wttr.in могут быть недоступны на некоторых сетях или старых устройствах; MET Norway используется как рабочий fallback.
+- Интерфейс настроек функциональный, но пока без отдельного дизайн-фреймворка.
+- Приложение распространяется как APK через GitHub Releases, не через Google Play.
 
-WClock is source-available for non-commercial use. See [LICENSE](LICENSE).
+## Лицензия
 
-Commercial use, resale, paid redistribution, or selling a derivative product based on this code requires separate written permission from the copyright holder.
+WClock доступен для некоммерческого использования. См. [LICENSE](LICENSE).
+
+Коммерческое использование, перепродажа, платное распространение или продажа производного продукта на основе этого кода требуют отдельного письменного разрешения правообладателя.
