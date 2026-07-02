@@ -63,9 +63,10 @@ public class ClockWeatherCollageViewTest {
         assertEquals(clockPanel.bottom, weatherPanel.bottom, 0.01f);
         assertTrue("Panels should sit close to the bottom edge", clockPanel.bottom >= 768 - 26);
         assertTrue("Clock panel should not keep excess vertical padding", clockPanel.height() <= 145);
-        assertTrue("Weather panel should live in the right half on tablets", weatherPanel.left > 1040 * 0.52f);
-        assertTrue("Weather panel should leave more collage visible horizontally", weatherPanel.width() <= 1040 * 0.46f);
-        assertTrue("Weather panel should be compact vertically", weatherPanel.height() <= 768 * 0.34f);
+        assertEquals("Weather panel should remain right aligned", 1040 - 24, weatherPanel.right, 1.0f);
+        assertTrue("Weather panel should not overlap the clock panel", weatherPanel.left >= clockPanel.right + 24);
+        assertTrue("Weather panel should be visibly larger for readability", weatherPanel.width() >= 1040 * 0.50f);
+        assertTrue("Weather panel should grow vertically for larger text and forecast cards", weatherPanel.height() >= 768 * 0.36f);
     }
 
     @Test
@@ -90,6 +91,17 @@ public class ClockWeatherCollageViewTest {
         Method method = ClockWeatherCollageView.class.getDeclaredMethod("weatherDetailLineGap");
         method.setAccessible(true);
 
-        assertEquals(16.5f, (Float) method.invoke(view), 0.01f);
+        assertEquals(24.75f, (Float) method.invoke(view), 0.01f);
+    }
+
+    @Test
+    public void panelBackgroundAlphaControlsPanelColor() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method method = ClockWeatherCollageView.class.getDeclaredMethod("panelColor", float.class);
+        method.setAccessible(true);
+
+        assertEquals(0x8F000000, ((Integer) method.invoke(view, 0.56f)).intValue());
+        assertEquals(0x00000000, ((Integer) method.invoke(view, -0.2f)).intValue());
+        assertEquals(0xD9000000, ((Integer) method.invoke(view, 1.2f)).intValue());
     }
 }

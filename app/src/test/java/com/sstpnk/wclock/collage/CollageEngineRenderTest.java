@@ -90,10 +90,10 @@ public class CollageEngineRenderTest {
                 new SequenceBitmapDecoder());
         engine.setSource(folder.getAbsolutePath(), "");
         engine.draw(canvas, 1000L, true, CollageEngine.MODE_FRAME, 1, 1);
-        engine.draw(canvas, 2500L, true, CollageEngine.MODE_FRAME, 1, 1);
+        engine.draw(canvas, 2700L, true, CollageEngine.MODE_FRAME, 1, 1);
         assertTrue("Crossfade must keep old image visible", countDominantRedPixels(target) > 5000);
 
-        engine.draw(canvas, 3400L, true, CollageEngine.MODE_FRAME, 1, 1);
+        engine.draw(canvas, 4501L, true, CollageEngine.MODE_FRAME, 1, 1);
         assertTrue("Crossfade must fade in new image", countDominantGreenPixels(target) > 5000);
     }
 
@@ -115,6 +115,26 @@ public class CollageEngineRenderTest {
         assertTrue("Wide photo needs more time than the configured interval to show every horizontal segment", displayMs > 5000L);
         assertEquals("Pan starts at the left edge", 0.0f, start.left, 0.01f);
         assertTrue("Pan ends after moving to the right edge of the oversized bitmap", end.left < -590.0f);
+    }
+
+    @Test
+    public void frameModeUsesEasedSlowPanForOversizedPhotos() throws Exception {
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                new WideBitmapDecoder());
+        Bitmap bitmap = Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888);
+        Method duration = CollageEngine.class.getDeclaredMethod("frameDisplayDurationMillis", Bitmap.class, int.class, int.class, int.class);
+        Method progress = CollageEngine.class.getDeclaredMethod("smoothFrameProgress", long.class, long.class, long.class);
+        duration.setAccessible(true);
+        progress.setAccessible(true);
+
+        long displayMs = (Long) duration.invoke(engine, bitmap, 600, 600, 5000);
+        float quarter = (Float) progress.invoke(engine, 1000L + displayMs / 4L, 1000L, displayMs);
+        float half = (Float) progress.invoke(engine, 1000L + displayMs / 2L, 1000L, displayMs);
+
+        assertTrue("Wide pan should run substantially slower than the configured interval", displayMs >= 9000L);
+        assertTrue("Pan should ease in instead of moving linearly from the first frame", quarter < 0.20f);
+        assertEquals("Pan midpoint should still reach the center of the image", 0.50f, half, 0.03f);
     }
 
     @Test

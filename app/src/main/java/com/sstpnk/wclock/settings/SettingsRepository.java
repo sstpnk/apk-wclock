@@ -42,6 +42,7 @@ public final class SettingsRepository {
         settings.autoBrightnessMin = prefs.getFloat("autoBrightnessMin", defaults.autoBrightnessMin);
         settings.autoBrightnessMax = prefs.getFloat("autoBrightnessMax", defaults.autoBrightnessMax);
         settings.nightOverlayAlpha = prefs.getFloat("nightOverlayAlpha", defaults.nightOverlayAlpha);
+        settings.panelBackgroundAlpha = prefs.getFloat("panelBackgroundAlpha", defaults.panelBackgroundAlpha);
         return settings.normalized();
     }
 
@@ -75,6 +76,7 @@ public final class SettingsRepository {
                 .putFloat("autoBrightnessMin", safe.autoBrightnessMin)
                 .putFloat("autoBrightnessMax", safe.autoBrightnessMax)
                 .putFloat("nightOverlayAlpha", safe.nightOverlayAlpha)
+                .putFloat("panelBackgroundAlpha", safe.panelBackgroundAlpha)
                 .apply();
     }
 
@@ -130,6 +132,7 @@ public final class SettingsRepository {
         public float autoBrightnessMin;
         public float autoBrightnessMax;
         public float nightOverlayAlpha;
+        public float panelBackgroundAlpha;
 
         public static Settings defaults() {
             Settings settings = new Settings();
@@ -160,6 +163,7 @@ public final class SettingsRepository {
             settings.autoBrightnessMin = 0.08f;
             settings.autoBrightnessMax = 0.90f;
             settings.nightOverlayAlpha = 0.45f;
+            settings.panelBackgroundAlpha = 0.56f;
             return settings;
         }
 
@@ -192,6 +196,7 @@ public final class SettingsRepository {
             safe.autoBrightnessMin = clampFloat(Math.min(autoBrightnessMin, autoBrightnessMax), 0.05f, 1.0f);
             safe.autoBrightnessMax = clampFloat(Math.max(autoBrightnessMin, autoBrightnessMax), safe.autoBrightnessMin, 1.0f);
             safe.nightOverlayAlpha = clampFloat(nightOverlayAlpha, 0.0f, 0.85f);
+            safe.panelBackgroundAlpha = clampFloat(panelBackgroundAlpha, 0.0f, 0.85f);
             return safe;
         }
     }

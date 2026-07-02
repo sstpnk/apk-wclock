@@ -58,6 +58,7 @@ public final class SettingsActivity extends Activity {
     private EditText dayBrightness;
     private EditText eveningBrightness;
     private EditText nightBrightness;
+    private EditText panelBackgroundAlpha;
     private CheckBox collageEnabled;
     private CheckBox showSeconds;
     private CheckBox autoBrightnessEnabled;
@@ -142,6 +143,9 @@ public final class SettingsActivity extends Activity {
         root.addView(section("Часы"));
         showSeconds = checkbox("Показывать секунды", settings.showSeconds);
         root.addView(showSeconds);
+        root.addView(fieldLabel("\u041f\u0440\u043e\u0437\u0440\u0430\u0447\u043d\u043e\u0441\u0442\u044c \u043f\u043e\u0434\u043b\u043e\u0436\u0435\u043a, 0.0-0.85"));
+        panelBackgroundAlpha = edit("0.56", Float.toString(settings.panelBackgroundAlpha));
+        root.addView(panelBackgroundAlpha);
 
         root.addView(section("Яркость"));
         autoBrightnessEnabled = checkbox("Автояркость по датчику освещенности", settings.autoBrightnessEnabled);
@@ -298,6 +302,7 @@ public final class SettingsActivity extends Activity {
         settings.dayBrightness = parseFloat(dayBrightness.getText().toString(), settings.dayBrightness);
         settings.eveningBrightness = parseFloat(eveningBrightness.getText().toString(), settings.eveningBrightness);
         settings.nightBrightness = parseFloat(nightBrightness.getText().toString(), settings.nightBrightness);
+        settings.panelBackgroundAlpha = parseFloat(panelBackgroundAlpha.getText().toString(), settings.panelBackgroundAlpha);
         repository.save(settings);
         finish();
     }

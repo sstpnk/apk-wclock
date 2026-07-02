@@ -289,7 +289,7 @@ public final class CollageEngine {
     }
 
     private void removeFadedFrameExtras(long transitionAge) {
-        if (activePhotos.size() > 1 && transitionAge > 1400L) {
+        if (activePhotos.size() > 1 && transitionAge > 1800L) {
             ActivePhoto first = activePhotos.remove(0);
             recycle(first);
         }
@@ -318,7 +318,7 @@ public final class CollageEngine {
     }
 
     private int alphaForFrameTransition(long transitionAge, boolean newest) {
-        long fade = 1400L;
+        long fade = 1800L;
         long age = Math.max(0L, Math.min(fade, transitionAge));
         if (newest) {
             return (int) Math.min(255, 255 * age / fade);
@@ -334,7 +334,7 @@ public final class CollageEngine {
         if (screens <= 1.01f) {
             return intervalMs;
         }
-        return Math.max(intervalMs, (long) (intervalMs * screens));
+        return Math.max(intervalMs, (long) (intervalMs * screens * 1.5f));
     }
 
     private RectF frameRectForBitmap(Bitmap bitmap, int width, int height, long nowMillis, long bornMillis, long displayDurationMs) {
@@ -343,11 +343,16 @@ public final class CollageEngine {
         float drawHeight = base.height();
         float maxX = Math.max(0.0f, drawWidth - width);
         float maxY = Math.max(0.0f, drawHeight - height);
-        float progress = displayDurationMs <= 0L ? 1.0f : (nowMillis - bornMillis) / (float) displayDurationMs;
-        progress = Math.max(0.0f, Math.min(1.0f, progress));
+        float progress = smoothFrameProgress(nowMillis, bornMillis, displayDurationMs);
         float left = maxX >= maxY ? -maxX * progress : -maxX * 0.5f;
         float top = maxY > maxX ? -maxY * progress : -maxY * 0.5f;
         return new RectF(left, top, left + drawWidth, top + drawHeight);
+    }
+
+    private float smoothFrameProgress(long nowMillis, long bornMillis, long displayDurationMs) {
+        float progress = displayDurationMs <= 0L ? 1.0f : (nowMillis - bornMillis) / (float) displayDurationMs;
+        progress = Math.max(0.0f, Math.min(1.0f, progress));
+        return progress * progress * (3.0f - 2.0f * progress);
     }
 
     private RectF frameBaseRect(Bitmap bitmap, int width, int height) {
