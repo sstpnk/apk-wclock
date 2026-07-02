@@ -27,7 +27,7 @@ public class SettingsActivityTest {
     public void settingsUseCompactSpinnersAndColumns() {
         SettingsActivity activity = Robolectric.buildActivity(SettingsActivity.class).setup().get();
 
-        assertTrue("Provider, location, refresh and weather icon controls should use dropdown spinners", countViews(activity.getWindow().getDecorView(), Spinner.class) >= 4);
+        assertTrue("Photo modes, provider, location, refresh and weather icon controls should use dropdown spinners", countViews(activity.getWindow().getDecorView(), Spinner.class) >= 6);
         assertTrue("Settings should use horizontal groups to reduce one-long-column scrolling", countHorizontalRows(activity.getWindow().getDecorView()) >= 4);
         assertRowHasColumns(activity, SettingsActivity.TAG_LOCATION_COORDINATES_ROW, 2);
         assertRowHasColumns(activity, SettingsActivity.TAG_BRIGHTNESS_ROW, 2);
@@ -43,11 +43,25 @@ public class SettingsActivityTest {
         assertTrue(text.contains("Локация"));
         assertTrue(text.contains("Автоматически"));
         assertTrue(text.contains("Координаты"));
+        assertTrue(text.contains("Локация для подписи"));
         assertTrue(text.contains("Количество фото на экране"));
         assertTrue(text.contains("Частота обновления погоды"));
         assertTrue(text.contains("Стиль погодных иконок"));
         assertTrue(text.contains("Автояркость использует"));
         assertFalse("Settings text must not contain mojibake fragments", text.contains("Р ") || text.contains("Рџ") || text.contains("СЃ"));
+    }
+
+    @Test
+    public void photoModeAndOrderUseDropdowns() {
+        SettingsActivity activity = Robolectric.buildActivity(SettingsActivity.class).setup().get();
+
+        Spinner mode = findSpinnerWithFirstItem(activity.getWindow().getDecorView(), "Фотостена");
+        Spinner order = findSpinnerWithFirstItem(activity.getWindow().getDecorView(), "Случайно");
+
+        assertNotNull(mode);
+        assertEquals("Фоторамка", mode.getAdapter().getItem(1));
+        assertNotNull(order);
+        assertEquals("По порядку", order.getAdapter().getItem(1));
     }
 
     @Test
@@ -112,6 +126,28 @@ public class SettingsActivityTest {
 
         autoBrightness.setChecked(false);
         assertEquals(View.GONE, autoRange.getVisibility());
+    }
+
+    @Test
+    public void panelAlphaControlsBelongToTheirFeatureGroups() {
+        SettingsActivity activity = Robolectric.buildActivity(SettingsActivity.class).setup().get();
+        View root = activity.getWindow().getDecorView();
+        String text = collectText(root);
+
+        assertTrue(text.contains("Прозрачность подложки часов"));
+        assertTrue(text.contains("Прозрачность подложки погоды"));
+        assertRowHasColumns(activity, SettingsActivity.TAG_CLOCK_SETTINGS_GROUP, 2);
+
+        CheckBox clock = findCheckBox(root, "Показывать часы");
+        CheckBox weather = findCheckBox(root, "Показывать погоду");
+        View clockGroup = findByTag(root, SettingsActivity.TAG_CLOCK_SETTINGS_GROUP);
+        View weatherGroup = findByTag(root, SettingsActivity.TAG_WEATHER_SETTINGS_GROUP);
+
+        clock.setChecked(false);
+        weather.setChecked(false);
+
+        assertEquals(View.GONE, clockGroup.getVisibility());
+        assertEquals(View.GONE, weatherGroup.getVisibility());
     }
 
     @Test

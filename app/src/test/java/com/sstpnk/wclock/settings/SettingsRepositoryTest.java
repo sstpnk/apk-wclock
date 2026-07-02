@@ -33,7 +33,8 @@ public class SettingsRepositoryTest {
         assertTrue(settings.burnInMaxMinutes <= 15);
         assertTrue(settings.nightOverlayAlpha >= 0.0f);
         assertTrue(settings.nightOverlayAlpha <= 1.0f);
-        assertEquals(0.56f, settings.panelBackgroundAlpha, 0.001f);
+        assertEquals(0.56f, settings.clockPanelBackgroundAlpha, 0.001f);
+        assertEquals(0.56f, settings.weatherPanelBackgroundAlpha, 0.001f);
     }
 
     @Test
@@ -102,13 +103,15 @@ public class SettingsRepositoryTest {
     public void panelBackgroundAlphaIsNormalized() {
         SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
 
-        settings.panelBackgroundAlpha = -0.3f;
-        assertEquals(0.0f, settings.normalized().panelBackgroundAlpha, 0.001f);
+        settings.clockPanelBackgroundAlpha = -0.3f;
+        assertEquals(0.0f, settings.normalized().clockPanelBackgroundAlpha, 0.001f);
 
-        settings.panelBackgroundAlpha = 1.2f;
-        assertEquals(0.85f, settings.normalized().panelBackgroundAlpha, 0.001f);
+        settings.weatherPanelBackgroundAlpha = 1.2f;
+        assertEquals(0.85f, settings.normalized().weatherPanelBackgroundAlpha, 0.001f);
 
-        settings.panelBackgroundAlpha = 0.62f;
-        assertEquals(0.62f, settings.normalized().panelBackgroundAlpha, 0.001f);
+        settings.clockPanelBackgroundAlpha = 0.62f;
+        settings.weatherPanelBackgroundAlpha = 0.64f;
+        assertEquals(0.62f, settings.normalized().clockPanelBackgroundAlpha, 0.001f);
+        assertEquals(0.64f, settings.normalized().weatherPanelBackgroundAlpha, 0.001f);
     }
 }

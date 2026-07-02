@@ -113,7 +113,23 @@ public class ClockWeatherCollageViewTest {
         RectF withoutForecast = (RectF) weatherPanelMethod.invoke(view, 1040, 768, clockPanel);
 
         assertTrue("Weather panel without five-day forecast should not keep the forecast-sized empty area", withoutForecast.height() + 70.0f < withForecast.height());
+        assertTrue("Current-only weather panel should be tight enough to avoid empty forecast space", withoutForecast.height() <= 205.0f);
         assertEquals("Weather panel should remain bottom aligned with the clock", clockPanel.bottom, withoutForecast.bottom, 0.01f);
+    }
+
+    @Test
+    public void settingsButtonIsLargerAndCloserToBottomRight() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        view.layout(0, 0, 1040, 768);
+        Method method = ClockWeatherCollageView.class.getDeclaredMethod("settingsButtonBounds", int.class, int.class);
+        method.setAccessible(true);
+
+        RectF bounds = (RectF) method.invoke(view, 1040, 768);
+
+        assertTrue("Settings button should be easier to hit", bounds.width() >= 38.0f);
+        assertTrue("Settings button should move closer to the right edge", 1040.0f - bounds.right <= 18.0f);
+        assertTrue("Settings button should move closer to the bottom edge", 768.0f - bounds.bottom <= 18.0f);
+        assertTrue(view.isSettingsButtonHit(bounds.centerX(), bounds.centerY()));
     }
 
     @Test

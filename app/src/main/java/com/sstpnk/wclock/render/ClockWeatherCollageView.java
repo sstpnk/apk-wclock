@@ -19,7 +19,8 @@ import java.util.Locale;
 public final class ClockWeatherCollageView extends View {
     private static final float PANEL_RADIUS_DP = 8.0f;
     private static final float EDGE_PADDING_DP = 24.0f;
-    private static final float SETTINGS_SIZE_DP = 30.0f;
+    private static final float SETTINGS_MARGIN_DP = 16.0f;
+    private static final float SETTINGS_SIZE_DP = 38.0f;
     private static final float WEATHER_UI_SCALE = 1.5f;
 
     private final CollageEngine collageEngine;
@@ -42,7 +43,8 @@ public final class ClockWeatherCollageView extends View {
     private boolean showForecast = true;
     private boolean showSeconds;
     private String weatherIconStyle = "outline";
-    private float panelBackgroundAlpha = 0.56f;
+    private float clockPanelBackgroundAlpha = 0.56f;
+    private float weatherPanelBackgroundAlpha = 0.56f;
     private String weatherStatus = "\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b";
     private long weatherStatusMillis;
 
@@ -71,7 +73,7 @@ public final class ClockWeatherCollageView extends View {
     }
 
     public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle) {
-        setDisplaySettings(collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, panelBackgroundAlpha);
+        setDisplaySettings(collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, clockPanelBackgroundAlpha);
     }
 
     public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
@@ -83,6 +85,10 @@ public final class ClockWeatherCollageView extends View {
     }
 
     public void setDisplaySettings(boolean collageEnabled, boolean showClock, boolean showWeather, boolean showForecast, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
+        setDisplaySettings(collageEnabled, showClock, showWeather, showForecast, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, panelBackgroundAlpha, panelBackgroundAlpha);
+    }
+
+    public void setDisplaySettings(boolean collageEnabled, boolean showClock, boolean showWeather, boolean showForecast, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond, boolean showSeconds, String weatherIconStyle, float clockPanelBackgroundAlpha, float weatherPanelBackgroundAlpha) {
         this.collageEnabled = collageEnabled;
         this.showClock = showClock;
         this.showWeather = showWeather;
@@ -94,7 +100,8 @@ public final class ClockWeatherCollageView extends View {
         this.framePanSpeedPxPerSecond = Math.max(4, Math.min(48, framePanSpeedPxPerSecond));
         this.showSeconds = showSeconds;
         this.weatherIconStyle = "flat".equals(weatherIconStyle) ? "flat" : "outline";
-        this.panelBackgroundAlpha = Math.max(0.0f, Math.min(0.85f, panelBackgroundAlpha));
+        this.clockPanelBackgroundAlpha = Math.max(0.0f, Math.min(0.85f, clockPanelBackgroundAlpha));
+        this.weatherPanelBackgroundAlpha = Math.max(0.0f, Math.min(0.85f, weatherPanelBackgroundAlpha));
     }
 
     public void setWeatherStatus(String weatherStatus) {
@@ -114,13 +121,13 @@ public final class ClockWeatherCollageView extends View {
         RectF clockPanel = null;
         if (showClock) {
             clockPanel = clockPanel(width, height);
-            drawPanel(canvas, clockPanel.left, clockPanel.top, clockPanel.right, clockPanel.bottom, panelColor(panelBackgroundAlpha));
+            drawPanel(canvas, clockPanel.left, clockPanel.top, clockPanel.right, clockPanel.bottom, panelColor(clockPanelBackgroundAlpha));
             drawClock(canvas, clockPanel, now, width);
         }
 
         if (showWeather && weatherData != null) {
             RectF weatherPanel = weatherPanel(width, height, clockPanel);
-            drawPanel(canvas, weatherPanel.left, weatherPanel.top, weatherPanel.right, weatherPanel.bottom, panelColor(panelBackgroundAlpha));
+            drawPanel(canvas, weatherPanel.left, weatherPanel.top, weatherPanel.right, weatherPanel.bottom, panelColor(weatherPanelBackgroundAlpha));
             drawWeather(canvas, weatherPanel, width);
         }
         if (showWeather) {
@@ -131,10 +138,8 @@ public final class ClockWeatherCollageView extends View {
     }
 
     public boolean isSettingsButtonHit(float x, float y) {
-        float size = dp(SETTINGS_SIZE_DP);
-        float margin = dp(EDGE_PADDING_DP);
-        return x >= getWidth() - margin - size && x <= getWidth() - margin
-                && y >= getHeight() - margin - size && y <= getHeight() - margin;
+        RectF bounds = settingsButtonBounds(getWidth(), getHeight());
+        return bounds.contains(x, y);
     }
 
     private RectF clockPanel(int width, int height) {
@@ -161,10 +166,10 @@ public final class ClockWeatherCollageView extends View {
             float panelWidth = clamp(width * 0.60f, dp(540), dp(750));
             float right = width - margin - (burnInZoneIndex % 2) * dp(14);
             float left = clockPanel == null ? right - panelWidth : Math.max(clockPanel.right + margin, right - panelWidth);
-            float panelHeight = showForecast ? clamp(height * 0.41f, dp(285), dp(390)) : clamp(height * 0.27f, dp(190), dp(270));
+            float panelHeight = showForecast ? clamp(height * 0.41f, dp(285), dp(390)) : clamp(height * 0.23f, dp(168), dp(225));
             return new RectF(left, bottom - panelHeight, right, bottom);
         }
-        float panelHeight = showForecast ? clamp(height * 0.39f, dp(345), dp(510)) : clamp(height * 0.25f, dp(220), dp(330));
+        float panelHeight = showForecast ? clamp(height * 0.39f, dp(345), dp(510)) : clamp(height * 0.21f, dp(190), dp(285));
         float top = clockPanel == null ? bottom - panelHeight : clockPanel.bottom + dp(14);
         return new RectF(margin, top, width - margin, top + panelHeight);
     }
@@ -267,7 +272,7 @@ public final class ClockWeatherCollageView extends View {
         if (height < dp(81)) {
             return;
         }
-        drawPanel(canvas, left, top, left + width, top + height, panelColor(panelBackgroundAlpha * 0.55f));
+        drawPanel(canvas, left, top, left + width, top + height, panelColor(weatherPanelBackgroundAlpha * 0.55f));
         setText(dp(15), 0xBFFFFFFF, true);
         paint.setTextAlign(Paint.Align.CENTER);
         float centerX = left + width * 0.50f;
@@ -281,10 +286,10 @@ public final class ClockWeatherCollageView extends View {
     }
 
     private void drawSettingsButton(Canvas canvas, int width, int height) {
-        float size = dp(SETTINGS_SIZE_DP);
-        float margin = dp(EDGE_PADDING_DP);
-        float left = width - margin - size;
-        float top = height - margin - size;
+        RectF bounds = settingsButtonBounds(width, height);
+        float size = bounds.width();
+        float left = bounds.left;
+        float top = bounds.top;
         panel.set(left, top, left + size, top + size);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(0x16000000);
@@ -296,6 +301,12 @@ public final class ClockWeatherCollageView extends View {
             float y = top + size * (0.34f + i * 0.16f);
             canvas.drawRect(barLeft, y, barRight, y + dp(1.2f), paint);
         }
+    }
+
+    private RectF settingsButtonBounds(int width, int height) {
+        float size = dp(SETTINGS_SIZE_DP);
+        float margin = dp(SETTINGS_MARGIN_DP);
+        return new RectF(width - margin - size, height - margin - size, width - margin, height - margin);
     }
 
     private void drawWeatherStatus(Canvas canvas, int width, int height) {

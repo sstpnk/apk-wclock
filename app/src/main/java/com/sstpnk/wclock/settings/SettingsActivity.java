@@ -17,8 +17,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -36,11 +34,6 @@ public final class SettingsActivity extends Activity {
     static final String TAG_WEATHER_SETTINGS_GROUP = "weather_settings_group";
     static final String TAG_BRIGHTNESS_AUTO_RANGE_ROW = "brightness_auto_range_row";
 
-    private static final int MODE_PHOTOWALL = 501;
-    private static final int MODE_FRAME = 502;
-    private static final int ORDER_RANDOM = 601;
-    private static final int ORDER_SEQUENTIAL = 602;
-
     private SettingsRepository repository;
     private SettingsRepository.Settings settings;
     private TextView folderValue;
@@ -57,15 +50,16 @@ public final class SettingsActivity extends Activity {
     private EditText dayBrightness;
     private EditText eveningBrightness;
     private EditText nightBrightness;
-    private EditText panelBackgroundAlpha;
+    private EditText clockPanelBackgroundAlpha;
+    private EditText weatherPanelBackgroundAlpha;
     private CheckBox collageEnabled;
     private CheckBox showClock;
     private CheckBox showWeather;
     private CheckBox showForecast;
     private CheckBox showSeconds;
     private CheckBox autoBrightnessEnabled;
-    private RadioGroup photoDisplayMode;
-    private RadioGroup photoOrderMode;
+    private Spinner photoDisplayMode;
+    private Spinner photoOrderMode;
     private Spinner locationMode;
     private Spinner weatherProvider;
     private Spinner weatherIconStyle;
@@ -121,21 +115,13 @@ public final class SettingsActivity extends Activity {
         LinearLayout photoModes = row();
         LinearLayout photoModeColumn = column();
         photoModeColumn.addView(fieldLabel("Режим показа фотографий"));
-        photoDisplayMode = new RadioGroup(this);
-        photoDisplayMode.setOrientation(RadioGroup.HORIZONTAL);
-        photoDisplayMode.addView(radio(MODE_PHOTOWALL, "Фотостена"));
-        photoDisplayMode.addView(radio(MODE_FRAME, "Фоторамка"));
-        photoDisplayMode.check("frame".equals(settings.photoDisplayMode) ? MODE_FRAME : MODE_PHOTOWALL);
+        photoDisplayMode = spinner(new String[]{"Фотостена", "Фоторамка"}, photoDisplayModeIndex(settings.photoDisplayMode));
         photoModeColumn.addView(photoDisplayMode);
         photoModes.addView(photoModeColumn);
 
         LinearLayout photoOrderColumn = column();
         photoOrderColumn.addView(fieldLabel("Порядок выбора фотографий"));
-        photoOrderMode = new RadioGroup(this);
-        photoOrderMode.setOrientation(RadioGroup.HORIZONTAL);
-        photoOrderMode.addView(radio(ORDER_RANDOM, "Случайно"));
-        photoOrderMode.addView(radio(ORDER_SEQUENTIAL, "По порядку"));
-        photoOrderMode.check("sequential".equals(settings.photoOrderMode) ? ORDER_SEQUENTIAL : ORDER_RANDOM);
+        photoOrderMode = spinner(new String[]{"Случайно", "По порядку"}, photoOrderModeIndex(settings.photoOrderMode));
         photoOrderColumn.addView(photoOrderMode);
         photoModes.addView(photoOrderColumn);
         photoSettingsGroup.addView(photoModes);
@@ -167,7 +153,7 @@ public final class SettingsActivity extends Activity {
         modeColumn.addView(locationMode);
         locationRow.addView(modeColumn);
         LinearLayout cityColumn = column();
-        cityColumn.addView(fieldLabel("Город для подписи"));
+        cityColumn.addView(fieldLabel("Локация для подписи"));
         city = edit("Москва", settings.cityName);
         cityColumn.addView(city);
         locationRow.addView(cityColumn);
@@ -191,22 +177,19 @@ public final class SettingsActivity extends Activity {
         showClock = checkbox("Показывать часы", settings.showClock);
         root.addView(showClock);
         clockSettingsGroup = new LinearLayout(this);
-        clockSettingsGroup.setOrientation(LinearLayout.VERTICAL);
+        clockSettingsGroup.setOrientation(LinearLayout.HORIZONTAL);
+        clockSettingsGroup.setBaselineAligned(false);
         clockSettingsGroup.setTag(TAG_CLOCK_SETTINGS_GROUP);
-        LinearLayout clockRow = row();
         LinearLayout secondsColumn = column();
         showSeconds = checkbox("Показывать секунды", settings.showSeconds);
         secondsColumn.addView(showSeconds);
-        clockRow.addView(secondsColumn);
-        clockSettingsGroup.addView(clockRow);
-        root.addView(clockSettingsGroup);
-        LinearLayout alphaRow = row();
+        clockSettingsGroup.addView(secondsColumn);
         LinearLayout alphaColumn = column();
-        alphaColumn.addView(fieldLabel("Прозрачность подложек, 0.0-0.85"));
-        panelBackgroundAlpha = edit("0.56", Float.toString(settings.panelBackgroundAlpha));
-        alphaColumn.addView(panelBackgroundAlpha);
-        alphaRow.addView(alphaColumn);
-        root.addView(alphaRow);
+        alphaColumn.addView(fieldLabel("Прозрачность подложки часов, 0.0-0.85"));
+        clockPanelBackgroundAlpha = edit("0.56", Float.toString(settings.clockPanelBackgroundAlpha));
+        alphaColumn.addView(clockPanelBackgroundAlpha);
+        clockSettingsGroup.addView(alphaColumn);
+        root.addView(clockSettingsGroup);
 
         root.addView(section("Яркость"));
         root.addView(label("Автояркость использует минимум и максимум как границы датчика. Если автояркость выключена, применяются фиксированные значения день/вечер/ночь.", 12));
@@ -218,14 +201,17 @@ public final class SettingsActivity extends Activity {
         brightnessRow.addView(autoBrightnessColumn);
         brightnessAutoRangeRow = row();
         brightnessAutoRangeRow.setTag(TAG_BRIGHTNESS_AUTO_RANGE_ROW);
+        brightnessAutoRangeRow.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 2.4f));
         LinearLayout minColumn = column();
         minColumn.addView(fieldLabel("Минимальная яркость авто, 0.05-1.0"));
         autoBrightnessMin = edit("0.08", Float.toString(settings.autoBrightnessMin));
+        autoBrightnessMin.setMinimumWidth(dp(118));
         minColumn.addView(autoBrightnessMin);
         brightnessAutoRangeRow.addView(minColumn);
         LinearLayout maxColumn = column();
         maxColumn.addView(fieldLabel("Максимальная яркость авто, 0.05-1.0"));
         autoBrightnessMax = edit("0.90", Float.toString(settings.autoBrightnessMax));
+        autoBrightnessMax.setMinimumWidth(dp(118));
         maxColumn.addView(autoBrightnessMax);
         brightnessAutoRangeRow.addView(maxColumn);
         brightnessRow.addView(brightnessAutoRangeRow);
@@ -271,6 +257,13 @@ public final class SettingsActivity extends Activity {
         iconColumn.addView(weatherIconStyle);
         weatherControls.addView(iconColumn);
         weatherSettingsGroup.addView(weatherControls);
+        LinearLayout weatherAlphaRow = row();
+        LinearLayout weatherAlphaColumn = column();
+        weatherAlphaColumn.addView(fieldLabel("Прозрачность подложки погоды, 0.0-0.85"));
+        weatherPanelBackgroundAlpha = edit("0.56", Float.toString(settings.weatherPanelBackgroundAlpha));
+        weatherAlphaColumn.addView(weatherPanelBackgroundAlpha);
+        weatherAlphaRow.addView(weatherAlphaColumn);
+        weatherSettingsGroup.addView(weatherAlphaRow);
         showForecast = checkbox("Показывать прогноз на следующие 5 дней", settings.showForecast);
         weatherSettingsGroup.addView(showForecast);
         weatherSettingsGroup.addView(label("Последняя попытка обновления погоды: " + valueOrDash(WeatherRepository.lastDiagnosticsText()), 12));
@@ -391,15 +384,6 @@ public final class SettingsActivity extends Activity {
         return view;
     }
 
-    private RadioButton radio(int id, String text) {
-        RadioButton button = new RadioButton(this);
-        button.setId(id);
-        button.setText(text);
-        button.setTextSize(18);
-        button.setFocusable(true);
-        return button;
-    }
-
     private EditText edit(String hint, String value) {
         EditText edit = new EditText(this);
         edit.setHint(hint);
@@ -453,8 +437,8 @@ public final class SettingsActivity extends Activity {
         settings.showClock = showClock.isChecked();
         settings.showWeather = showWeather.isChecked();
         settings.showForecast = showForecast.isChecked();
-        settings.photoDisplayMode = photoDisplayMode.getCheckedRadioButtonId() == MODE_FRAME ? "frame" : "photowall";
-        settings.photoOrderMode = photoOrderMode.getCheckedRadioButtonId() == ORDER_SEQUENTIAL ? "sequential" : "random";
+        settings.photoDisplayMode = photoDisplayModeValue(photoDisplayMode.getSelectedItemPosition());
+        settings.photoOrderMode = photoOrderModeValue(photoOrderMode.getSelectedItemPosition());
         settings.cityName = city.getText().toString();
         settings.latitude = parseDouble(latitude.getText().toString(), settings.latitude);
         settings.longitude = parseDouble(longitude.getText().toString(), settings.longitude);
@@ -474,7 +458,8 @@ public final class SettingsActivity extends Activity {
         settings.dayBrightness = parseFloat(dayBrightness.getText().toString(), settings.dayBrightness);
         settings.eveningBrightness = parseFloat(eveningBrightness.getText().toString(), settings.eveningBrightness);
         settings.nightBrightness = parseFloat(nightBrightness.getText().toString(), settings.nightBrightness);
-        settings.panelBackgroundAlpha = parseFloat(panelBackgroundAlpha.getText().toString(), settings.panelBackgroundAlpha);
+        settings.clockPanelBackgroundAlpha = parseFloat(clockPanelBackgroundAlpha.getText().toString(), settings.clockPanelBackgroundAlpha);
+        settings.weatherPanelBackgroundAlpha = parseFloat(weatherPanelBackgroundAlpha.getText().toString(), settings.weatherPanelBackgroundAlpha);
         repository.save(settings);
         finish();
     }
@@ -517,6 +502,22 @@ public final class SettingsActivity extends Activity {
 
     private String iconStyleValue(int index) {
         return index == 1 ? "flat" : "outline";
+    }
+
+    private int photoDisplayModeIndex(String value) {
+        return "frame".equals(value) ? 1 : 0;
+    }
+
+    private String photoDisplayModeValue(int index) {
+        return index == 1 ? "frame" : "photowall";
+    }
+
+    private int photoOrderModeIndex(String value) {
+        return "sequential".equals(value) ? 1 : 0;
+    }
+
+    private String photoOrderModeValue(int index) {
+        return index == 1 ? "sequential" : "random";
     }
 
     private int refreshIndex(int minutes) {
