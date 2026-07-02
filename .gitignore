@@ -5,5 +5,7 @@ local.properties
 release-signing.properties
 *.jks
 *.keystore
+docs/BETA_CHECKLIST.md
+docs/superpowers/
 *.iml
 .idea/
