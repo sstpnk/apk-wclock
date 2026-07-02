@@ -96,7 +96,23 @@ public class ClockWeatherCollageViewTest {
         view.setDisplaySettings(true, "photowall", "random", 18, 5, true, "outline", 0.56f);
         RectF withSeconds = (RectF) clockPanelMethod.invoke(view, 1040, 768);
 
-        assertTrue("Clock panel without seconds should not reserve the seconds area", withoutSeconds.width() + 60.0f < withSeconds.width());
+        assertTrue("Clock panel without seconds should not reserve the seconds area", withoutSeconds.width() + 30.0f < withSeconds.width());
+    }
+
+    @Test
+    public void clockPanelWithSecondsDoesNotReserveExcessRightPadding() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method clockPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("clockPanel", int.class, int.class);
+        Method contentWidthMethod = ClockWeatherCollageView.class.getDeclaredMethod("clockContentWidth", int.class);
+        clockPanelMethod.setAccessible(true);
+        contentWidthMethod.setAccessible(true);
+
+        view.setDisplaySettings(true, "photowall", "random", 18, 5, true, "outline", 0.56f);
+        RectF withSeconds = (RectF) clockPanelMethod.invoke(view, 1040, 768);
+        float contentWidth = (Float) contentWidthMethod.invoke(view, 1040);
+
+        assertTrue("Clock panel with seconds should stay close to measured content width", withSeconds.width() - contentWidth <= 2.0f);
+        assertTrue("Clock panel with seconds should not be wider than needed for the time/date line", withSeconds.width() <= 345.0f);
     }
 
     @Test
@@ -114,6 +130,7 @@ public class ClockWeatherCollageViewTest {
 
         assertTrue("Weather panel without five-day forecast should not keep the forecast-sized empty area", withoutForecast.height() + 70.0f < withForecast.height());
         assertTrue("Current-only weather panel should be tight enough to avoid empty forecast space", withoutForecast.height() <= 205.0f);
+        assertTrue("Current-only weather panel should not keep forecast-sized horizontal space", withoutForecast.width() + 120.0f < withForecast.width());
         assertEquals("Weather panel should remain bottom aligned with the clock", clockPanel.bottom, withoutForecast.bottom, 0.01f);
     }
 

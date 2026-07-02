@@ -8,11 +8,11 @@ WClock - Android-приложение для настольных часов, ф
 
 ## Текущий релиз
 
-- Последний релиз: `v0.1.1`.
-- APK: [WClock-v0.1.1.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.1/WClock-v0.1.1.apk).
+- Последний релиз: `v0.1.2`.
+- APK: [WClock-v0.1.2.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.2/WClock-v0.1.2.apk).
 - Минимальная версия Android: 4.4 KitKat (`minSdk 19`).
-- `versionName`: `0.1.1`.
-- `versionCode`: `2`.
+- `versionName`: `0.1.2`.
+- `versionCode`: `3`.
 
 ## Назначение
 

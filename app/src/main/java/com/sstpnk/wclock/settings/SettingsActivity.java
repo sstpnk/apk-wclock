@@ -33,6 +33,7 @@ public final class SettingsActivity extends Activity {
     static final String TAG_CLOCK_SETTINGS_GROUP = "clock_settings_group";
     static final String TAG_WEATHER_SETTINGS_GROUP = "weather_settings_group";
     static final String TAG_BRIGHTNESS_AUTO_RANGE_ROW = "brightness_auto_range_row";
+    static final String TAG_WEATHER_FORECAST_ROW = "weather_forecast_row";
 
     private SettingsRepository repository;
     private SettingsRepository.Settings settings;
@@ -258,14 +259,17 @@ public final class SettingsActivity extends Activity {
         weatherControls.addView(iconColumn);
         weatherSettingsGroup.addView(weatherControls);
         LinearLayout weatherAlphaRow = row();
+        weatherAlphaRow.setTag(TAG_WEATHER_FORECAST_ROW);
+        LinearLayout forecastColumn = column();
+        showForecast = checkbox("Показывать прогноз на следующие 5 дней", settings.showForecast);
+        forecastColumn.addView(showForecast);
+        weatherAlphaRow.addView(forecastColumn);
         LinearLayout weatherAlphaColumn = column();
         weatherAlphaColumn.addView(fieldLabel("Прозрачность подложки погоды, 0.0-0.85"));
         weatherPanelBackgroundAlpha = edit("0.56", Float.toString(settings.weatherPanelBackgroundAlpha));
         weatherAlphaColumn.addView(weatherPanelBackgroundAlpha);
         weatherAlphaRow.addView(weatherAlphaColumn);
         weatherSettingsGroup.addView(weatherAlphaRow);
-        showForecast = checkbox("Показывать прогноз на следующие 5 дней", settings.showForecast);
-        weatherSettingsGroup.addView(showForecast);
         weatherSettingsGroup.addView(label("Последняя попытка обновления погоды: " + valueOrDash(WeatherRepository.lastDiagnosticsText()), 12));
 
         weatherKeysRow = row();

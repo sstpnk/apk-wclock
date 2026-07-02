@@ -163,7 +163,7 @@ public final class ClockWeatherCollageView extends View {
         float margin = dp(EDGE_PADDING_DP);
         float bottom = clockPanel == null ? bottomPanelEdge(height) : clockPanel.bottom;
         if (width > height) {
-            float panelWidth = clamp(width * 0.60f, dp(540), dp(750));
+            float panelWidth = showForecast ? clamp(width * 0.60f, dp(540), dp(750)) : clamp(width * 0.43f, dp(390), dp(560));
             float right = width - margin - (burnInZoneIndex % 2) * dp(14);
             float left = clockPanel == null ? right - panelWidth : Math.max(clockPanel.right + margin, right - panelWidth);
             float panelHeight = showForecast ? clamp(height * 0.41f, dp(285), dp(390)) : clamp(height * 0.23f, dp(168), dp(225));
@@ -378,7 +378,7 @@ public final class ClockWeatherCollageView extends View {
 
     private float clockContentWidth(int width) {
         float clockSize = clamp(width * 0.055f, dp(58), dp(118));
-        float timeWidth = clockSize * (showSeconds ? 4.35f : 2.72f) + dp(48);
+        float timeWidth = clockSize * (showSeconds ? 3.78f : 2.72f) + dp(48);
         float dateWidth = clamp(width * 0.018f, dp(22), dp(36)) * 8.0f + dp(52);
         return Math.max(timeWidth, dateWidth);
     }

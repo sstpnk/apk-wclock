@@ -1,6 +1,6 @@
 # Release Checklist
 
-Target: `v0.1.1`
+Target: `v0.1.2`
 
 ## Before Publishing
 
@@ -24,6 +24,6 @@ Target: `v0.1.1`
 
 ## Versioning
 
-- Android `versionName`: `0.1.1`.
-- Android `versionCode`: `2`.
+- Android `versionName`: `0.1.2`.
+- Android `versionCode`: `3`.
 - Runtime build number is generated at build time in UTC.

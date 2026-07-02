@@ -137,6 +137,7 @@ public class SettingsActivityTest {
         assertTrue(text.contains("Прозрачность подложки часов"));
         assertTrue(text.contains("Прозрачность подложки погоды"));
         assertRowHasColumns(activity, SettingsActivity.TAG_CLOCK_SETTINGS_GROUP, 2);
+        assertRowHasColumns(activity, SettingsActivity.TAG_WEATHER_FORECAST_ROW, 2);
 
         CheckBox clock = findCheckBox(root, "Показывать часы");
         CheckBox weather = findCheckBox(root, "Показывать погоду");

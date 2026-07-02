@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.1.2 - Settings and overlay polish
+
+### Fixed
+
+- Tighten clock panel width when seconds are enabled.
+- Reduce weather panel width and height when the five-day forecast is disabled.
+- Keep five-day forecast and weather panel opacity controls on one settings row.
+
+### Changed
+
+- Add separate clock and weather panel opacity settings.
+- Improve settings layout with dropdowns for photo mode, photo order, weather source, location mode, refresh interval, and weather icon style.
+- Add display toggles for clock, weather, and five-day forecast blocks.
+- Improve photo frame pan smoothness and expose pan speed in settings.
+- Increase weather overlay readability with larger text, spacing, and icons.
+
 ## v0.1.1 - First test release
 
 ### Fixed
