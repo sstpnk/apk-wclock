@@ -37,6 +37,9 @@ public final class ClockWeatherCollageView extends View {
     private int maxVisiblePhotos = 18;
     private int photoChangeSeconds = 20;
     private int framePanSpeedPxPerSecond = 20;
+    private boolean showClock = true;
+    private boolean showWeather = true;
+    private boolean showForecast = true;
     private boolean showSeconds;
     private String weatherIconStyle = "outline";
     private float panelBackgroundAlpha = 0.56f;
@@ -76,7 +79,14 @@ public final class ClockWeatherCollageView extends View {
     }
 
     public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
+        setDisplaySettings(collageEnabled, true, true, true, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, panelBackgroundAlpha);
+    }
+
+    public void setDisplaySettings(boolean collageEnabled, boolean showClock, boolean showWeather, boolean showForecast, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
         this.collageEnabled = collageEnabled;
+        this.showClock = showClock;
+        this.showWeather = showWeather;
+        this.showForecast = showForecast;
         this.photoDisplayMode = "frame".equals(photoDisplayMode) ? "frame" : "photowall";
         this.photoOrderMode = "sequential".equals(photoOrderMode) ? "sequential" : "random";
         this.maxVisiblePhotos = Math.max(1, Math.min(50, maxVisiblePhotos));
@@ -101,16 +111,21 @@ public final class ClockWeatherCollageView extends View {
         collageEngine.setSource(collageEnabled ? photoFolderPath : "", collageEnabled ? photoFolderUri : "");
         collageEngine.draw(canvas, now, collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond);
 
-        RectF clockPanel = clockPanel(width, height);
-        drawPanel(canvas, clockPanel.left, clockPanel.top, clockPanel.right, clockPanel.bottom, panelColor(panelBackgroundAlpha));
-        drawClock(canvas, clockPanel, now, width);
+        RectF clockPanel = null;
+        if (showClock) {
+            clockPanel = clockPanel(width, height);
+            drawPanel(canvas, clockPanel.left, clockPanel.top, clockPanel.right, clockPanel.bottom, panelColor(panelBackgroundAlpha));
+            drawClock(canvas, clockPanel, now, width);
+        }
 
-        if (weatherData != null) {
+        if (showWeather && weatherData != null) {
             RectF weatherPanel = weatherPanel(width, height, clockPanel);
             drawPanel(canvas, weatherPanel.left, weatherPanel.top, weatherPanel.right, weatherPanel.bottom, panelColor(panelBackgroundAlpha));
             drawWeather(canvas, weatherPanel, width);
         }
-        drawWeatherStatus(canvas, width, height);
+        if (showWeather) {
+            drawWeatherStatus(canvas, width, height);
+        }
 
         drawSettingsButton(canvas, width, height);
     }
@@ -141,16 +156,16 @@ public final class ClockWeatherCollageView extends View {
 
     private RectF weatherPanel(int width, int height, RectF clockPanel) {
         float margin = dp(EDGE_PADDING_DP);
+        float bottom = clockPanel == null ? bottomPanelEdge(height) : clockPanel.bottom;
         if (width > height) {
             float panelWidth = clamp(width * 0.60f, dp(540), dp(750));
             float right = width - margin - (burnInZoneIndex % 2) * dp(14);
-            float left = Math.max(clockPanel.right + margin, right - panelWidth);
-            float panelHeight = clamp(height * 0.41f, dp(285), dp(390));
-            float bottom = clockPanel.bottom;
+            float left = clockPanel == null ? right - panelWidth : Math.max(clockPanel.right + margin, right - panelWidth);
+            float panelHeight = showForecast ? clamp(height * 0.41f, dp(285), dp(390)) : clamp(height * 0.27f, dp(190), dp(270));
             return new RectF(left, bottom - panelHeight, right, bottom);
         }
-        float top = clockPanel.bottom + dp(14);
-        float panelHeight = clamp(height * 0.39f, dp(345), dp(510));
+        float panelHeight = showForecast ? clamp(height * 0.39f, dp(345), dp(510)) : clamp(height * 0.25f, dp(220), dp(330));
+        float top = clockPanel == null ? bottom - panelHeight : clockPanel.bottom + dp(14);
         return new RectF(margin, top, width - margin, top + panelHeight);
     }
 
@@ -230,7 +245,7 @@ public final class ClockWeatherCollageView extends View {
             y += weatherDetailLineGap();
         }
 
-        int count = Math.min(5, weatherData.forecast.size());
+        int count = showForecast ? Math.min(5, weatherData.forecast.size()) : 0;
         if (count == 0) {
             return;
         }

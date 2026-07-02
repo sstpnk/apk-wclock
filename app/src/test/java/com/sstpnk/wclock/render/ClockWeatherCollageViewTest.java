@@ -100,6 +100,23 @@ public class ClockWeatherCollageViewTest {
     }
 
     @Test
+    public void weatherPanelShrinksWhenForecastIsHidden() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method clockPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("clockPanel", int.class, int.class);
+        Method weatherPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("weatherPanel", int.class, int.class, RectF.class);
+        clockPanelMethod.setAccessible(true);
+        weatherPanelMethod.setAccessible(true);
+
+        RectF clockPanel = (RectF) clockPanelMethod.invoke(view, 1040, 768);
+        RectF withForecast = (RectF) weatherPanelMethod.invoke(view, 1040, 768, clockPanel);
+        view.setDisplaySettings(true, true, true, false, "photowall", "random", 18, 5, 20, false, "outline", 0.56f);
+        RectF withoutForecast = (RectF) weatherPanelMethod.invoke(view, 1040, 768, clockPanel);
+
+        assertTrue("Weather panel without five-day forecast should not keep the forecast-sized empty area", withoutForecast.height() + 70.0f < withForecast.height());
+        assertEquals("Weather panel should remain bottom aligned with the clock", clockPanel.bottom, withoutForecast.bottom, 0.01f);
+    }
+
+    @Test
     public void weatherDetailTextAlignsWithHeaderTextAndUsesSlightlySmallerFont() throws Exception {
         ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
         Method headerOffset = ClockWeatherCollageView.class.getDeclaredMethod("weatherHeaderTextOffset");

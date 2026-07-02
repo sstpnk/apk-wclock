@@ -14,6 +14,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -30,9 +31,11 @@ public final class SettingsActivity extends Activity {
     static final String TAG_LOCATION_COORDINATES_ROW = "location_coordinates_row";
     static final String TAG_BRIGHTNESS_ROW = "brightness_row";
     static final String TAG_WEATHER_KEYS_ROW = "weather_keys_row";
+    static final String TAG_PHOTO_SETTINGS_GROUP = "photo_settings_group";
+    static final String TAG_CLOCK_SETTINGS_GROUP = "clock_settings_group";
+    static final String TAG_WEATHER_SETTINGS_GROUP = "weather_settings_group";
+    static final String TAG_BRIGHTNESS_AUTO_RANGE_ROW = "brightness_auto_range_row";
 
-    private static final int ICON_OUTLINE = 301;
-    private static final int ICON_FLAT = 302;
     private static final int MODE_PHOTOWALL = 501;
     private static final int MODE_FRAME = 502;
     private static final int ORDER_RANDOM = 601;
@@ -56,14 +59,21 @@ public final class SettingsActivity extends Activity {
     private EditText nightBrightness;
     private EditText panelBackgroundAlpha;
     private CheckBox collageEnabled;
+    private CheckBox showClock;
+    private CheckBox showWeather;
+    private CheckBox showForecast;
     private CheckBox showSeconds;
     private CheckBox autoBrightnessEnabled;
     private RadioGroup photoDisplayMode;
     private RadioGroup photoOrderMode;
     private Spinner locationMode;
     private Spinner weatherProvider;
-    private RadioGroup weatherIconStyle;
+    private Spinner weatherIconStyle;
     private Spinner weatherRefresh;
+    private LinearLayout photoSettingsGroup;
+    private LinearLayout clockSettingsGroup;
+    private LinearLayout weatherSettingsGroup;
+    private LinearLayout brightnessAutoRangeRow;
     private LinearLayout weatherKeysRow;
     private LinearLayout weatherApiColumn;
     private LinearLayout openWeatherColumn;
@@ -94,8 +104,11 @@ public final class SettingsActivity extends Activity {
         root.addView(section("Коллаж"));
         collageEnabled = checkbox("Включить коллаж", settings.collageEnabled);
         root.addView(collageEnabled);
+        photoSettingsGroup = new LinearLayout(this);
+        photoSettingsGroup.setOrientation(LinearLayout.VERTICAL);
+        photoSettingsGroup.setTag(TAG_PHOTO_SETTINGS_GROUP);
         folderValue = label("Папка: " + valueOrDash(settings.photoFolderPath), 16);
-        root.addView(folderValue);
+        photoSettingsGroup.addView(folderValue);
         Button folder = button("Выбрать папку");
         folder.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -103,11 +116,11 @@ public final class SettingsActivity extends Activity {
                 openFolderPicker();
             }
         });
-        root.addView(folder);
+        photoSettingsGroup.addView(folder);
 
         LinearLayout photoModes = row();
         LinearLayout photoModeColumn = column();
-        photoModeColumn.addView(fieldLabel("Режим фотографий"));
+        photoModeColumn.addView(fieldLabel("Режим показа фотографий"));
         photoDisplayMode = new RadioGroup(this);
         photoDisplayMode.setOrientation(RadioGroup.HORIZONTAL);
         photoDisplayMode.addView(radio(MODE_PHOTOWALL, "Фотостена"));
@@ -117,7 +130,7 @@ public final class SettingsActivity extends Activity {
         photoModes.addView(photoModeColumn);
 
         LinearLayout photoOrderColumn = column();
-        photoOrderColumn.addView(fieldLabel("Порядок выбора"));
+        photoOrderColumn.addView(fieldLabel("Порядок выбора фотографий"));
         photoOrderMode = new RadioGroup(this);
         photoOrderMode.setOrientation(RadioGroup.HORIZONTAL);
         photoOrderMode.addView(radio(ORDER_RANDOM, "Случайно"));
@@ -125,25 +138,26 @@ public final class SettingsActivity extends Activity {
         photoOrderMode.check("sequential".equals(settings.photoOrderMode) ? ORDER_SEQUENTIAL : ORDER_RANDOM);
         photoOrderColumn.addView(photoOrderMode);
         photoModes.addView(photoOrderColumn);
-        root.addView(photoModes);
+        photoSettingsGroup.addView(photoModes);
 
         LinearLayout photoNumbers = row();
         LinearLayout maxPhotosColumn = column();
-        maxPhotosColumn.addView(fieldLabel("Фото на экране"));
+        maxPhotosColumn.addView(fieldLabel("Количество фото на экране"));
         maxPhotos = edit("1-50", Integer.toString(settings.maxVisiblePhotos));
         maxPhotosColumn.addView(maxPhotos);
         photoNumbers.addView(maxPhotosColumn);
         LinearLayout intervalColumn = column();
-        intervalColumn.addView(fieldLabel("Интервал, сек"));
+        intervalColumn.addView(fieldLabel("Интервал смены фото, сек"));
         photoInterval = edit("1-60", Integer.toString(settings.photoChangeSeconds));
         intervalColumn.addView(photoInterval);
         photoNumbers.addView(intervalColumn);
         LinearLayout speedColumn = column();
-        speedColumn.addView(fieldLabel("Панорама, px/с"));
+        speedColumn.addView(fieldLabel("Скорость панорамы, px/с"));
         framePanSpeed = edit("4-48", Integer.toString(settings.framePanSpeedPxPerSecond));
         speedColumn.addView(framePanSpeed);
         photoNumbers.addView(speedColumn);
-        root.addView(photoNumbers);
+        photoSettingsGroup.addView(photoNumbers);
+        root.addView(photoSettingsGroup);
 
         root.addView(section("Локация"));
         LinearLayout locationRow = row();
@@ -162,70 +176,104 @@ public final class SettingsActivity extends Activity {
         LinearLayout coordinatesRow = row();
         coordinatesRow.setTag(TAG_LOCATION_COORDINATES_ROW);
         LinearLayout latitudeColumn = column();
-        latitudeColumn.addView(fieldLabel("Широта"));
+        latitudeColumn.addView(fieldLabel("Широта для прогноза"));
         latitude = edit("55.7558", Double.toString(settings.latitude));
         latitudeColumn.addView(latitude);
         coordinatesRow.addView(latitudeColumn);
         LinearLayout longitudeColumn = column();
-        longitudeColumn.addView(fieldLabel("Долгота"));
+        longitudeColumn.addView(fieldLabel("Долгота для прогноза"));
         longitude = edit("37.6173", Double.toString(settings.longitude));
         longitudeColumn.addView(longitude);
         coordinatesRow.addView(longitudeColumn);
         root.addView(coordinatesRow);
 
         root.addView(section("Часы"));
+        showClock = checkbox("Показывать часы", settings.showClock);
+        root.addView(showClock);
+        clockSettingsGroup = new LinearLayout(this);
+        clockSettingsGroup.setOrientation(LinearLayout.VERTICAL);
+        clockSettingsGroup.setTag(TAG_CLOCK_SETTINGS_GROUP);
         LinearLayout clockRow = row();
         LinearLayout secondsColumn = column();
         showSeconds = checkbox("Показывать секунды", settings.showSeconds);
         secondsColumn.addView(showSeconds);
         clockRow.addView(secondsColumn);
+        clockSettingsGroup.addView(clockRow);
+        root.addView(clockSettingsGroup);
+        LinearLayout alphaRow = row();
         LinearLayout alphaColumn = column();
         alphaColumn.addView(fieldLabel("Прозрачность подложек, 0.0-0.85"));
         panelBackgroundAlpha = edit("0.56", Float.toString(settings.panelBackgroundAlpha));
         alphaColumn.addView(panelBackgroundAlpha);
-        clockRow.addView(alphaColumn);
-        root.addView(clockRow);
+        alphaRow.addView(alphaColumn);
+        root.addView(alphaRow);
 
         root.addView(section("Яркость"));
+        root.addView(label("Автояркость использует минимум и максимум как границы датчика. Если автояркость выключена, применяются фиксированные значения день/вечер/ночь.", 12));
         LinearLayout brightnessRow = row();
         brightnessRow.setTag(TAG_BRIGHTNESS_ROW);
         LinearLayout autoBrightnessColumn = column();
-        autoBrightnessEnabled = checkbox("Автояркость", settings.autoBrightnessEnabled);
+        autoBrightnessEnabled = checkbox("Автояркость по датчику", settings.autoBrightnessEnabled);
         autoBrightnessColumn.addView(autoBrightnessEnabled);
-        autoBrightnessColumn.addView(fieldLabel("Минимум, 0.05-1.0"));
-        autoBrightnessMin = edit("0.08", Float.toString(settings.autoBrightnessMin));
-        autoBrightnessColumn.addView(autoBrightnessMin);
-        autoBrightnessColumn.addView(fieldLabel("Максимум, 0.05-1.0"));
-        autoBrightnessMax = edit("0.90", Float.toString(settings.autoBrightnessMax));
-        autoBrightnessColumn.addView(autoBrightnessMax);
         brightnessRow.addView(autoBrightnessColumn);
-        LinearLayout scheduleColumn = column();
-        scheduleColumn.addView(fieldLabel("День"));
-        dayBrightness = edit("0.85", Float.toString(settings.dayBrightness));
-        scheduleColumn.addView(dayBrightness);
-        scheduleColumn.addView(fieldLabel("Вечер"));
-        eveningBrightness = edit("0.45", Float.toString(settings.eveningBrightness));
-        scheduleColumn.addView(eveningBrightness);
-        scheduleColumn.addView(fieldLabel("Ночь"));
-        nightBrightness = edit("0.12", Float.toString(settings.nightBrightness));
-        scheduleColumn.addView(nightBrightness);
-        brightnessRow.addView(scheduleColumn);
+        brightnessAutoRangeRow = row();
+        brightnessAutoRangeRow.setTag(TAG_BRIGHTNESS_AUTO_RANGE_ROW);
+        LinearLayout minColumn = column();
+        minColumn.addView(fieldLabel("Минимальная яркость авто, 0.05-1.0"));
+        autoBrightnessMin = edit("0.08", Float.toString(settings.autoBrightnessMin));
+        minColumn.addView(autoBrightnessMin);
+        brightnessAutoRangeRow.addView(minColumn);
+        LinearLayout maxColumn = column();
+        maxColumn.addView(fieldLabel("Максимальная яркость авто, 0.05-1.0"));
+        autoBrightnessMax = edit("0.90", Float.toString(settings.autoBrightnessMax));
+        maxColumn.addView(autoBrightnessMax);
+        brightnessAutoRangeRow.addView(maxColumn);
+        brightnessRow.addView(brightnessAutoRangeRow);
         root.addView(brightnessRow);
+        LinearLayout scheduleRow = row();
+        LinearLayout dayColumn = column();
+        dayColumn.addView(fieldLabel("Фиксированная яркость днём"));
+        dayBrightness = edit("0.85", Float.toString(settings.dayBrightness));
+        dayColumn.addView(dayBrightness);
+        scheduleRow.addView(dayColumn);
+        LinearLayout eveningColumn = column();
+        eveningColumn.addView(fieldLabel("Фиксированная яркость вечером"));
+        eveningBrightness = edit("0.45", Float.toString(settings.eveningBrightness));
+        eveningColumn.addView(eveningBrightness);
+        scheduleRow.addView(eveningColumn);
+        LinearLayout nightColumn = column();
+        nightColumn.addView(fieldLabel("Фиксированная яркость ночью"));
+        nightBrightness = edit("0.12", Float.toString(settings.nightBrightness));
+        nightColumn.addView(nightBrightness);
+        scheduleRow.addView(nightColumn);
+        root.addView(scheduleRow);
 
         root.addView(section("Погода"));
+        showWeather = checkbox("Показывать погоду", settings.showWeather);
+        root.addView(showWeather);
+        weatherSettingsGroup = new LinearLayout(this);
+        weatherSettingsGroup.setOrientation(LinearLayout.VERTICAL);
+        weatherSettingsGroup.setTag(TAG_WEATHER_SETTINGS_GROUP);
         LinearLayout weatherControls = row();
         LinearLayout providerColumn = column();
-        providerColumn.addView(fieldLabel("Источник"));
+        providerColumn.addView(fieldLabel("Источник погоды"));
         weatherProvider = spinner(new String[]{"Автоматически", "WeatherAPI.com", "OpenWeather"}, providerIndex(settings.weatherProvider));
         providerColumn.addView(weatherProvider);
         weatherControls.addView(providerColumn);
         LinearLayout refreshColumn = column();
-        refreshColumn.addView(fieldLabel("Обновление"));
+        refreshColumn.addView(fieldLabel("Частота обновления погоды"));
         weatherRefresh = spinner(new String[]{"15 мин", "30 мин", "1 час", "3 часа", "6 часов", "12 часов"}, refreshIndex(settings.weatherRefreshMinutes));
         refreshColumn.addView(weatherRefresh);
         weatherControls.addView(refreshColumn);
-        root.addView(weatherControls);
-        root.addView(label("Последняя попытка: " + valueOrDash(WeatherRepository.lastDiagnosticsText()), 12));
+        LinearLayout iconColumn = column();
+        iconColumn.addView(fieldLabel("Стиль погодных иконок"));
+        weatherIconStyle = spinner(new String[]{"Контурные", "Цветные"}, iconStyleIndex(settings.weatherIconStyle));
+        iconColumn.addView(weatherIconStyle);
+        weatherControls.addView(iconColumn);
+        weatherSettingsGroup.addView(weatherControls);
+        showForecast = checkbox("Показывать прогноз на следующие 5 дней", settings.showForecast);
+        weatherSettingsGroup.addView(showForecast);
+        weatherSettingsGroup.addView(label("Последняя попытка обновления погоды: " + valueOrDash(WeatherRepository.lastDiagnosticsText()), 12));
 
         weatherKeysRow = row();
         weatherKeysRow.setTag(TAG_WEATHER_KEYS_ROW);
@@ -239,7 +287,7 @@ public final class SettingsActivity extends Activity {
         openWeatherApiKey = edit("если выбран OpenWeather", settings.openWeatherApiKey);
         openWeatherColumn.addView(openWeatherApiKey);
         weatherKeysRow.addView(openWeatherColumn);
-        root.addView(weatherKeysRow);
+        weatherSettingsGroup.addView(weatherKeysRow);
         updateWeatherKeyVisibility();
         weatherProvider.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -253,15 +301,15 @@ public final class SettingsActivity extends Activity {
             }
         });
 
-        root.addView(fieldLabel("Стиль погодных иконок"));
-        weatherIconStyle = new RadioGroup(this);
-        weatherIconStyle.setOrientation(RadioGroup.HORIZONTAL);
-        weatherIconStyle.addView(radio(ICON_OUTLINE, "Контурные"));
-        weatherIconStyle.addView(radio(ICON_FLAT, "Цветные"));
-        weatherIconStyle.check("flat".equals(settings.weatherIconStyle) ? ICON_FLAT : ICON_OUTLINE);
-        root.addView(weatherIconStyle);
+        root.addView(weatherSettingsGroup);
+        attachDependentVisibilityHandlers();
+        updateDependentVisibility();
 
         Button save = button("Сохранить");
+        save.setPadding(0, dp(10), 0, dp(10));
+        LinearLayout.LayoutParams saveParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        saveParams.setMargins(0, dp(28), 0, 0);
+        save.setLayoutParams(saveParams);
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -283,6 +331,34 @@ public final class SettingsActivity extends Activity {
         weatherKeysRow.setVisibility(selected == 0 ? View.GONE : View.VISIBLE);
         weatherApiColumn.setVisibility(selected == 1 ? View.VISIBLE : View.GONE);
         openWeatherColumn.setVisibility(selected == 2 ? View.VISIBLE : View.GONE);
+    }
+
+    private void attachDependentVisibilityHandlers() {
+        CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                updateDependentVisibility();
+            }
+        };
+        collageEnabled.setOnCheckedChangeListener(listener);
+        showClock.setOnCheckedChangeListener(listener);
+        showWeather.setOnCheckedChangeListener(listener);
+        autoBrightnessEnabled.setOnCheckedChangeListener(listener);
+    }
+
+    private void updateDependentVisibility() {
+        if (photoSettingsGroup != null) {
+            photoSettingsGroup.setVisibility(collageEnabled.isChecked() ? View.VISIBLE : View.GONE);
+        }
+        if (clockSettingsGroup != null) {
+            clockSettingsGroup.setVisibility(showClock.isChecked() ? View.VISIBLE : View.GONE);
+        }
+        if (weatherSettingsGroup != null) {
+            weatherSettingsGroup.setVisibility(showWeather.isChecked() ? View.VISIBLE : View.GONE);
+        }
+        if (brightnessAutoRangeRow != null) {
+            brightnessAutoRangeRow.setVisibility(autoBrightnessEnabled.isChecked() ? View.VISIBLE : View.GONE);
+        }
     }
 
     private TextView section(String text) {
@@ -374,6 +450,9 @@ public final class SettingsActivity extends Activity {
 
     private void saveAndFinish() {
         settings.collageEnabled = collageEnabled.isChecked();
+        settings.showClock = showClock.isChecked();
+        settings.showWeather = showWeather.isChecked();
+        settings.showForecast = showForecast.isChecked();
         settings.photoDisplayMode = photoDisplayMode.getCheckedRadioButtonId() == MODE_FRAME ? "frame" : "photowall";
         settings.photoOrderMode = photoOrderMode.getCheckedRadioButtonId() == ORDER_SEQUENTIAL ? "sequential" : "random";
         settings.cityName = city.getText().toString();
@@ -386,7 +465,7 @@ public final class SettingsActivity extends Activity {
         settings.locationMode = locationMode.getSelectedItemPosition() == 1 ? "city" : "coordinates";
         settings.weatherProvider = providerValue(weatherProvider.getSelectedItemPosition());
         settings.weatherRefreshMinutes = refreshValue(weatherRefresh.getSelectedItemPosition());
-        settings.weatherIconStyle = weatherIconStyle.getCheckedRadioButtonId() == ICON_FLAT ? "flat" : "outline";
+        settings.weatherIconStyle = iconStyleValue(weatherIconStyle.getSelectedItemPosition());
         settings.weatherApiKey = weatherApiKey.getText().toString();
         settings.openWeatherApiKey = openWeatherApiKey.getText().toString();
         settings.autoBrightnessEnabled = autoBrightnessEnabled.isChecked();
@@ -430,6 +509,14 @@ public final class SettingsActivity extends Activity {
             return "openweather";
         }
         return "open-meteo";
+    }
+
+    private int iconStyleIndex(String value) {
+        return "flat".equals(value) ? 1 : 0;
+    }
+
+    private String iconStyleValue(int index) {
+        return index == 1 ? "flat" : "outline";
     }
 
     private int refreshIndex(int minutes) {

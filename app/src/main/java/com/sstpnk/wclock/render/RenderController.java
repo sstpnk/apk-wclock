@@ -59,7 +59,7 @@ public final class RenderController {
     private void updateViewState() {
         final SettingsRepository.Settings settings = settingsRepository.load();
         view.setPhotoSource(settings.photoFolderPath, settings.photoFolderUri);
-        view.setDisplaySettings(settings.collageEnabled, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.framePanSpeedPxPerSecond, settings.showSeconds, settings.weatherIconStyle, settings.panelBackgroundAlpha);
+        view.setDisplaySettings(settings.collageEnabled, settings.showClock, settings.showWeather, settings.showForecast, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.framePanSpeedPxPerSecond, settings.showSeconds, settings.weatherIconStyle, settings.panelBackgroundAlpha);
         long now = System.currentTimeMillis();
         int intervalMillis = Math.max(1, settings.burnInMinMinutes) * 60 * 1000;
         int zoneIndex = (int) ((now / intervalMillis) % 6);

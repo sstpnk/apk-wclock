@@ -15,6 +15,9 @@ public class SettingsRepositoryTest {
         assertEquals(37.6173, settings.longitude, 0.0001);
         assertEquals(30, settings.weatherRefreshMinutes);
         assertTrue(settings.collageEnabled);
+        assertTrue(settings.showClock);
+        assertTrue(settings.showWeather);
+        assertTrue(settings.showForecast);
         assertEquals("photowall", settings.photoDisplayMode);
         assertEquals("random", settings.photoOrderMode);
         assertEquals(18, settings.maxVisiblePhotos);

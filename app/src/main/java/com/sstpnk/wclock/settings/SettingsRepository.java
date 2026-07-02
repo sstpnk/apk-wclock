@@ -22,6 +22,9 @@ public final class SettingsRepository {
         settings.longitude = doubleFromPrefs("longitude", defaults.longitude);
         settings.weatherRefreshMinutes = prefs.getInt("weatherRefreshMinutes", defaults.weatherRefreshMinutes);
         settings.collageEnabled = prefs.getBoolean("collageEnabled", defaults.collageEnabled);
+        settings.showClock = prefs.getBoolean("showClock", defaults.showClock);
+        settings.showWeather = prefs.getBoolean("showWeather", defaults.showWeather);
+        settings.showForecast = prefs.getBoolean("showForecast", defaults.showForecast);
         settings.photoDisplayMode = prefs.getString("photoDisplayMode", defaults.photoDisplayMode);
         settings.photoOrderMode = prefs.getString("photoOrderMode", defaults.photoOrderMode);
         settings.maxVisiblePhotos = prefs.getInt("maxVisiblePhotos", defaults.maxVisiblePhotos);
@@ -57,6 +60,9 @@ public final class SettingsRepository {
                 .putString("longitude", Double.toString(safe.longitude))
                 .putInt("weatherRefreshMinutes", safe.weatherRefreshMinutes)
                 .putBoolean("collageEnabled", safe.collageEnabled)
+                .putBoolean("showClock", safe.showClock)
+                .putBoolean("showWeather", safe.showWeather)
+                .putBoolean("showForecast", safe.showForecast)
                 .putString("photoDisplayMode", safe.photoDisplayMode)
                 .putString("photoOrderMode", safe.photoOrderMode)
                 .putInt("maxVisiblePhotos", safe.maxVisiblePhotos)
@@ -114,6 +120,9 @@ public final class SettingsRepository {
         public double longitude;
         public int weatherRefreshMinutes;
         public boolean collageEnabled;
+        public boolean showClock;
+        public boolean showWeather;
+        public boolean showForecast;
         public String photoDisplayMode;
         public String photoOrderMode;
         public int maxVisiblePhotos;
@@ -146,6 +155,9 @@ public final class SettingsRepository {
             settings.longitude = 37.6173;
             settings.weatherRefreshMinutes = 30;
             settings.collageEnabled = true;
+            settings.showClock = true;
+            settings.showWeather = true;
+            settings.showForecast = true;
             settings.photoDisplayMode = "photowall";
             settings.photoOrderMode = "random";
             settings.maxVisiblePhotos = 18;
@@ -180,6 +192,9 @@ public final class SettingsRepository {
             safe.longitude = isValidLongitude(longitude) ? longitude : 37.6173;
             safe.weatherRefreshMinutes = clampInt(weatherRefreshMinutes, 15, 720);
             safe.collageEnabled = collageEnabled;
+            safe.showClock = showClock;
+            safe.showWeather = showWeather;
+            safe.showForecast = showForecast;
             safe.photoDisplayMode = normalizePhotoDisplayMode(photoDisplayMode);
             safe.photoOrderMode = normalizePhotoOrderMode(photoOrderMode);
             safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);

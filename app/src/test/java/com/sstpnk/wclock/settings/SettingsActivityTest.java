@@ -2,6 +2,7 @@ package com.sstpnk.wclock.settings;
 
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -26,7 +27,7 @@ public class SettingsActivityTest {
     public void settingsUseCompactSpinnersAndColumns() {
         SettingsActivity activity = Robolectric.buildActivity(SettingsActivity.class).setup().get();
 
-        assertTrue("Provider, location and refresh controls should use dropdown spinners", countViews(activity.getWindow().getDecorView(), Spinner.class) >= 3);
+        assertTrue("Provider, location, refresh and weather icon controls should use dropdown spinners", countViews(activity.getWindow().getDecorView(), Spinner.class) >= 4);
         assertTrue("Settings should use horizontal groups to reduce one-long-column scrolling", countHorizontalRows(activity.getWindow().getDecorView()) >= 4);
         assertRowHasColumns(activity, SettingsActivity.TAG_LOCATION_COORDINATES_ROW, 2);
         assertRowHasColumns(activity, SettingsActivity.TAG_BRIGHTNESS_ROW, 2);
@@ -42,6 +43,10 @@ public class SettingsActivityTest {
         assertTrue(text.contains("Локация"));
         assertTrue(text.contains("Автоматически"));
         assertTrue(text.contains("Координаты"));
+        assertTrue(text.contains("Количество фото на экране"));
+        assertTrue(text.contains("Частота обновления погоды"));
+        assertTrue(text.contains("Стиль погодных иконок"));
+        assertTrue(text.contains("Автояркость использует"));
         assertFalse("Settings text must not contain mojibake fragments", text.contains("Р ") || text.contains("Рџ") || text.contains("СЃ"));
     }
 
@@ -71,6 +76,52 @@ public class SettingsActivityTest {
         View focused = activity.getWindow().getDecorView().findFocus();
 
         assertFalse("Opening settings should not focus an EditText and summon the soft keyboard", focused instanceof EditText);
+    }
+
+    @Test
+    public void dependentSettingsHideWhenTheirFeatureIsDisabled() {
+        SettingsActivity activity = Robolectric.buildActivity(SettingsActivity.class).setup().get();
+        View root = activity.getWindow().getDecorView();
+
+        CheckBox collage = findCheckBox(root, "Включить коллаж");
+        View photoGroup = findByTag(root, SettingsActivity.TAG_PHOTO_SETTINGS_GROUP);
+        CheckBox clock = findCheckBox(root, "Показывать часы");
+        View clockGroup = findByTag(root, SettingsActivity.TAG_CLOCK_SETTINGS_GROUP);
+        CheckBox weather = findCheckBox(root, "Показывать погоду");
+        View weatherGroup = findByTag(root, SettingsActivity.TAG_WEATHER_SETTINGS_GROUP);
+        CheckBox autoBrightness = findCheckBox(root, "Автояркость по датчику");
+        View autoRange = findByTag(root, SettingsActivity.TAG_BRIGHTNESS_AUTO_RANGE_ROW);
+
+        assertNotNull(collage);
+        assertNotNull(photoGroup);
+        assertNotNull(clock);
+        assertNotNull(clockGroup);
+        assertNotNull(weather);
+        assertNotNull(weatherGroup);
+        assertNotNull(autoBrightness);
+        assertNotNull(autoRange);
+
+        collage.setChecked(false);
+        assertEquals(View.GONE, photoGroup.getVisibility());
+
+        clock.setChecked(false);
+        assertEquals(View.GONE, clockGroup.getVisibility());
+
+        weather.setChecked(false);
+        assertEquals(View.GONE, weatherGroup.getVisibility());
+
+        autoBrightness.setChecked(false);
+        assertEquals(View.GONE, autoRange.getVisibility());
+    }
+
+    @Test
+    public void weatherIconStyleUsesDropdown() {
+        SettingsActivity activity = Robolectric.buildActivity(SettingsActivity.class).setup().get();
+        Spinner spinner = findSpinnerWithFirstItem(activity.getWindow().getDecorView(), "Контурные");
+
+        assertNotNull(spinner);
+        assertEquals(2, spinner.getAdapter().getCount());
+        assertEquals("Цветные", spinner.getAdapter().getItem(1));
     }
 
     private int countHorizontalRows(android.view.View view) {
@@ -131,6 +182,22 @@ public class SettingsActivityTest {
             ViewGroup group = (ViewGroup) view;
             for (int i = 0; i < group.getChildCount(); i++) {
                 Spinner found = findSpinnerWithFirstItem(group.getChildAt(i), firstItem);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    private CheckBox findCheckBox(View view, String text) {
+        if (view instanceof CheckBox && text.equals(String.valueOf(((CheckBox) view).getText()))) {
+            return (CheckBox) view;
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                CheckBox found = findCheckBox(group.getChildAt(i), text);
                 if (found != null) {
                     return found;
                 }
