@@ -19,6 +19,7 @@ public class SettingsRepositoryTest {
         assertEquals("random", settings.photoOrderMode);
         assertEquals(18, settings.maxVisiblePhotos);
         assertEquals(5, settings.photoChangeSeconds);
+        assertEquals(20, settings.framePanSpeedPxPerSecond);
         assertEquals("coordinates", settings.locationMode);
         assertEquals("open-meteo", settings.weatherProvider);
         assertEquals("outline", settings.weatherIconStyle);
@@ -55,12 +56,31 @@ public class SettingsRepositoryTest {
     }
 
     @Test
-    public void weatherProviderAcceptsWttrIn() {
+    public void weatherProviderGroupsFreeFallbackProvidersAsAutomatic() {
         SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
 
         settings.weatherProvider = "wttr-in";
+        assertEquals("open-meteo", settings.normalized().weatherProvider);
 
-        assertEquals("wttr-in", settings.normalized().weatherProvider);
+        settings.weatherProvider = "met-norway";
+        assertEquals("open-meteo", settings.normalized().weatherProvider);
+
+        settings.weatherProvider = "open-meteo";
+        assertEquals("open-meteo", settings.normalized().weatherProvider);
+    }
+
+    @Test
+    public void framePanSpeedIsNormalized() {
+        SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
+
+        settings.framePanSpeedPxPerSecond = 2;
+        assertEquals(4, settings.normalized().framePanSpeedPxPerSecond);
+
+        settings.framePanSpeedPxPerSecond = 96;
+        assertEquals(48, settings.normalized().framePanSpeedPxPerSecond);
+
+        settings.framePanSpeedPxPerSecond = 28;
+        assertEquals(28, settings.normalized().framePanSpeedPxPerSecond);
     }
 
     @Test

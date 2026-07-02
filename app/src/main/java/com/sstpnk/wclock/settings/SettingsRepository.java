@@ -26,6 +26,7 @@ public final class SettingsRepository {
         settings.photoOrderMode = prefs.getString("photoOrderMode", defaults.photoOrderMode);
         settings.maxVisiblePhotos = prefs.getInt("maxVisiblePhotos", defaults.maxVisiblePhotos);
         settings.photoChangeSeconds = prefs.getInt("photoChangeSeconds", defaults.photoChangeSeconds);
+        settings.framePanSpeedPxPerSecond = prefs.getInt("framePanSpeedPxPerSecond", defaults.framePanSpeedPxPerSecond);
         settings.locationMode = prefs.getString("locationMode", defaults.locationMode);
         settings.weatherProvider = prefs.getString("weatherProvider", defaults.weatherProvider);
         settings.weatherIconStyle = prefs.getString("weatherIconStyle", defaults.weatherIconStyle);
@@ -60,6 +61,7 @@ public final class SettingsRepository {
                 .putString("photoOrderMode", safe.photoOrderMode)
                 .putInt("maxVisiblePhotos", safe.maxVisiblePhotos)
                 .putInt("photoChangeSeconds", safe.photoChangeSeconds)
+                .putInt("framePanSpeedPxPerSecond", safe.framePanSpeedPxPerSecond)
                 .putString("locationMode", safe.locationMode)
                 .putString("weatherProvider", safe.weatherProvider)
                 .putString("weatherIconStyle", safe.weatherIconStyle)
@@ -116,6 +118,7 @@ public final class SettingsRepository {
         public String photoOrderMode;
         public int maxVisiblePhotos;
         public int photoChangeSeconds;
+        public int framePanSpeedPxPerSecond;
         public String locationMode;
         public String weatherProvider;
         public String weatherIconStyle;
@@ -147,6 +150,7 @@ public final class SettingsRepository {
             settings.photoOrderMode = "random";
             settings.maxVisiblePhotos = 18;
             settings.photoChangeSeconds = 5;
+            settings.framePanSpeedPxPerSecond = 20;
             settings.locationMode = "coordinates";
             settings.weatherProvider = "open-meteo";
             settings.weatherIconStyle = "outline";
@@ -180,6 +184,7 @@ public final class SettingsRepository {
             safe.photoOrderMode = normalizePhotoOrderMode(photoOrderMode);
             safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);
             safe.photoChangeSeconds = clampInt(photoChangeSeconds, 1, 60);
+            safe.framePanSpeedPxPerSecond = clampInt(framePanSpeedPxPerSecond, 4, 48);
             safe.locationMode = normalizeLocationMode(locationMode);
             safe.weatherProvider = normalizeProvider(weatherProvider);
             safe.weatherIconStyle = normalizeIconStyle(weatherIconStyle);
@@ -206,7 +211,7 @@ public final class SettingsRepository {
             return "open-meteo";
         }
         String value = provider.trim().toLowerCase();
-        if ("met-norway".equals(value) || "weatherapi".equals(value) || "openweather".equals(value) || "wttr-in".equals(value)) {
+        if ("weatherapi".equals(value) || "openweather".equals(value)) {
             return value;
         }
         return "open-meteo";

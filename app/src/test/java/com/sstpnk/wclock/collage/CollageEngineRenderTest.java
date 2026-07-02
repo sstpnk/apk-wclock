@@ -103,12 +103,12 @@ public class CollageEngineRenderTest {
                 ApplicationProvider.getApplicationContext().getContentResolver(),
                 new WideBitmapDecoder());
         Bitmap bitmap = Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888);
-        Method duration = CollageEngine.class.getDeclaredMethod("frameDisplayDurationMillis", Bitmap.class, int.class, int.class, int.class);
+        Method duration = CollageEngine.class.getDeclaredMethod("frameDisplayDurationMillis", Bitmap.class, int.class, int.class, int.class, int.class);
         Method rect = CollageEngine.class.getDeclaredMethod("frameRectForBitmap", Bitmap.class, int.class, int.class, long.class, long.class, long.class);
         duration.setAccessible(true);
         rect.setAccessible(true);
 
-        long displayMs = (Long) duration.invoke(engine, bitmap, 600, 600, 5000);
+        long displayMs = (Long) duration.invoke(engine, bitmap, 600, 600, 5000, 20);
         RectF start = (RectF) rect.invoke(engine, bitmap, 600, 600, 1000L, 1000L, displayMs);
         RectF end = (RectF) rect.invoke(engine, bitmap, 600, 600, 1000L + displayMs, 1000L, displayMs);
 
@@ -123,18 +123,34 @@ public class CollageEngineRenderTest {
                 ApplicationProvider.getApplicationContext().getContentResolver(),
                 new WideBitmapDecoder());
         Bitmap bitmap = Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888);
-        Method duration = CollageEngine.class.getDeclaredMethod("frameDisplayDurationMillis", Bitmap.class, int.class, int.class, int.class);
-        Method progress = CollageEngine.class.getDeclaredMethod("smoothFrameProgress", long.class, long.class, long.class);
+        Method duration = CollageEngine.class.getDeclaredMethod("frameDisplayDurationMillis", Bitmap.class, int.class, int.class, int.class, int.class);
+        Method progress = CollageEngine.class.getDeclaredMethod("frameProgress", long.class, long.class, long.class);
         duration.setAccessible(true);
         progress.setAccessible(true);
 
-        long displayMs = (Long) duration.invoke(engine, bitmap, 600, 600, 5000);
+        long displayMs = (Long) duration.invoke(engine, bitmap, 600, 600, 5000, 8);
         float quarter = (Float) progress.invoke(engine, 1000L + displayMs / 4L, 1000L, displayMs);
         float half = (Float) progress.invoke(engine, 1000L + displayMs / 2L, 1000L, displayMs);
 
-        assertTrue("Wide pan should run substantially slower than the configured interval", displayMs >= 9000L);
-        assertTrue("Pan should ease in instead of moving linearly from the first frame", quarter < 0.20f);
+        assertTrue("Wide pan should be slow enough for sub-pixel frame-to-frame movement", displayMs >= 70000L);
+        assertEquals("Pan should use a stable constant speed through the frame display", 0.25f, quarter, 0.02f);
         assertEquals("Pan midpoint should still reach the center of the image", 0.50f, half, 0.03f);
+    }
+
+    @Test
+    public void framePanSpeedControlsDisplayDuration() throws Exception {
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                new WideBitmapDecoder());
+        Bitmap bitmap = Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888);
+        Method duration = CollageEngine.class.getDeclaredMethod("frameDisplayDurationMillis", Bitmap.class, int.class, int.class, int.class, int.class);
+        duration.setAccessible(true);
+
+        long slow = (Long) duration.invoke(engine, bitmap, 600, 600, 5000, 8);
+        long fast = (Long) duration.invoke(engine, bitmap, 600, 600, 5000, 32);
+
+        assertTrue("Faster configured pan speed should shorten the frame display duration", fast < slow / 2);
+        assertTrue("Fast pan should still respect the configured minimum interval", fast >= 5000L);
     }
 
     @Test

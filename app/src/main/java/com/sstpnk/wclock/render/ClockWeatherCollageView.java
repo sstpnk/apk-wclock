@@ -36,6 +36,7 @@ public final class ClockWeatherCollageView extends View {
     private String photoOrderMode = "random";
     private int maxVisiblePhotos = 18;
     private int photoChangeSeconds = 20;
+    private int framePanSpeedPxPerSecond = 20;
     private boolean showSeconds;
     private String weatherIconStyle = "outline";
     private float panelBackgroundAlpha = 0.56f;
@@ -67,15 +68,20 @@ public final class ClockWeatherCollageView extends View {
     }
 
     public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle) {
-        setDisplaySettings(collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, showSeconds, weatherIconStyle, panelBackgroundAlpha);
+        setDisplaySettings(collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, panelBackgroundAlpha);
     }
 
     public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
+        setDisplaySettings(collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, panelBackgroundAlpha);
+    }
+
+    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
         this.collageEnabled = collageEnabled;
         this.photoDisplayMode = "frame".equals(photoDisplayMode) ? "frame" : "photowall";
         this.photoOrderMode = "sequential".equals(photoOrderMode) ? "sequential" : "random";
         this.maxVisiblePhotos = Math.max(1, Math.min(50, maxVisiblePhotos));
         this.photoChangeSeconds = Math.max(1, photoChangeSeconds);
+        this.framePanSpeedPxPerSecond = Math.max(4, Math.min(48, framePanSpeedPxPerSecond));
         this.showSeconds = showSeconds;
         this.weatherIconStyle = "flat".equals(weatherIconStyle) ? "flat" : "outline";
         this.panelBackgroundAlpha = Math.max(0.0f, Math.min(0.85f, panelBackgroundAlpha));
@@ -93,7 +99,7 @@ public final class ClockWeatherCollageView extends View {
         int height = getHeight();
         long now = System.currentTimeMillis();
         collageEngine.setSource(collageEnabled ? photoFolderPath : "", collageEnabled ? photoFolderUri : "");
-        collageEngine.draw(canvas, now, collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds);
+        collageEngine.draw(canvas, now, collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond);
 
         RectF clockPanel = clockPanel(width, height);
         drawPanel(canvas, clockPanel.left, clockPanel.top, clockPanel.right, clockPanel.bottom, panelColor(panelBackgroundAlpha));
@@ -118,8 +124,7 @@ public final class ClockWeatherCollageView extends View {
 
     private RectF clockPanel(int width, int height) {
         float margin = dp(EDGE_PADDING_DP);
-        float clockSize = clamp(width * 0.055f, dp(58), dp(118));
-        float contentWidth = clockSize * (showSeconds ? 4.35f : 3.10f) + dp(58);
+        float contentWidth = clockContentWidth(width);
         if (width > height) {
             float panelWidth = Math.min(width * 0.42f, contentWidth);
             float panelHeight = clamp(height * 0.17f, dp(126), dp(176));
@@ -200,25 +205,28 @@ public final class ClockWeatherCollageView extends View {
         float left = bounds.left + padding;
         float top = bounds.top + dp(12 * WEATHER_UI_SCALE);
         float iconSize = clamp(width * 0.0375f, dp(48), dp(81));
+        float textLeft = left + weatherHeaderTextOffset();
 
         weatherIconPainter.draw(canvas, weatherData.weatherCode, left + iconSize * 0.50f, top + iconSize * 0.66f, iconSize, weatherIconStyle);
         setText(clamp(width * 0.024f, dp(27), dp(45)), 0xDFFFFFFF, true);
-        canvas.drawText(weatherData.cityName + "  " + Math.round(weatherData.temperatureC) + "\u00b0", left + iconSize + dp(21), top + dp(40.5f), paint);
+        canvas.drawText(weatherData.cityName + "  " + Math.round(weatherData.temperatureC) + "\u00b0", textLeft, top + weatherCityBaselineOffset(), paint);
 
-        setText(clamp(width * 0.0165f, dp(19.5f), dp(30)), 0xB8FFFFFF, false);
-        canvas.drawText(weatherData.descriptionRu, left + iconSize + dp(21), top + dp(61.5f), paint);
+        setText(weatherDescriptionTextSize(width), 0xB8FFFFFF, false);
+        canvas.drawText(weatherData.descriptionRu, textLeft, top + weatherDescriptionBaselineOffset(), paint);
 
-        float y = top + dp(93);
+        setText(weatherDetailTextSize(width), 0xAFFFFFFF, false);
+        float detailLeft = left + weatherDetailTextOffset();
+        float y = top + weatherFirstDetailBaselineOffset();
         if (hasTodayRange()) {
-            canvas.drawText("\u0434\u0435\u043d\u044c " + Math.round(weatherData.todayMaxTempC) + "\u00b0 / \u043d\u043e\u0447\u044c " + Math.round(weatherData.todayMinTempC) + "\u00b0", left, y, paint);
+            canvas.drawText("\u0434\u0435\u043d\u044c " + Math.round(weatherData.todayMaxTempC) + "\u00b0 / \u043d\u043e\u0447\u044c " + Math.round(weatherData.todayMinTempC) + "\u00b0", detailLeft, y, paint);
             y += weatherDetailLineGap();
         }
         if (weatherData.humidityPercent > 0 || weatherData.pressureHpa > 0.0) {
-            canvas.drawText("\u0432\u043b\u0430\u0436\u043d. " + valueOrDash(weatherData.humidityPercent, "%") + "   \u0434\u0430\u0432\u043b. " + pressureText(weatherData.pressureHpa), left, y, paint);
+            canvas.drawText("\u0432\u043b\u0430\u0436\u043d. " + valueOrDash(weatherData.humidityPercent, "%") + "   \u0434\u0430\u0432\u043b. " + pressureText(weatherData.pressureHpa), detailLeft, y, paint);
             y += weatherDetailLineGap();
         }
         if (weatherData.precipitationProbability > 0) {
-            canvas.drawText("\u043e\u0441\u0430\u0434\u043a\u0438 " + weatherData.precipitationProbability + "%", left, y, paint);
+            canvas.drawText("\u043e\u0441\u0430\u0434\u043a\u0438 " + weatherData.precipitationProbability + "%", detailLeft, y, paint);
             y += weatherDetailLineGap();
         }
 
@@ -231,7 +239,7 @@ public final class ClockWeatherCollageView extends View {
         float cardsRight = bounds.right - padding;
         float cardWidth = (cardsRight - cardsLeft - cardGap * (count - 1)) / count;
         float desiredCardHeight = clamp(bounds.height() * 0.36f, dp(99), dp(138));
-        float cardTop = Math.max(y + dp(12), bounds.bottom - dp(18) - desiredCardHeight);
+        float cardTop = forecastCardTop(bounds, y, desiredCardHeight);
         float cardHeight = bounds.bottom - dp(18) - cardTop;
         for (int i = 0; i < count; i++) {
             ForecastDay day = weatherData.forecast.get(i);
@@ -328,6 +336,48 @@ public final class ClockWeatherCollageView extends View {
 
     private float weatherDetailLineGap() {
         return dp(16.5f * WEATHER_UI_SCALE);
+    }
+
+    private float weatherCityBaselineOffset() {
+        return dp(40.5f);
+    }
+
+    private float weatherDescriptionBaselineOffset() {
+        return weatherCityBaselineOffset() + weatherDetailLineGap();
+    }
+
+    private float weatherFirstDetailBaselineOffset() {
+        return dp(106);
+    }
+
+    private float clockContentWidth(int width) {
+        float clockSize = clamp(width * 0.055f, dp(58), dp(118));
+        float timeWidth = clockSize * (showSeconds ? 4.35f : 2.72f) + dp(48);
+        float dateWidth = clamp(width * 0.018f, dp(22), dp(36)) * 8.0f + dp(52);
+        return Math.max(timeWidth, dateWidth);
+    }
+
+    private float weatherHeaderTextOffset() {
+        return clamp(getWidth() * 0.0375f, dp(48), dp(81)) + dp(21);
+    }
+
+    private float weatherDetailTextOffset() {
+        return weatherHeaderTextOffset();
+    }
+
+    private float weatherDescriptionTextSize(int width) {
+        return clamp(width * 0.0165f, dp(19.5f), dp(30));
+    }
+
+    private float weatherDetailTextSize(int width) {
+        return weatherDescriptionTextSize(width) * 0.96f;
+    }
+
+    private float forecastCardTop(RectF bounds, float currentWeatherBottom, float cardHeight) {
+        float bottomGap = dp(18);
+        float balancedTop = bounds.bottom - bottomGap - cardHeight;
+        float centeredTop = currentWeatherBottom + (bounds.bottom - currentWeatherBottom - cardHeight) * 0.50f;
+        return Math.min(balancedTop, Math.max(currentWeatherBottom + bottomGap, centeredTop));
     }
 
     private int panelColor(float alphaFraction) {

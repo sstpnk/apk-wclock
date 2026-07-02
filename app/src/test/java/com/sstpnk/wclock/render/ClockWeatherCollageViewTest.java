@@ -86,6 +86,68 @@ public class ClockWeatherCollageViewTest {
     }
 
     @Test
+    public void clockPanelShrinksWhenSecondsAreHidden() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method clockPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("clockPanel", int.class, int.class);
+        clockPanelMethod.setAccessible(true);
+
+        view.setDisplaySettings(true, "photowall", "random", 18, 5, false, "outline", 0.56f);
+        RectF withoutSeconds = (RectF) clockPanelMethod.invoke(view, 1040, 768);
+        view.setDisplaySettings(true, "photowall", "random", 18, 5, true, "outline", 0.56f);
+        RectF withSeconds = (RectF) clockPanelMethod.invoke(view, 1040, 768);
+
+        assertTrue("Clock panel without seconds should not reserve the seconds area", withoutSeconds.width() + 60.0f < withSeconds.width());
+    }
+
+    @Test
+    public void weatherDetailTextAlignsWithHeaderTextAndUsesSlightlySmallerFont() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method headerOffset = ClockWeatherCollageView.class.getDeclaredMethod("weatherHeaderTextOffset");
+        Method detailOffset = ClockWeatherCollageView.class.getDeclaredMethod("weatherDetailTextOffset");
+        Method detailSize = ClockWeatherCollageView.class.getDeclaredMethod("weatherDetailTextSize", int.class);
+        Method descriptionSize = ClockWeatherCollageView.class.getDeclaredMethod("weatherDescriptionTextSize", int.class);
+        headerOffset.setAccessible(true);
+        detailOffset.setAccessible(true);
+        detailSize.setAccessible(true);
+        descriptionSize.setAccessible(true);
+
+        assertEquals((Float) headerOffset.invoke(view), (Float) detailOffset.invoke(view), 0.01f);
+        assertEquals((Float) descriptionSize.invoke(view, 1040), (Float) detailSize.invoke(view, 1040), 1.0f);
+        assertTrue("Detail font should be slightly smaller than the previous scaled detail size", (Float) detailSize.invoke(view, 1040) < 19.0f);
+    }
+
+    @Test
+    public void forecastCardsUseBalancedVerticalGaps() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method cardTopMethod = ClockWeatherCollageView.class.getDeclaredMethod("forecastCardTop", RectF.class, float.class, float.class);
+        cardTopMethod.setAccessible(true);
+        RectF weatherPanel = new RectF(492.0f, 429.0f, 1016.0f, 744.0f);
+        float currentWeatherBottom = weatherPanel.top + 150.0f;
+        float cardHeight = 113.0f;
+
+        float cardTop = (Float) cardTopMethod.invoke(view, weatherPanel, currentWeatherBottom, cardHeight);
+
+        assertEquals(weatherPanel.bottom - cardTop - cardHeight, cardTop - currentWeatherBottom, 1.0f);
+    }
+
+    @Test
+    public void weatherHeaderAndDetailsUseConsistentVerticalRhythm() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        Method descriptionBaseline = ClockWeatherCollageView.class.getDeclaredMethod("weatherDescriptionBaselineOffset");
+        Method cityBaseline = ClockWeatherCollageView.class.getDeclaredMethod("weatherCityBaselineOffset");
+        Method firstDetailBaseline = ClockWeatherCollageView.class.getDeclaredMethod("weatherFirstDetailBaselineOffset");
+        Method lineGap = ClockWeatherCollageView.class.getDeclaredMethod("weatherDetailLineGap");
+        descriptionBaseline.setAccessible(true);
+        cityBaseline.setAccessible(true);
+        firstDetailBaseline.setAccessible(true);
+        lineGap.setAccessible(true);
+
+        float headerGap = (Float) descriptionBaseline.invoke(view) - (Float) cityBaseline.invoke(view);
+        assertEquals((Float) lineGap.invoke(view), headerGap, 0.75f);
+        assertTrue("Current weather detail block should sit lower, closer to forecast cards", (Float) firstDetailBaseline.invoke(view) >= 104.0f);
+    }
+
+    @Test
     public void weatherDetailsUseWiderLineGap() throws Exception {
         ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
         Method method = ClockWeatherCollageView.class.getDeclaredMethod("weatherDetailLineGap");

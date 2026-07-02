@@ -66,16 +66,20 @@ public final class CollageEngine {
     }
 
     public void draw(Canvas canvas, long nowMillis, boolean enabled, String mode, int maxVisible, int changeSeconds) {
-        draw(canvas, nowMillis, enabled, mode, ORDER_RANDOM, maxVisible, changeSeconds);
+        draw(canvas, nowMillis, enabled, mode, ORDER_RANDOM, maxVisible, changeSeconds, 20);
     }
 
     public void draw(Canvas canvas, long nowMillis, boolean enabled, String mode, String orderMode, int maxVisible, int changeSeconds) {
+        draw(canvas, nowMillis, enabled, mode, orderMode, maxVisible, changeSeconds, 20);
+    }
+
+    public void draw(Canvas canvas, long nowMillis, boolean enabled, String mode, String orderMode, int maxVisible, int changeSeconds, int framePanSpeedPxPerSecond) {
         canvas.drawColor(Color.rgb(12, 14, 16));
         if (!enabled || photos.size() == 0) {
             return;
         }
         if (MODE_FRAME.equals(mode)) {
-            drawFrameMode(canvas, nowMillis, orderMode, changeSeconds);
+            drawFrameMode(canvas, nowMillis, orderMode, changeSeconds, framePanSpeedPxPerSecond);
             return;
         }
         drawPhotoWall(canvas, nowMillis, orderMode, maxVisible, changeSeconds);
@@ -133,15 +137,16 @@ public final class CollageEngine {
         }
     }
 
-    private void drawFrameMode(Canvas canvas, long nowMillis, String orderMode, int changeSeconds) {
+    private void drawFrameMode(Canvas canvas, long nowMillis, String orderMode, int changeSeconds, int framePanSpeedPxPerSecond) {
         int safeIntervalMs = Math.max(1, changeSeconds) * 1000;
+        int safePanSpeed = Math.max(4, Math.min(48, framePanSpeedPxPerSecond));
         int width = canvas.getWidth();
         int height = canvas.getHeight();
         if (activePhotos.size() == 0) {
             addFramePhoto(canvas, nowMillis, orderMode);
         } else if (activePhotos.size() == 1) {
             ActivePhoto current = activePhotos.get(0);
-            long displayDuration = frameDisplayDurationMillis(current.bitmap, width, height, safeIntervalMs);
+            long displayDuration = frameDisplayDurationMillis(current.bitmap, width, height, safeIntervalMs, safePanSpeed);
             if (nowMillis - current.bornMillis >= displayDuration) {
                 addFramePhoto(canvas, nowMillis, orderMode);
             }
@@ -152,7 +157,7 @@ public final class CollageEngine {
                 : Long.MAX_VALUE;
         for (int i = 0; i < activePhotos.size(); i++) {
             ActivePhoto photo = activePhotos.get(i);
-            long displayDuration = frameDisplayDurationMillis(photo.bitmap, width, height, safeIntervalMs);
+            long displayDuration = frameDisplayDurationMillis(photo.bitmap, width, height, safeIntervalMs, safePanSpeed);
             RectF frame = frameRectForBitmap(photo.bitmap, width, height, nowMillis, photo.bornMillis, displayDuration);
             paint.setAlpha(activePhotos.size() == 1 ? 255 : alphaForFrameTransition(transitionAge, i == activePhotos.size() - 1));
             canvas.drawBitmap(photo.bitmap, null, frame, paint);
@@ -327,6 +332,10 @@ public final class CollageEngine {
     }
 
     private long frameDisplayDurationMillis(Bitmap bitmap, int width, int height, int intervalMs) {
+        return frameDisplayDurationMillis(bitmap, width, height, intervalMs, 20);
+    }
+
+    private long frameDisplayDurationMillis(Bitmap bitmap, int width, int height, int intervalMs, int framePanSpeedPxPerSecond) {
         RectF base = frameBaseRect(bitmap, width, height);
         float horizontalScreens = base.width() / Math.max(1.0f, width);
         float verticalScreens = base.height() / Math.max(1.0f, height);
@@ -334,7 +343,10 @@ public final class CollageEngine {
         if (screens <= 1.01f) {
             return intervalMs;
         }
-        return Math.max(intervalMs, (long) (intervalMs * screens * 1.5f));
+        float maxPanPx = Math.max(0.0f, Math.max(base.width() - width, base.height() - height));
+        float safePanSpeed = Math.max(4.0f, Math.min(48.0f, framePanSpeedPxPerSecond));
+        long durationForSmoothPan = (long) Math.ceil(maxPanPx / safePanSpeed * 1000.0f);
+        return Math.max(Math.max(intervalMs, (long) (intervalMs * screens * 1.5f)), durationForSmoothPan);
     }
 
     private RectF frameRectForBitmap(Bitmap bitmap, int width, int height, long nowMillis, long bornMillis, long displayDurationMs) {
@@ -343,16 +355,15 @@ public final class CollageEngine {
         float drawHeight = base.height();
         float maxX = Math.max(0.0f, drawWidth - width);
         float maxY = Math.max(0.0f, drawHeight - height);
-        float progress = smoothFrameProgress(nowMillis, bornMillis, displayDurationMs);
+        float progress = frameProgress(nowMillis, bornMillis, displayDurationMs);
         float left = maxX >= maxY ? -maxX * progress : -maxX * 0.5f;
         float top = maxY > maxX ? -maxY * progress : -maxY * 0.5f;
         return new RectF(left, top, left + drawWidth, top + drawHeight);
     }
 
-    private float smoothFrameProgress(long nowMillis, long bornMillis, long displayDurationMs) {
+    private float frameProgress(long nowMillis, long bornMillis, long displayDurationMs) {
         float progress = displayDurationMs <= 0L ? 1.0f : (nowMillis - bornMillis) / (float) displayDurationMs;
-        progress = Math.max(0.0f, Math.min(1.0f, progress));
-        return progress * progress * (3.0f - 2.0f * progress);
+        return Math.max(0.0f, Math.min(1.0f, progress));
     }
 
     private RectF frameBaseRect(Bitmap bitmap, int width, int height) {

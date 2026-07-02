@@ -9,6 +9,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -16,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.sstpnk.wclock.BuildConfig;
@@ -23,21 +27,12 @@ import com.sstpnk.wclock.util.CrashReporter;
 import com.sstpnk.wclock.weather.WeatherRepository;
 
 public final class SettingsActivity extends Activity {
-    private static final int LOCATION_CITY = 101;
-    private static final int LOCATION_COORDINATES = 102;
-    private static final int PROVIDER_OPEN_METEO = 201;
-    private static final int PROVIDER_MET_NORWAY = 202;
-    private static final int PROVIDER_WEATHERAPI = 203;
-    private static final int PROVIDER_OPENWEATHER = 204;
-    private static final int PROVIDER_WTTR_IN = 205;
+    static final String TAG_LOCATION_COORDINATES_ROW = "location_coordinates_row";
+    static final String TAG_BRIGHTNESS_ROW = "brightness_row";
+    static final String TAG_WEATHER_KEYS_ROW = "weather_keys_row";
+
     private static final int ICON_OUTLINE = 301;
     private static final int ICON_FLAT = 302;
-    private static final int REFRESH_15 = 401;
-    private static final int REFRESH_30 = 402;
-    private static final int REFRESH_60 = 403;
-    private static final int REFRESH_180 = 404;
-    private static final int REFRESH_360 = 405;
-    private static final int REFRESH_720 = 406;
     private static final int MODE_PHOTOWALL = 501;
     private static final int MODE_FRAME = 502;
     private static final int ORDER_RANDOM = 601;
@@ -51,6 +46,7 @@ public final class SettingsActivity extends Activity {
     private EditText longitude;
     private EditText maxPhotos;
     private EditText photoInterval;
+    private EditText framePanSpeed;
     private EditText weatherApiKey;
     private EditText openWeatherApiKey;
     private EditText autoBrightnessMin;
@@ -64,14 +60,18 @@ public final class SettingsActivity extends Activity {
     private CheckBox autoBrightnessEnabled;
     private RadioGroup photoDisplayMode;
     private RadioGroup photoOrderMode;
-    private RadioGroup locationMode;
-    private RadioGroup weatherProvider;
+    private Spinner locationMode;
+    private Spinner weatherProvider;
     private RadioGroup weatherIconStyle;
-    private RadioGroup weatherRefresh;
+    private Spinner weatherRefresh;
+    private LinearLayout weatherKeysRow;
+    private LinearLayout weatherApiColumn;
+    private LinearLayout openWeatherColumn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         repository = new SettingsRepository(this);
         settings = repository.load();
         setContentView(buildContent());
@@ -83,6 +83,8 @@ public final class SettingsActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(32), dp(72), dp(32), dp(32));
+        root.setFocusableInTouchMode(true);
+        root.requestFocus();
         scrollView.addView(root);
 
         root.addView(label("Настройки WClock", 28));
@@ -102,100 +104,154 @@ public final class SettingsActivity extends Activity {
             }
         });
         root.addView(folder);
-        root.addView(fieldLabel("Режим фотографий"));
+
+        LinearLayout photoModes = row();
+        LinearLayout photoModeColumn = column();
+        photoModeColumn.addView(fieldLabel("Режим фотографий"));
         photoDisplayMode = new RadioGroup(this);
         photoDisplayMode.setOrientation(RadioGroup.HORIZONTAL);
         photoDisplayMode.addView(radio(MODE_PHOTOWALL, "Фотостена"));
         photoDisplayMode.addView(radio(MODE_FRAME, "Фоторамка"));
         photoDisplayMode.check("frame".equals(settings.photoDisplayMode) ? MODE_FRAME : MODE_PHOTOWALL);
-        root.addView(photoDisplayMode);
-        root.addView(fieldLabel("Порядок выбора фотографий"));
+        photoModeColumn.addView(photoDisplayMode);
+        photoModes.addView(photoModeColumn);
+
+        LinearLayout photoOrderColumn = column();
+        photoOrderColumn.addView(fieldLabel("Порядок выбора"));
         photoOrderMode = new RadioGroup(this);
         photoOrderMode.setOrientation(RadioGroup.HORIZONTAL);
         photoOrderMode.addView(radio(ORDER_RANDOM, "Случайно"));
-        photoOrderMode.addView(radio(ORDER_SEQUENTIAL, "Последовательно"));
+        photoOrderMode.addView(radio(ORDER_SEQUENTIAL, "По порядку"));
         photoOrderMode.check("sequential".equals(settings.photoOrderMode) ? ORDER_SEQUENTIAL : ORDER_RANDOM);
-        root.addView(photoOrderMode);
-        root.addView(fieldLabel("Количество фотографий на экране"));
+        photoOrderColumn.addView(photoOrderMode);
+        photoModes.addView(photoOrderColumn);
+        root.addView(photoModes);
+
+        LinearLayout photoNumbers = row();
+        LinearLayout maxPhotosColumn = column();
+        maxPhotosColumn.addView(fieldLabel("Фото на экране"));
         maxPhotos = edit("1-50", Integer.toString(settings.maxVisiblePhotos));
-        root.addView(maxPhotos);
-        root.addView(fieldLabel("Интервал появления фотографий, сек"));
+        maxPhotosColumn.addView(maxPhotos);
+        photoNumbers.addView(maxPhotosColumn);
+        LinearLayout intervalColumn = column();
+        intervalColumn.addView(fieldLabel("Интервал, сек"));
         photoInterval = edit("1-60", Integer.toString(settings.photoChangeSeconds));
-        root.addView(photoInterval);
+        intervalColumn.addView(photoInterval);
+        photoNumbers.addView(intervalColumn);
+        LinearLayout speedColumn = column();
+        speedColumn.addView(fieldLabel("Панорама, px/с"));
+        framePanSpeed = edit("4-48", Integer.toString(settings.framePanSpeedPxPerSecond));
+        speedColumn.addView(framePanSpeed);
+        photoNumbers.addView(speedColumn);
+        root.addView(photoNumbers);
 
         root.addView(section("Локация"));
-        locationMode = new RadioGroup(this);
-        locationMode.setOrientation(RadioGroup.VERTICAL);
-        locationMode.addView(radio(LOCATION_CITY, "Город"));
-        locationMode.addView(radio(LOCATION_COORDINATES, "Координаты"));
-        locationMode.check("city".equals(settings.locationMode) ? LOCATION_CITY : LOCATION_COORDINATES);
-        root.addView(locationMode);
-        root.addView(fieldLabel("Город для подписи погоды"));
+        LinearLayout locationRow = row();
+        LinearLayout modeColumn = column();
+        modeColumn.addView(fieldLabel("Источник локации"));
+        locationMode = spinner(new String[]{"Координаты", "Город"}, "city".equals(settings.locationMode) ? 1 : 0);
+        modeColumn.addView(locationMode);
+        locationRow.addView(modeColumn);
+        LinearLayout cityColumn = column();
+        cityColumn.addView(fieldLabel("Город для подписи"));
         city = edit("Москва", settings.cityName);
-        root.addView(city);
-        root.addView(fieldLabel("Широта"));
+        cityColumn.addView(city);
+        locationRow.addView(cityColumn);
+        root.addView(locationRow);
+
+        LinearLayout coordinatesRow = row();
+        coordinatesRow.setTag(TAG_LOCATION_COORDINATES_ROW);
+        LinearLayout latitudeColumn = column();
+        latitudeColumn.addView(fieldLabel("Широта"));
         latitude = edit("55.7558", Double.toString(settings.latitude));
-        root.addView(latitude);
-        root.addView(fieldLabel("Долгота"));
+        latitudeColumn.addView(latitude);
+        coordinatesRow.addView(latitudeColumn);
+        LinearLayout longitudeColumn = column();
+        longitudeColumn.addView(fieldLabel("Долгота"));
         longitude = edit("37.6173", Double.toString(settings.longitude));
-        root.addView(longitude);
+        longitudeColumn.addView(longitude);
+        coordinatesRow.addView(longitudeColumn);
+        root.addView(coordinatesRow);
 
         root.addView(section("Часы"));
+        LinearLayout clockRow = row();
+        LinearLayout secondsColumn = column();
         showSeconds = checkbox("Показывать секунды", settings.showSeconds);
-        root.addView(showSeconds);
-        root.addView(fieldLabel("\u041f\u0440\u043e\u0437\u0440\u0430\u0447\u043d\u043e\u0441\u0442\u044c \u043f\u043e\u0434\u043b\u043e\u0436\u0435\u043a, 0.0-0.85"));
+        secondsColumn.addView(showSeconds);
+        clockRow.addView(secondsColumn);
+        LinearLayout alphaColumn = column();
+        alphaColumn.addView(fieldLabel("Прозрачность подложек, 0.0-0.85"));
         panelBackgroundAlpha = edit("0.56", Float.toString(settings.panelBackgroundAlpha));
-        root.addView(panelBackgroundAlpha);
+        alphaColumn.addView(panelBackgroundAlpha);
+        clockRow.addView(alphaColumn);
+        root.addView(clockRow);
 
         root.addView(section("Яркость"));
-        autoBrightnessEnabled = checkbox("Автояркость по датчику освещенности", settings.autoBrightnessEnabled);
-        root.addView(autoBrightnessEnabled);
-        root.addView(fieldLabel("Автояркость: минимум, 0.05-1.0"));
+        LinearLayout brightnessRow = row();
+        brightnessRow.setTag(TAG_BRIGHTNESS_ROW);
+        LinearLayout autoBrightnessColumn = column();
+        autoBrightnessEnabled = checkbox("Автояркость", settings.autoBrightnessEnabled);
+        autoBrightnessColumn.addView(autoBrightnessEnabled);
+        autoBrightnessColumn.addView(fieldLabel("Минимум, 0.05-1.0"));
         autoBrightnessMin = edit("0.08", Float.toString(settings.autoBrightnessMin));
-        root.addView(autoBrightnessMin);
-        root.addView(fieldLabel("Автояркость: максимум, 0.05-1.0"));
+        autoBrightnessColumn.addView(autoBrightnessMin);
+        autoBrightnessColumn.addView(fieldLabel("Максимум, 0.05-1.0"));
         autoBrightnessMax = edit("0.90", Float.toString(settings.autoBrightnessMax));
-        root.addView(autoBrightnessMax);
-        root.addView(fieldLabel("Расписание: день"));
+        autoBrightnessColumn.addView(autoBrightnessMax);
+        brightnessRow.addView(autoBrightnessColumn);
+        LinearLayout scheduleColumn = column();
+        scheduleColumn.addView(fieldLabel("День"));
         dayBrightness = edit("0.85", Float.toString(settings.dayBrightness));
-        root.addView(dayBrightness);
-        root.addView(fieldLabel("Расписание: вечер"));
+        scheduleColumn.addView(dayBrightness);
+        scheduleColumn.addView(fieldLabel("Вечер"));
         eveningBrightness = edit("0.45", Float.toString(settings.eveningBrightness));
-        root.addView(eveningBrightness);
-        root.addView(fieldLabel("Расписание: ночь"));
+        scheduleColumn.addView(eveningBrightness);
+        scheduleColumn.addView(fieldLabel("Ночь"));
         nightBrightness = edit("0.12", Float.toString(settings.nightBrightness));
-        root.addView(nightBrightness);
+        scheduleColumn.addView(nightBrightness);
+        brightnessRow.addView(scheduleColumn);
+        root.addView(brightnessRow);
 
         root.addView(section("Погода"));
-        weatherProvider = new RadioGroup(this);
-        weatherProvider.setOrientation(RadioGroup.VERTICAL);
-        weatherProvider.addView(radio(PROVIDER_OPEN_METEO, "Open-Meteo, без ключа"));
-        weatherProvider.addView(radio(PROVIDER_MET_NORWAY, "MET Norway, без ключа"));
-        weatherProvider.addView(radio(PROVIDER_WTTR_IN, "wttr.in, без ключа, HTTP"));
-        weatherProvider.addView(radio(PROVIDER_WEATHERAPI, "WeatherAPI.com, нужен ключ"));
-        weatherProvider.addView(radio(PROVIDER_OPENWEATHER, "OpenWeather, нужен ключ"));
-        weatherProvider.check(providerId(settings.weatherProvider));
-        root.addView(weatherProvider);
+        LinearLayout weatherControls = row();
+        LinearLayout providerColumn = column();
+        providerColumn.addView(fieldLabel("Источник"));
+        weatherProvider = spinner(new String[]{"Автоматически", "WeatherAPI.com", "OpenWeather"}, providerIndex(settings.weatherProvider));
+        providerColumn.addView(weatherProvider);
+        weatherControls.addView(providerColumn);
+        LinearLayout refreshColumn = column();
+        refreshColumn.addView(fieldLabel("Обновление"));
+        weatherRefresh = spinner(new String[]{"15 мин", "30 мин", "1 час", "3 часа", "6 часов", "12 часов"}, refreshIndex(settings.weatherRefreshMinutes));
+        refreshColumn.addView(weatherRefresh);
+        weatherControls.addView(refreshColumn);
+        root.addView(weatherControls);
         root.addView(label("Последняя попытка: " + valueOrDash(WeatherRepository.lastDiagnosticsText()), 12));
 
-        root.addView(fieldLabel("Частота обновления"));
-        weatherRefresh = new RadioGroup(this);
-        weatherRefresh.setOrientation(RadioGroup.VERTICAL);
-        weatherRefresh.addView(radio(REFRESH_15, "15 минут"));
-        weatherRefresh.addView(radio(REFRESH_30, "30 минут"));
-        weatherRefresh.addView(radio(REFRESH_60, "1 час"));
-        weatherRefresh.addView(radio(REFRESH_180, "3 часа"));
-        weatherRefresh.addView(radio(REFRESH_360, "6 часов"));
-        weatherRefresh.addView(radio(REFRESH_720, "12 часов"));
-        weatherRefresh.check(refreshId(settings.weatherRefreshMinutes));
-        root.addView(weatherRefresh);
-
-        root.addView(fieldLabel("WeatherAPI.com ключ"));
+        weatherKeysRow = row();
+        weatherKeysRow.setTag(TAG_WEATHER_KEYS_ROW);
+        weatherApiColumn = column();
+        weatherApiColumn.addView(fieldLabel("WeatherAPI.com ключ"));
         weatherApiKey = edit("если выбран WeatherAPI.com", settings.weatherApiKey);
-        root.addView(weatherApiKey);
-        root.addView(fieldLabel("OpenWeather ключ"));
+        weatherApiColumn.addView(weatherApiKey);
+        weatherKeysRow.addView(weatherApiColumn);
+        openWeatherColumn = column();
+        openWeatherColumn.addView(fieldLabel("OpenWeather ключ"));
         openWeatherApiKey = edit("если выбран OpenWeather", settings.openWeatherApiKey);
-        root.addView(openWeatherApiKey);
+        openWeatherColumn.addView(openWeatherApiKey);
+        weatherKeysRow.addView(openWeatherColumn);
+        root.addView(weatherKeysRow);
+        updateWeatherKeyVisibility();
+        weatherProvider.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateWeatherKeyVisibility();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                updateWeatherKeyVisibility();
+            }
+        });
 
         root.addView(fieldLabel("Стиль погодных иконок"));
         weatherIconStyle = new RadioGroup(this);
@@ -217,6 +273,16 @@ public final class SettingsActivity extends Activity {
         bottomSpace.setPadding(0, 0, 0, dp(56));
         root.addView(bottomSpace);
         return scrollView;
+    }
+
+    private void updateWeatherKeyVisibility() {
+        if (weatherKeysRow == null || weatherProvider == null) {
+            return;
+        }
+        int selected = weatherProvider.getSelectedItemPosition();
+        weatherKeysRow.setVisibility(selected == 0 ? View.GONE : View.VISIBLE);
+        weatherApiColumn.setVisibility(selected == 1 ? View.VISIBLE : View.GONE);
+        openWeatherColumn.setVisibility(selected == 2 ? View.VISIBLE : View.GONE);
     }
 
     private TextView section(String text) {
@@ -264,7 +330,33 @@ public final class SettingsActivity extends Activity {
         edit.setText(value);
         edit.setSingleLine(true);
         edit.setTextSize(18);
+        edit.setFocusableInTouchMode(true);
         return edit;
+    }
+
+    private Spinner spinner(String[] values, int selectedIndex) {
+        Spinner spinner = new Spinner(this);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, values);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setSelection(Math.max(0, Math.min(values.length - 1, selectedIndex)));
+        spinner.setFocusable(true);
+        return spinner;
+    }
+
+    private LinearLayout row() {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setBaselineAligned(false);
+        return row;
+    }
+
+    private LinearLayout column() {
+        LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
+        column.setPadding(0, 0, dp(14), 0);
+        column.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
+        return column;
     }
 
     private Button button(String text) {
@@ -277,7 +369,7 @@ public final class SettingsActivity extends Activity {
     }
 
     private String valueOrDash(String value) {
-        return value == null || value.length() == 0 ? "не выбрана" : value;
+        return value == null || value.length() == 0 ? "не выбрано" : value;
     }
 
     private void saveAndFinish() {
@@ -289,10 +381,11 @@ public final class SettingsActivity extends Activity {
         settings.longitude = parseDouble(longitude.getText().toString(), settings.longitude);
         settings.maxVisiblePhotos = parseInt(maxPhotos.getText().toString(), settings.maxVisiblePhotos);
         settings.photoChangeSeconds = parseInt(photoInterval.getText().toString(), settings.photoChangeSeconds);
+        settings.framePanSpeedPxPerSecond = parseInt(framePanSpeed.getText().toString(), settings.framePanSpeedPxPerSecond);
         settings.showSeconds = showSeconds.isChecked();
-        settings.locationMode = locationMode.getCheckedRadioButtonId() == LOCATION_CITY ? "city" : "coordinates";
-        settings.weatherProvider = providerValue(weatherProvider.getCheckedRadioButtonId());
-        settings.weatherRefreshMinutes = refreshValue(weatherRefresh.getCheckedRadioButtonId());
+        settings.locationMode = locationMode.getSelectedItemPosition() == 1 ? "city" : "coordinates";
+        settings.weatherProvider = providerValue(weatherProvider.getSelectedItemPosition());
+        settings.weatherRefreshMinutes = refreshValue(weatherRefresh.getSelectedItemPosition());
         settings.weatherIconStyle = weatherIconStyle.getCheckedRadioButtonId() == ICON_FLAT ? "flat" : "outline";
         settings.weatherApiKey = weatherApiKey.getText().toString();
         settings.openWeatherApiKey = openWeatherApiKey.getText().toString();
@@ -319,71 +412,59 @@ public final class SettingsActivity extends Activity {
         startActivityForResult(new Intent(SettingsActivity.this, FileBrowserActivity.class), 10);
     }
 
-    private int providerId(String value) {
-        if ("met-norway".equals(value)) {
-            return PROVIDER_MET_NORWAY;
-        }
+    private int providerIndex(String value) {
         if ("weatherapi".equals(value)) {
-            return PROVIDER_WEATHERAPI;
+            return 1;
         }
         if ("openweather".equals(value)) {
-            return PROVIDER_OPENWEATHER;
+            return 2;
         }
-        if ("wttr-in".equals(value)) {
-            return PROVIDER_WTTR_IN;
-        }
-        return PROVIDER_OPEN_METEO;
+        return 0;
     }
 
-    private String providerValue(int id) {
-        if (id == PROVIDER_MET_NORWAY) {
-            return "met-norway";
-        }
-        if (id == PROVIDER_WEATHERAPI) {
+    private String providerValue(int index) {
+        if (index == 1) {
             return "weatherapi";
         }
-        if (id == PROVIDER_OPENWEATHER) {
+        if (index == 2) {
             return "openweather";
-        }
-        if (id == PROVIDER_WTTR_IN) {
-            return "wttr-in";
         }
         return "open-meteo";
     }
 
-    private int refreshId(int minutes) {
+    private int refreshIndex(int minutes) {
         if (minutes <= 15) {
-            return REFRESH_15;
+            return 0;
         }
         if (minutes <= 30) {
-            return REFRESH_30;
+            return 1;
         }
         if (minutes <= 60) {
-            return REFRESH_60;
+            return 2;
         }
         if (minutes <= 180) {
-            return REFRESH_180;
+            return 3;
         }
         if (minutes <= 360) {
-            return REFRESH_360;
+            return 4;
         }
-        return REFRESH_720;
+        return 5;
     }
 
-    private int refreshValue(int id) {
-        if (id == REFRESH_15) {
+    private int refreshValue(int index) {
+        if (index == 0) {
             return 15;
         }
-        if (id == REFRESH_60) {
+        if (index == 2) {
             return 60;
         }
-        if (id == REFRESH_180) {
+        if (index == 3) {
             return 180;
         }
-        if (id == REFRESH_360) {
+        if (index == 4) {
             return 360;
         }
-        if (id == REFRESH_720) {
+        if (index == 5) {
             return 720;
         }
         return 30;
