@@ -96,7 +96,7 @@ public class ClockWeatherCollageViewTest {
         view.setDisplaySettings(true, "photowall", "random", 18, 5, true, "outline", 0.56f);
         RectF withSeconds = (RectF) clockPanelMethod.invoke(view, 1040, 768);
 
-        assertTrue("Clock panel without seconds should not reserve the seconds area", withoutSeconds.width() + 30.0f < withSeconds.width());
+        assertTrue("Clock panel without seconds should not reserve the seconds area", withoutSeconds.width() < withSeconds.width());
     }
 
     @Test
@@ -113,6 +113,20 @@ public class ClockWeatherCollageViewTest {
 
         assertTrue("Clock panel with seconds should stay close to measured content width", withSeconds.width() - contentWidth <= 2.0f);
         assertTrue("Clock panel with seconds should not be wider than needed for the time/date line", withSeconds.width() <= 345.0f);
+    }
+
+    @Test
+    public void clockPanelWithSecondsStaysTightOnHighDensityScreens() throws Exception {
+        ClockWeatherCollageView view = new ClockWeatherCollageView(ApplicationProvider.getApplicationContext());
+        view.getResources().getDisplayMetrics().density = 2.0f;
+        view.getResources().getDisplayMetrics().scaledDensity = 2.0f;
+        Method clockPanelMethod = ClockWeatherCollageView.class.getDeclaredMethod("clockPanel", int.class, int.class);
+        clockPanelMethod.setAccessible(true);
+
+        view.setDisplaySettings(true, "photowall", "random", 18, 5, true, "outline", 0.56f);
+        RectF withSeconds = (RectF) clockPanelMethod.invoke(view, 1040, 768);
+
+        assertTrue("Clock panel with seconds should not fall back to the wide landscape cap on dense screens, width=" + withSeconds.width(), withSeconds.width() <= 420.0f);
     }
 
     @Test

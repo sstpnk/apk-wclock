@@ -12,9 +12,10 @@ public final class RenderController {
     private static final long WEATHER_STATUS_MIN_VISIBLE_MS = 1500L;
 
     private final ClockWeatherCollageView view;
-    private final SettingsRepository settingsRepository;
+    private final SettingsSource settingsSource;
     private final WeatherRepository weatherRepository;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private SettingsRepository.Settings cachedSettings;
     private boolean running;
     private boolean weatherRefreshRunning;
     private long lastWeatherRefresh;
@@ -32,8 +33,12 @@ public final class RenderController {
     };
 
     public RenderController(ClockWeatherCollageView view, SettingsRepository settingsRepository, WeatherRepository weatherRepository) {
+        this(view, new RepositorySettingsSource(settingsRepository), weatherRepository);
+    }
+
+    RenderController(ClockWeatherCollageView view, SettingsSource settingsSource, WeatherRepository weatherRepository) {
         this.view = view;
-        this.settingsRepository = settingsRepository;
+        this.settingsSource = settingsSource;
         this.weatherRepository = weatherRepository;
     }
 
@@ -41,6 +46,7 @@ public final class RenderController {
         if (running) {
             return;
         }
+        refreshSettings();
         running = true;
         handler.post(frame);
     }
@@ -51,23 +57,41 @@ public final class RenderController {
     }
 
     public void forceRefreshNow() {
-        final SettingsRepository.Settings settings = settingsRepository.load();
+        final SettingsRepository.Settings settings = settingsOrLoad();
         lastWeatherRefresh = System.currentTimeMillis();
         refreshWeather(settings, lastWeatherRefresh);
     }
 
     private void updateViewState() {
-        final SettingsRepository.Settings settings = settingsRepository.load();
+        updateViewState(System.currentTimeMillis(), true);
+    }
+
+    void updateViewStateForTest(long now, boolean allowWeatherRefresh) {
+        updateViewState(now, allowWeatherRefresh);
+    }
+
+    public void refreshSettings() {
+        cachedSettings = settingsSource.load();
+    }
+
+    private void updateViewState(long now, boolean allowWeatherRefresh) {
+        final SettingsRepository.Settings settings = settingsOrLoad();
         view.setPhotoSource(settings.photoFolderPath, settings.photoFolderUri);
         view.setDisplaySettings(settings.collageEnabled, settings.showClock, settings.showWeather, settings.showForecast, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.framePanSpeedPxPerSecond, settings.showSeconds, settings.weatherIconStyle, settings.clockPanelBackgroundAlpha, settings.weatherPanelBackgroundAlpha);
-        long now = System.currentTimeMillis();
         int intervalMillis = Math.max(1, settings.burnInMinMinutes) * 60 * 1000;
         int zoneIndex = (int) ((now / intervalMillis) % 6);
         view.setBurnInZoneIndex(zoneIndex);
-        if (!weatherRefreshRunning && now - lastWeatherRefresh > settings.weatherRefreshMinutes * 60L * 1000L) {
+        if (allowWeatherRefresh && !weatherRefreshRunning && now - lastWeatherRefresh > settings.weatherRefreshMinutes * 60L * 1000L) {
             lastWeatherRefresh = now;
             refreshWeather(settings, now);
         }
+    }
+
+    private SettingsRepository.Settings settingsOrLoad() {
+        if (cachedSettings == null) {
+            refreshSettings();
+        }
+        return cachedSettings;
     }
 
     private void refreshWeather(final SettingsRepository.Settings settings, final long now) {
@@ -109,5 +133,22 @@ public final class RenderController {
 
     static String weatherStatusAfterRefresh(WeatherData data, String lastError) {
         return data == null || data.stale ? lastError : "";
+    }
+
+    interface SettingsSource {
+        SettingsRepository.Settings load();
+    }
+
+    private static final class RepositorySettingsSource implements SettingsSource {
+        private final SettingsRepository settingsRepository;
+
+        RepositorySettingsSource(SettingsRepository settingsRepository) {
+            this.settingsRepository = settingsRepository;
+        }
+
+        @Override
+        public SettingsRepository.Settings load() {
+            return settingsRepository.load();
+        }
     }
 }

@@ -193,7 +193,7 @@ public final class ClockWeatherCollageView extends View {
         String second = twoDigits(calendar.get(Calendar.SECOND));
         boolean colonVisible = (now / 1000L) % 2L == 0L;
 
-        float clockSize = clamp(width * 0.055f, dp(58), dp(118));
+        float clockSize = clockSize(width);
         Paint.FontMetrics metrics = setText(clockSize, 0xE8FFFFFF, true);
         float baseline = bounds.top + dp(16) - metrics.ascent;
         float x = bounds.left + dp(24);
@@ -377,10 +377,38 @@ public final class ClockWeatherCollageView extends View {
     }
 
     private float clockContentWidth(int width) {
-        float clockSize = clamp(width * 0.055f, dp(58), dp(118));
-        float timeWidth = clockSize * (showSeconds ? 3.78f : 2.72f) + dp(48);
-        float dateWidth = clamp(width * 0.018f, dp(22), dp(36)) * 8.0f + dp(52);
+        float clockSize = clockSize(width);
+        float timeWidth = clockTimeWidth(clockSize) + dp(48);
+        float dateWidth = clockDateWidth(width) + dp(52);
         return Math.max(timeWidth, dateWidth);
+    }
+
+    private float clockSize(int width) {
+        float minSizeDp = showSeconds ? 48.0f : 58.0f;
+        return clamp(width * 0.055f, dp(minSizeDp), dp(118));
+    }
+
+    private float clockTimeWidth(float clockSize) {
+        float width = 0.0f;
+        setText(clockSize, 0xE8FFFFFF, true);
+        width += paint.measureText("88") + dp(4);
+        setText(clockSize * 0.86f, 0xC8FFFFFF, false);
+        width += paint.measureText(":") + dp(4);
+        setText(clockSize * 0.82f, 0xCFFFFFFF, false);
+        width += paint.measureText("88");
+        if (showSeconds) {
+            width += dp(4);
+            setText(clockSize * 0.36f, 0x8FFFFFFF, false);
+            width += paint.measureText(":") + dp(3);
+            setText(clockSize * 0.32f, 0x88FFFFFF, false);
+            width += paint.measureText("88");
+        }
+        return width;
+    }
+
+    private float clockDateWidth(int width) {
+        setText(clamp(width * 0.018f, dp(22), dp(36)), 0x98FFFFFF, false);
+        return paint.measureText(dateFormat.format(new Date()));
     }
 
     private float weatherHeaderTextOffset() {

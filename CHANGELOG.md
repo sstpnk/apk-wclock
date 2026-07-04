@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.3 - Photo wall smoothness fix
+
+### Fixed
+
+- Move photo wall bitmap decoding out of the draw frame to prevent flicker and dropped frames when a new photo flies in.
+- Recycle queued and stale prepared bitmaps safely when the photo source changes.
+- Tighten the clock panel width on dense screens when seconds are enabled.
+
+### Changed
+
+- Prefetch the next photo wall bitmap before the display interval elapses.
+- Cache render settings between frame updates instead of reading preferences every frame.
+
 ## v0.1.2 - Settings and overlay polish
 
 ### Fixed

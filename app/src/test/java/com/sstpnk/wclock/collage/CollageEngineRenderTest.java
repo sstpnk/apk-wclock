@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.lang.reflect.Method;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -55,11 +58,87 @@ public class CollageEngineRenderTest {
         assertTrue("Photowall source folder must produce photos", engine.photoCountForTest() > 0);
         engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
         engine.draw(canvas, 2500L, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
+        engine.draw(canvas, 3900L, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
         assertTrue("Photowall draw must activate a decoded photo", engine.activePhotoCountForTest() > 0);
 
         int redPixels = countDominantRedPixels(target);
         assertTrue("Photowall must render visible source image pixels, redPixels=" + redPixels + ", maxRed=" + maxRed(target) + ", nonBackground=" + countNonBackgroundPixels(target), redPixels > 1200);
         assertTrue("Photowall must draw a light photo border", countLightBorderPixels(target) > 80);
+    }
+
+    @Test
+    public void photoWallDoesNotBlockDrawWhileNextBitmapIsDecoded() throws Exception {
+        File folder = createImageFolder("photowall-nonblocking", Color.rgb(230, 40, 40));
+        final BlockingBitmapDecoder decoder = new BlockingBitmapDecoder(Color.rgb(230, 40, 40));
+        final CollageEngine engine = asyncEngine(decoder);
+        final Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(target);
+        final CountDownLatch drawReturned = new CountDownLatch(1);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        Thread drawThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
+                drawReturned.countDown();
+            }
+        }, "test-photowall-draw");
+        drawThread.start();
+
+        assertTrue("Decoder should be asked for the next bitmap", decoder.decodeStarted.await(1, TimeUnit.SECONDS));
+        assertTrue("draw() must not wait for image decode to finish", drawReturned.await(150, TimeUnit.MILLISECONDS));
+
+        decoder.releaseDecode.countDown();
+        drawThread.join(1000L);
+        engine.recycle();
+    }
+
+    @Test
+    public void photoWallAddsPreparedBitmapOnLaterFrame() throws Exception {
+        File folder = createImageFolder("photowall-prefetch", Color.rgb(230, 40, 40));
+        BlockingBitmapDecoder decoder = new BlockingBitmapDecoder(Color.rgb(230, 40, 40));
+        CollageEngine engine = asyncEngine(decoder);
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
+        assertEquals("First draw should schedule decode but keep the frame unblocked", 0, engine.activePhotoCountForTest());
+
+        assertTrue(decoder.decodeStarted.await(1, TimeUnit.SECONDS));
+        decoder.releaseDecode.countDown();
+        assertTrue(decoder.decodeFinished.await(1, TimeUnit.SECONDS));
+
+        long deadline = System.currentTimeMillis() + 1000L;
+        long frameTime = 1100L;
+        while (engine.activePhotoCountForTest() == 0 && System.currentTimeMillis() < deadline) {
+            engine.draw(canvas, frameTime, true, CollageEngine.MODE_PHOTOWALL, 10, 1);
+            frameTime += 33L;
+            Thread.sleep(10L);
+        }
+        assertEquals("Prepared bitmap should become active on a later frame", 1, engine.activePhotoCountForTest());
+        engine.recycle();
+    }
+
+    @Test
+    public void photoWallPrefetchesNextBitmapBeforeDisplayIntervalElapses() throws Exception {
+        File folder = createImageFolder("photowall-prefetch-early", Color.rgb(230, 40, 40));
+        createImageFile(folder, "a-second.png", Color.rgb(40, 220, 70));
+        RecordingBitmapDecoder decoder = new RecordingBitmapDecoder();
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                decoder);
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 10, 5);
+        engine.draw(canvas, 1100L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 10, 5);
+
+        assertEquals("First draw should prepare the first bitmap and second draw should prefetch the next one", 2, decoder.names.size());
+        assertEquals("a-second.png", decoder.names.get(0));
+        assertEquals("source.png", decoder.names.get(1));
+        assertEquals("Only the first prepared bitmap should be visible before the configured interval", 1, engine.activePhotoCountForTest());
     }
 
     @Test
@@ -167,6 +246,7 @@ public class CollageEngineRenderTest {
         engine.setSource(folder.getAbsolutePath(), "");
         engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 10, 1);
         engine.draw(canvas, 2500L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 10, 1);
+        engine.draw(canvas, 3500L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 10, 1);
 
         assertEquals("a-second.png", decoder.names.get(0));
         assertEquals("source.png", decoder.names.get(1));
@@ -189,6 +269,8 @@ public class CollageEngineRenderTest {
         engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
         engine.draw(canvas, 2500L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
         engine.draw(canvas, 4000L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
+        engine.draw(canvas, 5500L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
+        engine.draw(canvas, 7000L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
 
         assertEquals("a-first.png", decoder.names.get(0));
         assertEquals("b-second.png", decoder.names.get(1));
@@ -209,6 +291,7 @@ public class CollageEngineRenderTest {
         engine.setSource(folder.getAbsolutePath(), "");
         engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
         engine.draw(canvas, 2500L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
+        engine.draw(canvas, 3500L, true, CollageEngine.MODE_PHOTOWALL, "random", 10, 1);
 
         assertEquals("source.png", decoder.names.get(0));
         assertEquals("source.png", decoder.names.get(1));
@@ -245,6 +328,21 @@ public class CollageEngineRenderTest {
         return folder;
     }
 
+    private CollageEngine asyncEngine(BitmapDecoder decoder) {
+        return new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                decoder,
+                new Random(),
+                new Executor() {
+                    @Override
+                    public void execute(Runnable command) {
+                        Thread thread = new Thread(command, "test-photo-decode");
+                        thread.setDaemon(true);
+                        thread.start();
+                    }
+                });
+    }
+
     private void createImageFile(File folder, String name, int color) throws Exception {
         File image = new File(folder, name);
         Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
@@ -271,6 +369,33 @@ public class CollageEngineRenderTest {
             Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
             canvas.drawColor(color);
+            return bitmap;
+        }
+    }
+
+    private static final class BlockingBitmapDecoder implements BitmapDecoder {
+        final CountDownLatch decodeStarted = new CountDownLatch(1);
+        final CountDownLatch releaseDecode = new CountDownLatch(1);
+        final CountDownLatch decodeFinished = new CountDownLatch(1);
+        private final int color;
+
+        BlockingBitmapDecoder(int color) {
+            this.color = color;
+        }
+
+        @Override
+        public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
+            decodeStarted.countDown();
+            try {
+                releaseDecode.await(2, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+            Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawColor(color);
+            decodeFinished.countDown();
             return bitmap;
         }
     }

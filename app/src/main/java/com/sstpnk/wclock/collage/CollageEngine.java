@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Executor;
 
 public final class CollageEngine {
     public static final String MODE_FRAME = "frame";
@@ -26,26 +27,36 @@ public final class CollageEngine {
     private final ContentResolver resolver;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Random random;
+    private final Executor decodeExecutor;
+    private final Object decodeLock = new Object();
     private final List<PhotoItem> photos = new ArrayList<PhotoItem>();
     private final List<ActivePhoto> activePhotos = new ArrayList<ActivePhoto>();
     private String loadedPath = "";
     private String loadedUri = "";
     private boolean sourceLoaded;
+    private boolean decodeInFlight;
+    private int decodeGeneration;
+    private PreparedPhoto preparedPhoto;
     private int nextPhotoIndex;
     private long lastAddMillis;
 
     public CollageEngine(ContentResolver resolver) {
-        this(resolver, new BitmapLoader());
+        this(resolver, new BitmapLoader(), new Random(), backgroundDecodeExecutor());
     }
 
     CollageEngine(ContentResolver resolver, BitmapDecoder loader) {
-        this(resolver, loader, new Random());
+        this(resolver, loader, new Random(), directDecodeExecutor());
     }
 
     CollageEngine(ContentResolver resolver, BitmapDecoder loader, Random random) {
+        this(resolver, loader, random, directDecodeExecutor());
+    }
+
+    CollageEngine(ContentResolver resolver, BitmapDecoder loader, Random random, Executor decodeExecutor) {
         this.resolver = resolver;
         this.loader = loader;
         this.random = random == null ? new Random() : random;
+        this.decodeExecutor = decodeExecutor == null ? backgroundDecodeExecutor() : decodeExecutor;
     }
 
     public void setSource(String path, String uriString) {
@@ -86,6 +97,14 @@ public final class CollageEngine {
     }
 
     public void recycle() {
+        PreparedPhoto queued;
+        synchronized (decodeLock) {
+            decodeGeneration++;
+            decodeInFlight = false;
+            queued = preparedPhoto;
+            preparedPhoto = null;
+        }
+        recycle(queued);
         for (ActivePhoto photo : activePhotos) {
             if (photo.bitmap != null && !photo.bitmap.isRecycled()) {
                 photo.bitmap.recycle();
@@ -111,7 +130,8 @@ public final class CollageEngine {
     private void drawPhotoWall(Canvas canvas, long nowMillis, String orderMode, int maxVisible, int changeSeconds) {
         int safeMax = maxVisibleForMemory(Math.max(1, Math.min(50, maxVisible)), Runtime.getRuntime().maxMemory());
         int safeIntervalMs = Math.max(1, changeSeconds) * 1000;
-        addNextIfNeeded(canvas, nowMillis, orderMode, safeMax, safeIntervalMs);
+        activatePreparedIfNeeded(nowMillis, safeMax, safeIntervalMs);
+        requestNextIfNeeded(canvas, orderMode, safeMax);
         removeExpired(nowMillis, safeMax, safeIntervalMs);
         int width = canvas.getWidth();
         int height = canvas.getHeight();
@@ -204,6 +224,97 @@ public final class CollageEngine {
         if (photo != null) {
             activePhotos.add(photo);
             lastAddMillis = nowMillis;
+        }
+    }
+
+    private void activatePreparedIfNeeded(long nowMillis, int maxVisible, int intervalMs) {
+        if (activePhotos.size() >= maxVisible) {
+            return;
+        }
+        if (lastAddMillis != 0 && nowMillis - lastAddMillis < intervalMs) {
+            return;
+        }
+        PreparedPhoto photo;
+        synchronized (decodeLock) {
+            photo = preparedPhoto;
+            preparedPhoto = null;
+        }
+        if (photo == null) {
+            return;
+        }
+        activePhotos.add(new ActivePhoto(photo.bitmap, nowMillis, photo.layoutIndex, photo.sourceIndex));
+        lastAddMillis = nowMillis;
+    }
+
+    private void requestNextIfNeeded(Canvas canvas, String orderMode, int maxVisible) {
+        if (activePhotos.size() >= maxVisible) {
+            return;
+        }
+        synchronized (decodeLock) {
+            if (decodeInFlight || preparedPhoto != null) {
+                return;
+            }
+        }
+        final DecodeRequest request = createDecodeRequest(orderMode, decodeMaxWidth(canvas), decodeMaxHeight(canvas));
+        if (request.candidates.size() == 0) {
+            return;
+        }
+        synchronized (decodeLock) {
+            if (decodeInFlight || preparedPhoto != null) {
+                return;
+            }
+            decodeInFlight = true;
+        }
+        decodeExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                decodePreparedPhoto(request);
+            }
+        });
+    }
+
+    private DecodeRequest createDecodeRequest(String orderMode, int maxWidth, int maxHeight) {
+        int generation;
+        synchronized (decodeLock) {
+            generation = decodeGeneration;
+        }
+        List<DecodeCandidate> candidates = new ArrayList<DecodeCandidate>();
+        int photoIndex = nextPhotoIndex(orderMode);
+        PhotoItem item = photos.get(photoIndex);
+        int layoutIndex = nextPhotoIndex;
+        nextPhotoIndex++;
+        candidates.add(new DecodeCandidate(item, layoutIndex, photoIndex));
+        return new DecodeRequest(candidates, maxWidth, maxHeight, generation);
+    }
+
+    private void decodePreparedPhoto(DecodeRequest request) {
+        PreparedPhoto decoded = null;
+        try {
+            for (DecodeCandidate candidate : request.candidates) {
+                Bitmap bitmap = null;
+                try {
+                    bitmap = loader.decode(candidate.item, resolver, request.maxWidth, request.maxHeight);
+                } catch (OutOfMemoryError ignored) {
+                }
+                if (bitmap != null) {
+                    decoded = new PreparedPhoto(bitmap, candidate.layoutIndex, candidate.sourceIndex);
+                    break;
+                }
+            }
+        } finally {
+            PreparedPhoto stale = null;
+            synchronized (decodeLock) {
+                boolean currentGeneration = request.generation == decodeGeneration;
+                if (currentGeneration && preparedPhoto == null) {
+                    preparedPhoto = decoded;
+                    decoded = null;
+                }
+                if (currentGeneration) {
+                    decodeInFlight = false;
+                }
+                stale = decoded;
+            }
+            recycle(stale);
         }
     }
 
@@ -306,6 +417,12 @@ public final class CollageEngine {
         }
     }
 
+    private void recycle(PreparedPhoto photo) {
+        if (photo != null && photo.bitmap != null && !photo.bitmap.isRecycled()) {
+            photo.bitmap.recycle();
+        }
+    }
+
     private int alphaFor(ActivePhoto photo, long nowMillis, int maxVisible, int intervalMs) {
         long age = nowMillis - photo.bornMillis;
         long fadeIn = 900L;
@@ -385,5 +502,63 @@ public final class CollageEngine {
             this.layoutIndex = layoutIndex;
             this.sourceIndex = sourceIndex;
         }
+    }
+
+    private static final class PreparedPhoto {
+        final Bitmap bitmap;
+        final int layoutIndex;
+        final int sourceIndex;
+
+        PreparedPhoto(Bitmap bitmap, int layoutIndex, int sourceIndex) {
+            this.bitmap = bitmap;
+            this.layoutIndex = layoutIndex;
+            this.sourceIndex = sourceIndex;
+        }
+    }
+
+    private static final class DecodeCandidate {
+        final PhotoItem item;
+        final int layoutIndex;
+        final int sourceIndex;
+
+        DecodeCandidate(PhotoItem item, int layoutIndex, int sourceIndex) {
+            this.item = item;
+            this.layoutIndex = layoutIndex;
+            this.sourceIndex = sourceIndex;
+        }
+    }
+
+    private static final class DecodeRequest {
+        final List<DecodeCandidate> candidates;
+        final int maxWidth;
+        final int maxHeight;
+        final int generation;
+
+        DecodeRequest(List<DecodeCandidate> candidates, int maxWidth, int maxHeight, int generation) {
+            this.candidates = candidates;
+            this.maxWidth = maxWidth;
+            this.maxHeight = maxHeight;
+            this.generation = generation;
+        }
+    }
+
+    private static Executor backgroundDecodeExecutor() {
+        return new Executor() {
+            @Override
+            public void execute(Runnable command) {
+                Thread thread = new Thread(command, "wclock-photo-decode");
+                thread.setDaemon(true);
+                thread.start();
+            }
+        };
+    }
+
+    private static Executor directDecodeExecutor() {
+        return new Executor() {
+            @Override
+            public void execute(Runnable command) {
+                command.run();
+            }
+        };
     }
 }
