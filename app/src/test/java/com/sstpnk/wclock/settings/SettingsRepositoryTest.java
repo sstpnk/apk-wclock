@@ -114,4 +114,5 @@ public class SettingsRepositoryTest {
         assertEquals(0.62f, settings.normalized().clockPanelBackgroundAlpha, 0.001f);
         assertEquals(0.64f, settings.normalized().weatherPanelBackgroundAlpha, 0.001f);
     }
+
 }

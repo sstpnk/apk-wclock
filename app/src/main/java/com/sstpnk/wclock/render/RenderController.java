@@ -2,6 +2,7 @@ package com.sstpnk.wclock.render;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Build;
 
 import com.sstpnk.wclock.settings.SettingsRepository;
 import com.sstpnk.wclock.weather.WeatherData;
@@ -27,7 +28,12 @@ public final class RenderController {
                 return;
             }
             updateViewState();
-            view.invalidate();
+            if (useVsyncInvalidationForSdk(Build.VERSION.SDK_INT)) {
+                invalidateView();
+                view.postOnAnimation(this);
+                return;
+            }
+            invalidateView();
             handler.postDelayed(this, FRAME_DELAY_MS);
         }
     };
@@ -98,7 +104,7 @@ public final class RenderController {
         weatherRefreshRunning = true;
         final long statusShownAt = System.currentTimeMillis();
         view.setWeatherStatus("\u0417\u0430\u043f\u0440\u043e\u0441 \u043f\u043e\u0433\u043e\u0434\u044b");
-        view.invalidate();
+        invalidateView();
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -115,7 +121,7 @@ public final class RenderController {
                                 weatherRefreshRunning = false;
                                 view.setWeatherData(data);
                                 view.setWeatherStatus(weatherStatusAfterRefresh(data, weatherRepository.lastError()));
-                                view.invalidate();
+                                invalidateView();
                             }
                         }, delay);
                     }
@@ -133,6 +139,18 @@ public final class RenderController {
 
     static String weatherStatusAfterRefresh(WeatherData data, String lastError) {
         return data == null || data.stale ? lastError : "";
+    }
+
+    static boolean useVsyncInvalidationForSdk(int sdkInt) {
+        return sdkInt >= 16;
+    }
+
+    private void invalidateView() {
+        if (useVsyncInvalidationForSdk(Build.VERSION.SDK_INT)) {
+            view.postInvalidateOnAnimation();
+            return;
+        }
+        view.invalidate();
     }
 
     interface SettingsSource {

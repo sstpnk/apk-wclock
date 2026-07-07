@@ -1,10 +1,10 @@
 # Release Checklist
 
-Target: `v0.1.3`
+Target: `v0.1.4`
 
 ## Before Publishing
 
-- Run `.\gradlew.bat testDebugUnitTest assembleDebug assembleRelease`.
+- Run `.\gradlew.bat testDebugUnitTest assembleDebug assembleRelease bundleRelease`.
 - Install the APK on:
   - Android 4.4 tablet or emulator.
   - Modern Android phone.
@@ -24,6 +24,6 @@ Target: `v0.1.3`
 
 ## Versioning
 
-- Android `versionName`: `0.1.3`.
-- Android `versionCode`: `4`.
+- Android `versionName`: `0.1.4`.
+- Android `versionCode`: `5`.
 - Runtime build number is generated at build time in UTC.

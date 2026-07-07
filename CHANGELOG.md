@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.4 - Vsync render pacing
+
+### Fixed
+
+- Pace continuous rendering with `postInvalidateOnAnimation()` on Android 4.1+ to reduce full-screen flicker on legacy hardware renderers.
+- Move photo frame bitmap decoding out of the draw frame, matching the photo wall prefetch path.
+- Route weather status redraws through the same vsync invalidation path.
+
+### Changed
+
+- Remove temporary flicker diagnostic switches from release settings.
+- Keep retired photo bitmaps alive briefly before recycling so pending hardware-rendered frames cannot reference recycled memory.
+
 ## v0.1.3 - Photo wall smoothness fix
 
 ### Fixed

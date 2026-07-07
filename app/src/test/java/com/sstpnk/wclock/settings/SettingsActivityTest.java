@@ -161,6 +161,19 @@ public class SettingsActivityTest {
         assertEquals("Цветные", spinner.getAdapter().getItem(1));
     }
 
+    @Test
+    public void debugSwitchesAreNotShownInReleaseSettings() {
+        SettingsActivity activity = Robolectric.buildActivity(SettingsActivity.class).setup().get();
+        View root = activity.getWindow().getDecorView();
+        String text = collectText(root);
+
+        assertFalse(text.contains("Диагностика мерцания"));
+        assertFalse(text.contains("Не освобождать bitmap"));
+        assertFalse(text.contains("Отключить эффекты фотостены"));
+        assertFalse(text.contains("Перерисовка по vsync"));
+        assertFalse(text.contains("Программный слой"));
+    }
+
     private int countHorizontalRows(android.view.View view) {
         int count = view instanceof LinearLayout && ((LinearLayout) view).getOrientation() == LinearLayout.HORIZONTAL ? 1 : 0;
         if (view instanceof android.view.ViewGroup) {

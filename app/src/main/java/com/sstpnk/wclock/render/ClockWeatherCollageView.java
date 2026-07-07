@@ -380,6 +380,9 @@ public final class ClockWeatherCollageView extends View {
         float clockSize = clockSize(width);
         float timeWidth = clockTimeWidth(clockSize) + dp(48);
         float dateWidth = clockDateWidth(width) + dp(52);
+        if (showSeconds) {
+            dateWidth += dp(46);
+        }
         return Math.max(timeWidth, dateWidth);
     }
 

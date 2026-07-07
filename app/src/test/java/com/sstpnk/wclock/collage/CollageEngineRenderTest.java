@@ -159,6 +159,33 @@ public class CollageEngineRenderTest {
     }
 
     @Test
+    public void frameModeDoesNotBlockDrawWhileBitmapIsDecoded() throws Exception {
+        File folder = createImageFolder("frame-nonblocking", Color.rgb(40, 220, 70));
+        final BlockingBitmapDecoder decoder = new BlockingBitmapDecoder(Color.rgb(40, 220, 70));
+        final CollageEngine engine = asyncEngine(decoder);
+        final Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(target);
+        final CountDownLatch drawReturned = new CountDownLatch(1);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        Thread drawThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                engine.draw(canvas, 1000L, true, CollageEngine.MODE_FRAME, 1, 1);
+                drawReturned.countDown();
+            }
+        }, "test-frame-draw");
+        drawThread.start();
+
+        assertTrue("Decoder should be asked for the frame bitmap", decoder.decodeStarted.await(1, TimeUnit.SECONDS));
+        assertTrue("frame draw() must not wait for image decode to finish", drawReturned.await(150, TimeUnit.MILLISECONDS));
+
+        decoder.releaseDecode.countDown();
+        drawThread.join(1000L);
+        engine.recycle();
+    }
+
+    @Test
     public void frameModeCrossfadesOldAndNewPhotos() throws Exception {
         File folder = createImageFolder("frame-crossfade", Color.rgb(230, 40, 40));
         Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
@@ -319,6 +346,50 @@ public class CollageEngineRenderTest {
         assertEquals(18, CollageEngine.maxVisibleForMemory(18, 192L * 1024L * 1024L));
     }
 
+    @Test
+    public void expiredPhotoWallBitmapIsRetainedBrieflyBeforeRecycle() throws Exception {
+        File folder = createImageFolder("photowall-retired-bitmap", Color.rgb(230, 40, 40));
+        RecordingBitmapDecoder decoder = new RecordingBitmapDecoder();
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                decoder);
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 1, 1);
+        engine.draw(canvas, 2000L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 1, 1);
+        Bitmap firstBitmap = decoder.bitmaps.get(0);
+
+        engine.draw(canvas, 7001L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 1, 1);
+        assertTrue("Expired bitmap should stay valid for the hardware renderer's pending frame", !firstBitmap.isRecycled());
+
+        engine.draw(canvas, 9102L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 1, 1);
+        assertTrue("Retired bitmap should be recycled after the render pipeline grace window", firstBitmap.isRecycled());
+    }
+
+    @Test
+    public void photoWallActivatesPreparedReplacementWhenFullPhotoExpires() throws Exception {
+        File folder = createImageFolder("photowall-full-replacement", Color.rgb(230, 40, 40));
+        createImageFile(folder, "a-second.png", Color.rgb(40, 220, 70));
+        RecordingBitmapDecoder decoder = new RecordingBitmapDecoder();
+        CollageEngine engine = new CollageEngine(
+                ApplicationProvider.getApplicationContext().getContentResolver(),
+                decoder);
+        Bitmap target = Bitmap.createBitmap(420, 640, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(target);
+
+        engine.setSource(folder.getAbsolutePath(), "");
+        engine.draw(canvas, 1000L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 1, 1);
+        engine.draw(canvas, 2000L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 1, 1);
+        assertEquals("One photo should be visible while the wall is at capacity", 1, engine.activePhotoCountForTest());
+
+        engine.draw(canvas, 6101L, true, CollageEngine.MODE_PHOTOWALL, "sequential", 1, 1);
+
+        assertEquals("Expired full-wall photo should be replaced without an empty frame", 1, engine.activePhotoCountForTest());
+        assertTrue("Replacement photo should have been prefetched before the old photo expired", decoder.names.size() >= 2);
+    }
+
     private File createImageFolder(String name, int color) throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         File folder = new File(context.getCacheDir(), name + "-" + System.nanoTime());
@@ -425,6 +496,7 @@ public class CollageEngineRenderTest {
 
     private static final class RecordingBitmapDecoder implements BitmapDecoder {
         final List<String> names = new ArrayList<String>();
+        final List<Bitmap> bitmaps = new ArrayList<Bitmap>();
 
         @Override
         public Bitmap decode(PhotoItem item, ContentResolver resolver, int maxWidth, int maxHeight) {
@@ -432,6 +504,7 @@ public class CollageEngineRenderTest {
             Bitmap bitmap = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
             canvas.drawColor(Color.rgb(230, 40, 40));
+            bitmaps.add(bitmap);
             return bitmap;
         }
     }
