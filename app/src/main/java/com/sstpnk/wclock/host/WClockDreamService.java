@@ -5,9 +5,12 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.service.dreams.DreamService;
+import android.widget.FrameLayout;
 
 import com.sstpnk.wclock.brightness.AmbientBrightnessMapper;
 import com.sstpnk.wclock.render.ClockWeatherCollageView;
+import com.sstpnk.wclock.render.PhotoImageViewRenderer;
+import com.sstpnk.wclock.render.PhotoRenderer;
 import com.sstpnk.wclock.render.RenderController;
 import com.sstpnk.wclock.settings.SettingsRepository;
 import com.sstpnk.wclock.util.CrashReporter;
@@ -32,12 +35,18 @@ public final class WClockDreamService extends DreamService implements SensorEven
         CrashReporter.install(this);
         setFullscreen(true);
         setScreenBright(false);
-        ClockWeatherCollageView view = new ClockWeatherCollageView(this);
         settingsRepository = new SettingsRepository(this);
+        SettingsRepository.Settings settings = settingsRepository.load();
+        ClockWeatherCollageView view = new ClockWeatherCollageView(this);
+        FrameLayout root = new FrameLayout(this);
+        PhotoImageViewRenderer photoView = new PhotoImageViewRenderer(this);
+        PhotoRenderer photoRenderer = photoView;
+        root.addView(photoView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        root.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        setContentView(root);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         lightSensor = sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-        renderController = new RenderController(view, settingsRepository, createWeatherRepository(settingsRepository.load()));
-        setContentView(view);
+        renderController = new RenderController(view, photoRenderer, settingsRepository, createWeatherRepository(settings));
     }
 
     @Override

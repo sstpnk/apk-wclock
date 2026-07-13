@@ -15,11 +15,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 
 import com.sstpnk.wclock.brightness.AmbientBrightnessMapper;
 import com.sstpnk.wclock.brightness.BrightnessController;
 import com.sstpnk.wclock.brightness.BrightnessSchedule;
 import com.sstpnk.wclock.render.ClockWeatherCollageView;
+import com.sstpnk.wclock.render.PhotoImageViewRenderer;
+import com.sstpnk.wclock.render.PhotoRenderer;
 import com.sstpnk.wclock.render.RenderController;
 import com.sstpnk.wclock.settings.SettingsActivity;
 import com.sstpnk.wclock.settings.SettingsRepository;
@@ -37,6 +40,7 @@ import java.util.Calendar;
 public final class MainActivity extends Activity implements SensorEventListener {
     private RenderController renderController;
     private ClockWeatherCollageView clockView;
+    private PhotoRenderer photoRenderer;
     private SettingsRepository settingsRepository;
     private String weatherRepositorySignature = "";
     private SensorManager sensorManager;
@@ -53,22 +57,10 @@ public final class MainActivity extends Activity implements SensorEventListener 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         hideSystemUi();
 
-        clockView = new ClockWeatherCollageView(this);
-        clockView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP && clockView.isSettingsButtonHit(event.getX(), event.getY())) {
-                    openSettings();
-                    return true;
-                }
-                return true;
-            }
-        });
         settingsRepository = new SettingsRepository(this);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         lightSensor = sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-        resetRenderController(settingsRepository.load());
-        setContentView(clockView);
+        rebuildRenderHost(settingsRepository.load());
         requestPhotoPermissionIfNeeded();
     }
 
@@ -79,7 +71,7 @@ public final class MainActivity extends Activity implements SensorEventListener 
         SettingsRepository.Settings settings = settingsRepository.load();
         applyConfiguredBrightness(settings);
         if (!weatherRepositorySignature.equals(weatherSignature(settings))) {
-            resetRenderController(settings);
+            resetRenderController(settings, photoRenderer);
             renderController.forceRefreshNow();
         }
         renderController.start();
@@ -128,12 +120,37 @@ public final class MainActivity extends Activity implements SensorEventListener 
         return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider(), new WttrInProvider());
     }
 
-    private void resetRenderController(SettingsRepository.Settings settings) {
+    private void rebuildRenderHost(SettingsRepository.Settings settings) {
+        if (renderController != null) {
+            renderController.stop();
+        }
+        clockView = new ClockWeatherCollageView(this);
+        clockView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_UP && clockView.isSettingsButtonHit(event.getX(), event.getY())) {
+                    openSettings();
+                    return true;
+                }
+                return true;
+            }
+        });
+
+        FrameLayout root = new FrameLayout(this);
+        PhotoImageViewRenderer photoView = new PhotoImageViewRenderer(this);
+        photoRenderer = photoView;
+        root.addView(photoView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        root.addView(clockView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        setContentView(root);
+        resetRenderController(settings, photoRenderer);
+    }
+
+    private void resetRenderController(SettingsRepository.Settings settings, PhotoRenderer photoRenderer) {
         if (renderController != null) {
             renderController.stop();
         }
         weatherRepositorySignature = weatherSignature(settings);
-        renderController = new RenderController(clockView, settingsRepository, createWeatherRepository(settings));
+        renderController = new RenderController(clockView, photoRenderer, settingsRepository, createWeatherRepository(settings));
     }
 
     private String weatherSignature(SettingsRepository.Settings settings) {

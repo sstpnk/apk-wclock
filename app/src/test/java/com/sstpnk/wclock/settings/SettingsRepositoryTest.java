@@ -115,4 +115,11 @@ public class SettingsRepositoryTest {
         assertEquals(0.64f, settings.normalized().weatherPanelBackgroundAlpha, 0.001f);
     }
 
+    @Test
+    public void recommendedPhotoLimitFollowsAvailableHeap() {
+        assertEquals(8, SettingsRepository.recommendedMaxVisiblePhotos(48L * 1024L * 1024L));
+        assertEquals(12, SettingsRepository.recommendedMaxVisiblePhotos(96L * 1024L * 1024L));
+        assertEquals(18, SettingsRepository.recommendedMaxVisiblePhotos(160L * 1024L * 1024L));
+        assertEquals(50, SettingsRepository.recommendedMaxVisiblePhotos(256L * 1024L * 1024L));
+    }
 }

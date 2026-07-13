@@ -47,6 +47,7 @@ public final class ClockWeatherCollageView extends View {
     private float weatherPanelBackgroundAlpha = 0.56f;
     private String weatherStatus = "\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b";
     private long weatherStatusMillis;
+    private boolean drawCollage = true;
 
     public ClockWeatherCollageView(Context context) {
         super(context);
@@ -58,6 +59,10 @@ public final class ClockWeatherCollageView extends View {
     public void setPhotoSource(String path, String uri) {
         this.photoFolderPath = path == null ? "" : path;
         this.photoFolderUri = uri == null ? "" : uri;
+    }
+
+    public void setDrawCollage(boolean drawCollage) {
+        this.drawCollage = drawCollage;
     }
 
     public void setWeatherData(WeatherData weatherData) {
@@ -115,8 +120,10 @@ public final class ClockWeatherCollageView extends View {
         int width = getWidth();
         int height = getHeight();
         long now = System.currentTimeMillis();
-        collageEngine.setSource(collageEnabled ? photoFolderPath : "", collageEnabled ? photoFolderUri : "");
-        collageEngine.draw(canvas, now, collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond);
+        if (drawCollage) {
+            collageEngine.setSource(collageEnabled ? photoFolderPath : "", collageEnabled ? photoFolderUri : "");
+            collageEngine.draw(canvas, now, collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond);
+        }
 
         RectF clockPanel = null;
         if (showClock) {

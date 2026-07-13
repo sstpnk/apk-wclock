@@ -69,6 +69,36 @@ public class RenderControllerTest {
         assertEquals("Explicit refresh should load settings once", 2, settingsSource.loadCount);
     }
 
+    @Test
+    public void frameUpdatesApplyPhotoSettingsToSeparateRenderer() {
+        SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
+        settings.photoFolderPath = "/tmp/photos";
+        settings.photoDisplayMode = "frame";
+        settings.photoOrderMode = "sequential";
+        RecordingPhotoRenderer photoRenderer = new RecordingPhotoRenderer();
+        RenderController controller = new RenderController(
+                new ClockWeatherCollageView(ApplicationProvider.getApplicationContext()),
+                photoRenderer,
+                new CountingSettingsSource(settings),
+                null);
+
+        controller.updateViewStateForTest(1000L, false);
+
+        assertEquals("/tmp/photos", photoRenderer.path);
+        assertEquals("frame", photoRenderer.mode);
+        assertEquals("sequential", photoRenderer.order);
+    }
+
+    @Test
+    public void slowOverlayUpdatesStillRefreshClockEverySecond() {
+        SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
+
+        assertEquals(1000L, RenderController.overlayInvalidateIntervalMillis(settings));
+
+        settings.showSeconds = true;
+        assertEquals(1000L, RenderController.overlayInvalidateIntervalMillis(settings));
+    }
+
     private WeatherData weather(boolean stale) {
         return new WeatherData("test", "Moscow", 1L, stale, 1.0, 1.0, 0, "Clear", 0.0, 0.0, 0, Collections.<ForecastDay>emptyList());
     }
@@ -85,6 +115,31 @@ public class RenderControllerTest {
         public SettingsRepository.Settings load() {
             loadCount++;
             return settings;
+        }
+    }
+
+    private static final class RecordingPhotoRenderer implements PhotoRenderer {
+        String path;
+        String mode;
+        String order;
+
+        @Override
+        public void setPhotoSource(String path, String uri) {
+            this.path = path;
+        }
+
+        @Override
+        public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond) {
+            this.mode = photoDisplayMode;
+            this.order = photoOrderMode;
+        }
+
+        @Override
+        public void renderFrame() {
+        }
+
+        @Override
+        public void recycle() {
         }
     }
 }

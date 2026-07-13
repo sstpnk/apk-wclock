@@ -340,13 +340,6 @@ public class CollageEngineRenderTest {
     }
 
     @Test
-    public void lowMemoryDevicesUseSmallerPhotoWallLimit() {
-        assertEquals(8, CollageEngine.maxVisibleForMemory(18, 48L * 1024L * 1024L));
-        assertEquals(12, CollageEngine.maxVisibleForMemory(18, 96L * 1024L * 1024L));
-        assertEquals(18, CollageEngine.maxVisibleForMemory(18, 192L * 1024L * 1024L));
-    }
-
-    @Test
     public void expiredPhotoWallBitmapIsRetainedBrieflyBeforeRecycle() throws Exception {
         File folder = createImageFolder("photowall-retired-bitmap", Color.rgb(230, 40, 40));
         RecordingBitmapDecoder decoder = new RecordingBitmapDecoder();

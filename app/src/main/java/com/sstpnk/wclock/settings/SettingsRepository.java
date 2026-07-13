@@ -111,6 +111,19 @@ public final class SettingsRepository {
         return Math.max(min, Math.min(max, value));
     }
 
+    public static int recommendedMaxVisiblePhotos(long maxMemoryBytes) {
+        if (maxMemoryBytes <= 64L * 1024L * 1024L) {
+            return 8;
+        }
+        if (maxMemoryBytes <= 128L * 1024L * 1024L) {
+            return 12;
+        }
+        if (maxMemoryBytes <= 192L * 1024L * 1024L) {
+            return 18;
+        }
+        return 50;
+    }
+
     static float clampFloat(float value, float min, float max) {
         return Math.max(min, Math.min(max, value));
     }
@@ -149,7 +162,6 @@ public final class SettingsRepository {
         public float nightOverlayAlpha;
         public float clockPanelBackgroundAlpha;
         public float weatherPanelBackgroundAlpha;
-
         public static Settings defaults() {
             Settings settings = new Settings();
             settings.photoFolderPath = "";
@@ -202,7 +214,7 @@ public final class SettingsRepository {
             safe.showForecast = showForecast;
             safe.photoDisplayMode = normalizePhotoDisplayMode(photoDisplayMode);
             safe.photoOrderMode = normalizePhotoOrderMode(photoOrderMode);
-            safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, 50);
+            safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, recommendedMaxVisiblePhotos(Runtime.getRuntime().maxMemory()));
             safe.photoChangeSeconds = clampInt(photoChangeSeconds, 1, 60);
             safe.framePanSpeedPxPerSecond = clampInt(framePanSpeedPxPerSecond, 4, 48);
             safe.locationMode = normalizeLocationMode(locationMode);

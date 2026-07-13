@@ -172,6 +172,10 @@ public class SettingsActivityTest {
         assertFalse(text.contains("Отключить эффекты фотостены"));
         assertFalse(text.contains("Перерисовка по vsync"));
         assertFalse(text.contains("Программный слой"));
+        assertFalse(text.contains("ImageView фоторамка"));
+        assertFalse(text.contains("ImageView фотостена"));
+        assertFalse(text.contains("SurfaceView для фото"));
+        assertFalse(text.contains("Surface render thread"));
     }
 
     private int countHorizontalRows(android.view.View view) {

@@ -13,6 +13,7 @@ public final class RenderController {
     private static final long WEATHER_STATUS_MIN_VISIBLE_MS = 1500L;
 
     private final ClockWeatherCollageView view;
+    private final PhotoRenderer photoRenderer;
     private final SettingsSource settingsSource;
     private final WeatherRepository weatherRepository;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -20,6 +21,7 @@ public final class RenderController {
     private boolean running;
     private boolean weatherRefreshRunning;
     private long lastWeatherRefresh;
+    private long lastOverlayInvalidate;
 
     private final Runnable frame = new Runnable() {
         @Override
@@ -28,6 +30,13 @@ public final class RenderController {
                 return;
             }
             updateViewState();
+            if (photoRenderer != null) {
+                photoRenderer.renderFrame();
+            }
+            if (!shouldInvalidateOverlay()) {
+                view.postOnAnimation(this);
+                return;
+            }
             if (useVsyncInvalidationForSdk(Build.VERSION.SDK_INT)) {
                 invalidateView();
                 view.postOnAnimation(this);
@@ -39,11 +48,20 @@ public final class RenderController {
     };
 
     public RenderController(ClockWeatherCollageView view, SettingsRepository settingsRepository, WeatherRepository weatherRepository) {
-        this(view, new RepositorySettingsSource(settingsRepository), weatherRepository);
+        this(view, null, new RepositorySettingsSource(settingsRepository), weatherRepository);
     }
 
     RenderController(ClockWeatherCollageView view, SettingsSource settingsSource, WeatherRepository weatherRepository) {
+        this(view, null, settingsSource, weatherRepository);
+    }
+
+    public RenderController(ClockWeatherCollageView view, PhotoRenderer photoRenderer, SettingsRepository settingsRepository, WeatherRepository weatherRepository) {
+        this(view, photoRenderer, new RepositorySettingsSource(settingsRepository), weatherRepository);
+    }
+
+    RenderController(ClockWeatherCollageView view, PhotoRenderer photoRenderer, SettingsSource settingsSource, WeatherRepository weatherRepository) {
         this.view = view;
+        this.photoRenderer = photoRenderer;
         this.settingsSource = settingsSource;
         this.weatherRepository = weatherRepository;
     }
@@ -60,6 +78,9 @@ public final class RenderController {
     public void stop() {
         running = false;
         handler.removeCallbacksAndMessages(null);
+        if (photoRenderer != null) {
+            photoRenderer.recycle();
+        }
     }
 
     public void forceRefreshNow() {
@@ -82,8 +103,13 @@ public final class RenderController {
 
     private void updateViewState(long now, boolean allowWeatherRefresh) {
         final SettingsRepository.Settings settings = settingsOrLoad();
+        view.setDrawCollage(photoRenderer == null);
         view.setPhotoSource(settings.photoFolderPath, settings.photoFolderUri);
         view.setDisplaySettings(settings.collageEnabled, settings.showClock, settings.showWeather, settings.showForecast, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.framePanSpeedPxPerSecond, settings.showSeconds, settings.weatherIconStyle, settings.clockPanelBackgroundAlpha, settings.weatherPanelBackgroundAlpha);
+        if (photoRenderer != null) {
+            photoRenderer.setPhotoSource(settings.photoFolderPath, settings.photoFolderUri);
+            photoRenderer.setDisplaySettings(settings.collageEnabled, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.framePanSpeedPxPerSecond);
+        }
         int intervalMillis = Math.max(1, settings.burnInMinMinutes) * 60 * 1000;
         int zoneIndex = (int) ((now / intervalMillis) % 6);
         view.setBurnInZoneIndex(zoneIndex);
@@ -146,11 +172,26 @@ public final class RenderController {
     }
 
     private void invalidateView() {
+        lastOverlayInvalidate = System.currentTimeMillis();
         if (useVsyncInvalidationForSdk(Build.VERSION.SDK_INT)) {
             view.postInvalidateOnAnimation();
             return;
         }
         view.invalidate();
+    }
+
+    private boolean shouldInvalidateOverlay() {
+        SettingsRepository.Settings settings = settingsOrLoad();
+        if (photoRenderer == null) {
+            return true;
+        }
+        long now = System.currentTimeMillis();
+        long interval = overlayInvalidateIntervalMillis(settings);
+        return now - lastOverlayInvalidate >= interval;
+    }
+
+    static long overlayInvalidateIntervalMillis(SettingsRepository.Settings settings) {
+        return settings.showClock ? 1000L : 60000L;
     }
 
     interface SettingsSource {

@@ -133,7 +133,7 @@ public final class CollageEngine {
 
     private void drawPhotoWall(Canvas canvas, long nowMillis, String orderMode, int maxVisible, int changeSeconds) {
         recycleRetired(nowMillis);
-        int safeMax = maxVisibleForMemory(Math.max(1, Math.min(50, maxVisible)), Runtime.getRuntime().maxMemory());
+        int safeMax = Math.max(1, Math.min(50, maxVisible));
         int safeIntervalMs = Math.max(1, changeSeconds) * 1000;
         removeExpired(nowMillis, safeMax, safeIntervalMs);
         activatePreparedIfNeeded(nowMillis, safeMax, safeIntervalMs);
@@ -334,16 +334,6 @@ public final class CollageEngine {
 
     private int decodeMaxHeight(Canvas canvas) {
         return Math.max(320, Math.min(canvas.getHeight(), 720));
-    }
-
-    static int maxVisibleForMemory(int requested, long maxMemoryBytes) {
-        if (maxMemoryBytes <= 64L * 1024L * 1024L) {
-            return Math.min(requested, 8);
-        }
-        if (maxMemoryBytes <= 128L * 1024L * 1024L) {
-            return Math.min(requested, 12);
-        }
-        return requested;
     }
 
     private int nextPhotoIndex(String orderMode) {

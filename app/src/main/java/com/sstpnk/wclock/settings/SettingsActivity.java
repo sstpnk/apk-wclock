@@ -128,9 +128,10 @@ public final class SettingsActivity extends Activity {
         photoSettingsGroup.addView(photoModes);
 
         LinearLayout photoNumbers = row();
+        int recommendedMaxPhotos = SettingsRepository.recommendedMaxVisiblePhotos(Runtime.getRuntime().maxMemory());
         LinearLayout maxPhotosColumn = column();
         maxPhotosColumn.addView(fieldLabel("Количество фото на экране"));
-        maxPhotos = edit("1-50", Integer.toString(settings.maxVisiblePhotos));
+        maxPhotos = edit("1-" + recommendedMaxPhotos, Integer.toString(Math.min(settings.maxVisiblePhotos, recommendedMaxPhotos)));
         maxPhotosColumn.addView(maxPhotos);
         photoNumbers.addView(maxPhotosColumn);
         LinearLayout intervalColumn = column();
@@ -446,7 +447,7 @@ public final class SettingsActivity extends Activity {
         settings.cityName = city.getText().toString();
         settings.latitude = parseDouble(latitude.getText().toString(), settings.latitude);
         settings.longitude = parseDouble(longitude.getText().toString(), settings.longitude);
-        settings.maxVisiblePhotos = parseInt(maxPhotos.getText().toString(), settings.maxVisiblePhotos);
+        settings.maxVisiblePhotos = Math.min(parseInt(maxPhotos.getText().toString(), settings.maxVisiblePhotos), SettingsRepository.recommendedMaxVisiblePhotos(Runtime.getRuntime().maxMemory()));
         settings.photoChangeSeconds = parseInt(photoInterval.getText().toString(), settings.photoChangeSeconds);
         settings.framePanSpeedPxPerSecond = parseInt(framePanSpeed.getText().toString(), settings.framePanSpeedPxPerSecond);
         settings.showSeconds = showSeconds.isChecked();
