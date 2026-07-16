@@ -2,11 +2,13 @@ package com.sstpnk.wclock.render;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Build;
 
 import com.sstpnk.wclock.settings.SettingsRepository;
 import com.sstpnk.wclock.weather.WeatherData;
 import com.sstpnk.wclock.weather.WeatherRepository;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class RenderController {
     static final long FRAME_DELAY_MS = 33L;
@@ -17,6 +19,7 @@ public final class RenderController {
     private final SettingsSource settingsSource;
     private final WeatherRepository weatherRepository;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private final ExecutorService weatherExecutor = Executors.newSingleThreadExecutor();
     private SettingsRepository.Settings cachedSettings;
     private boolean running;
     private boolean weatherRefreshRunning;
@@ -37,26 +40,22 @@ public final class RenderController {
                 view.postOnAnimation(this);
                 return;
             }
-            if (useVsyncInvalidationForSdk(Build.VERSION.SDK_INT)) {
-                invalidateView();
-                view.postOnAnimation(this);
-                return;
-            }
             invalidateView();
-            handler.postDelayed(this, FRAME_DELAY_MS);
+            view.postOnAnimation(this);
         }
     };
-
-    public RenderController(ClockWeatherCollageView view, SettingsRepository settingsRepository, WeatherRepository weatherRepository) {
-        this(view, null, new RepositorySettingsSource(settingsRepository), weatherRepository);
-    }
 
     RenderController(ClockWeatherCollageView view, SettingsSource settingsSource, WeatherRepository weatherRepository) {
         this(view, null, settingsSource, weatherRepository);
     }
 
     public RenderController(ClockWeatherCollageView view, PhotoRenderer photoRenderer, SettingsRepository settingsRepository, WeatherRepository weatherRepository) {
-        this(view, photoRenderer, new RepositorySettingsSource(settingsRepository), weatherRepository);
+        this(view, photoRenderer, new SettingsSource() {
+            @Override
+            public SettingsRepository.Settings load() {
+                return settingsRepository.load();
+            }
+        }, weatherRepository);
     }
 
     RenderController(ClockWeatherCollageView view, PhotoRenderer photoRenderer, SettingsSource settingsSource, WeatherRepository weatherRepository) {
@@ -78,6 +77,7 @@ public final class RenderController {
     public void stop() {
         running = false;
         handler.removeCallbacksAndMessages(null);
+        weatherExecutor.shutdownNow();
         if (photoRenderer != null) {
             photoRenderer.recycle();
         }
@@ -131,7 +131,7 @@ public final class RenderController {
         final long statusShownAt = System.currentTimeMillis();
         view.setWeatherStatus("\u0417\u0430\u043f\u0440\u043e\u0441 \u043f\u043e\u0433\u043e\u0434\u044b");
         invalidateView();
-        Thread thread = new Thread(new Runnable() {
+        weatherExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 long refreshMillis = settings.weatherRefreshMinutes * 60L * 1000L;
@@ -153,9 +153,7 @@ public final class RenderController {
                     }
                 });
             }
-        }, "wclock-weather-refresh");
-        thread.setDaemon(true);
-        thread.start();
+        });
     }
 
     static long weatherCompletionDelayMillis(long statusShownAtMillis, long nowMillis) {
@@ -167,17 +165,9 @@ public final class RenderController {
         return data == null || data.stale ? lastError : "";
     }
 
-    static boolean useVsyncInvalidationForSdk(int sdkInt) {
-        return sdkInt >= 16;
-    }
-
     private void invalidateView() {
         lastOverlayInvalidate = System.currentTimeMillis();
-        if (useVsyncInvalidationForSdk(Build.VERSION.SDK_INT)) {
-            view.postInvalidateOnAnimation();
-            return;
-        }
-        view.invalidate();
+        view.postInvalidateOnAnimation();
     }
 
     private boolean shouldInvalidateOverlay() {
@@ -196,18 +186,5 @@ public final class RenderController {
 
     interface SettingsSource {
         SettingsRepository.Settings load();
-    }
-
-    private static final class RepositorySettingsSource implements SettingsSource {
-        private final SettingsRepository settingsRepository;
-
-        RepositorySettingsSource(SettingsRepository settingsRepository) {
-            this.settingsRepository = settingsRepository;
-        }
-
-        @Override
-        public SettingsRepository.Settings load() {
-            return settingsRepository.load();
-        }
     }
 }

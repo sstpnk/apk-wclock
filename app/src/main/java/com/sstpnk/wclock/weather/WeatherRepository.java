@@ -1,5 +1,6 @@
 package com.sstpnk.wclock.weather;
 
+import com.sstpnk.wclock.settings.SettingsRepository;
 import com.sstpnk.wclock.util.NetworkClient;
 
 import java.util.ArrayList;
@@ -29,8 +30,21 @@ public final class WeatherRepository {
         }
     }
 
-    public WeatherData refresh(String cityName, double latitude, double longitude, long nowMillis) {
-        return tryProviders(cityName, latitude, longitude, nowMillis, true);
+    public static WeatherRepository create(SettingsRepository.Settings settings) {
+        NetworkClient networkClient = new NetworkClient("WClock/0.1 contact: github.com/sstpnk/apk-wclock", 10000);
+        if ("met-norway".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new MetNorwayProvider(), new OpenMeteoProvider(), new WttrInProvider());
+        }
+        if ("weatherapi".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new WeatherApiProvider(settings.weatherApiKey), new OpenMeteoProvider(), new WttrInProvider());
+        }
+        if ("openweather".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new OpenWeatherProvider(settings.openWeatherApiKey), new OpenMeteoProvider(), new WttrInProvider());
+        }
+        if ("wttr-in".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new WttrInProvider(), new OpenMeteoProvider(), new MetNorwayProvider());
+        }
+        return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider(), new WttrInProvider());
     }
 
     public WeatherData refreshCached(String cityName, double latitude, double longitude, long nowMillis, long refreshIntervalMillis, String cacheKey) {
@@ -50,10 +64,6 @@ public final class WeatherRepository {
 
     public WeatherData refreshForTest(String cityName, double latitude, double longitude, long nowMillis) {
         return tryProviders(cityName, latitude, longitude, nowMillis, false);
-    }
-
-    public WeatherData lastSuccessful() {
-        return lastSuccessful;
     }
 
     public String lastError() {
@@ -125,6 +135,6 @@ public final class WeatherRepository {
         if (data == null) {
             return null;
         }
-        return new WeatherData(data.providerName, data.cityName, data.updatedAtMillis, true, data.temperatureC, data.feelsLikeC, data.weatherCode, data.descriptionRu, data.precipitationMm, data.windSpeed, data.windDirection, data.forecast);
+        return new WeatherData(data.providerName, data.cityName, data.updatedAtMillis, true, data.temperatureC, data.weatherCode, data.descriptionRu, data.forecast);
     }
 }

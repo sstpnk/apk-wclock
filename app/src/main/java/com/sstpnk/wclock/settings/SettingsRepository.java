@@ -36,16 +36,14 @@ public final class SettingsRepository {
         settings.weatherApiKey = prefs.getString("weatherApiKey", defaults.weatherApiKey);
         settings.openWeatherApiKey = prefs.getString("openWeatherApiKey", defaults.openWeatherApiKey);
         settings.showSeconds = prefs.getBoolean("showSeconds", defaults.showSeconds);
-        settings.motionIntensity = prefs.getFloat("motionIntensity", defaults.motionIntensity);
         settings.burnInMinMinutes = prefs.getInt("burnInMinMinutes", defaults.burnInMinMinutes);
-        settings.burnInMaxMinutes = prefs.getInt("burnInMaxMinutes", defaults.burnInMaxMinutes);
         settings.dayBrightness = prefs.getFloat("dayBrightness", defaults.dayBrightness);
         settings.eveningBrightness = prefs.getFloat("eveningBrightness", defaults.eveningBrightness);
         settings.nightBrightness = prefs.getFloat("nightBrightness", defaults.nightBrightness);
         settings.autoBrightnessEnabled = prefs.getBoolean("autoBrightnessEnabled", defaults.autoBrightnessEnabled);
         settings.autoBrightnessMin = prefs.getFloat("autoBrightnessMin", defaults.autoBrightnessMin);
         settings.autoBrightnessMax = prefs.getFloat("autoBrightnessMax", defaults.autoBrightnessMax);
-        settings.nightOverlayAlpha = prefs.getFloat("nightOverlayAlpha", defaults.nightOverlayAlpha);
+
         float legacyPanelAlpha = prefs.getFloat("panelBackgroundAlpha", defaults.clockPanelBackgroundAlpha);
         settings.clockPanelBackgroundAlpha = prefs.getFloat("clockPanelBackgroundAlpha", legacyPanelAlpha);
         settings.weatherPanelBackgroundAlpha = prefs.getFloat("weatherPanelBackgroundAlpha", legacyPanelAlpha);
@@ -76,16 +74,14 @@ public final class SettingsRepository {
                 .putString("weatherApiKey", safe.weatherApiKey)
                 .putString("openWeatherApiKey", safe.openWeatherApiKey)
                 .putBoolean("showSeconds", safe.showSeconds)
-                .putFloat("motionIntensity", safe.motionIntensity)
                 .putInt("burnInMinMinutes", safe.burnInMinMinutes)
-                .putInt("burnInMaxMinutes", safe.burnInMaxMinutes)
                 .putFloat("dayBrightness", safe.dayBrightness)
                 .putFloat("eveningBrightness", safe.eveningBrightness)
                 .putFloat("nightBrightness", safe.nightBrightness)
                 .putBoolean("autoBrightnessEnabled", safe.autoBrightnessEnabled)
                 .putFloat("autoBrightnessMin", safe.autoBrightnessMin)
                 .putFloat("autoBrightnessMax", safe.autoBrightnessMax)
-                .putFloat("nightOverlayAlpha", safe.nightOverlayAlpha)
+
                 .putFloat("clockPanelBackgroundAlpha", safe.clockPanelBackgroundAlpha)
                 .putFloat("weatherPanelBackgroundAlpha", safe.weatherPanelBackgroundAlpha)
                 .apply();
@@ -150,16 +146,13 @@ public final class SettingsRepository {
         public String weatherApiKey;
         public String openWeatherApiKey;
         public boolean showSeconds;
-        public float motionIntensity;
         public int burnInMinMinutes;
-        public int burnInMaxMinutes;
         public float dayBrightness;
         public float eveningBrightness;
         public float nightBrightness;
         public boolean autoBrightnessEnabled;
         public float autoBrightnessMin;
         public float autoBrightnessMax;
-        public float nightOverlayAlpha;
         public float clockPanelBackgroundAlpha;
         public float weatherPanelBackgroundAlpha;
         public static Settings defaults() {
@@ -185,16 +178,13 @@ public final class SettingsRepository {
             settings.weatherApiKey = "";
             settings.openWeatherApiKey = "";
             settings.showSeconds = false;
-            settings.motionIntensity = 0.35f;
             settings.burnInMinMinutes = 5;
-            settings.burnInMaxMinutes = 15;
             settings.dayBrightness = 0.85f;
             settings.eveningBrightness = 0.45f;
             settings.nightBrightness = 0.12f;
             settings.autoBrightnessEnabled = true;
             settings.autoBrightnessMin = 0.08f;
             settings.autoBrightnessMax = 0.90f;
-            settings.nightOverlayAlpha = 0.45f;
             settings.clockPanelBackgroundAlpha = 0.56f;
             settings.weatherPanelBackgroundAlpha = 0.56f;
             return settings;
@@ -223,16 +213,13 @@ public final class SettingsRepository {
             safe.weatherApiKey = weatherApiKey == null ? "" : weatherApiKey.trim();
             safe.openWeatherApiKey = openWeatherApiKey == null ? "" : openWeatherApiKey.trim();
             safe.showSeconds = showSeconds;
-            safe.motionIntensity = clampFloat(motionIntensity, 0.0f, 1.0f);
             safe.burnInMinMinutes = clampInt(burnInMinMinutes, 5, 15);
-            safe.burnInMaxMinutes = clampInt(burnInMaxMinutes, safe.burnInMinMinutes, 15);
             safe.dayBrightness = clampFloat(dayBrightness, 0.05f, 1.0f);
             safe.eveningBrightness = clampFloat(eveningBrightness, 0.05f, 1.0f);
             safe.nightBrightness = clampFloat(nightBrightness, 0.02f, 1.0f);
             safe.autoBrightnessEnabled = autoBrightnessEnabled;
             safe.autoBrightnessMin = clampFloat(Math.min(autoBrightnessMin, autoBrightnessMax), 0.05f, 1.0f);
             safe.autoBrightnessMax = clampFloat(Math.max(autoBrightnessMin, autoBrightnessMax), safe.autoBrightnessMin, 1.0f);
-            safe.nightOverlayAlpha = clampFloat(nightOverlayAlpha, 0.0f, 0.85f);
             safe.clockPanelBackgroundAlpha = clampFloat(clockPanelBackgroundAlpha, 0.0f, 0.85f);
             safe.weatherPanelBackgroundAlpha = clampFloat(weatherPanelBackgroundAlpha, 0.0f, 0.85f);
             return safe;

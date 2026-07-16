@@ -43,11 +43,9 @@ public final class WeatherApiProvider implements WeatherProvider {
             forecast.add(new ForecastDay(
                     dayRoot.getString("date"),
                     code,
-                    day.getJSONObject("condition").optString("text", WeatherCodeMapper.openMeteoDescription(code)),
                     day.getDouble("mintemp_c"),
                     day.getDouble("maxtemp_c"),
-                    day.optInt("daily_chance_of_rain", 0),
-                    day.optDouble("maxwind_kph", 0.0)));
+                    day.optInt("daily_chance_of_rain", 0)));
         }
         int currentCode = mapConditionCode(current.getJSONObject("condition").optInt("code", 1003));
         WeatherData data = new WeatherData(
@@ -56,12 +54,8 @@ public final class WeatherApiProvider implements WeatherProvider {
                 updatedAtMillis,
                 false,
                 current.getDouble("temp_c"),
-                current.optDouble("feelslike_c", current.getDouble("temp_c")),
                 currentCode,
                 current.getJSONObject("condition").optString("text", WeatherCodeMapper.openMeteoDescription(currentCode)),
-                current.optDouble("precip_mm", 0.0),
-                current.optDouble("wind_kph", 0.0),
-                current.optInt("wind_degree", 0),
                 forecast);
         if (forecast.size() > 0) {
             data.todayMinTempC = forecast.get(0).minTempC;

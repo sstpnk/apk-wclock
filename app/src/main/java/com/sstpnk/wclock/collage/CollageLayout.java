@@ -5,7 +5,10 @@ import android.graphics.RectF;
 import java.util.Random;
 
 public final class CollageLayout {
+    private final Random random = new Random();
+
     public RectF frameForIndex(int index, int width, int height, int bitmapWidth, int bitmapHeight) {
+        random.setSeed(index * 1103515245L + 12345L);
         float frameWidth = Math.max(1.0f, bitmapWidth);
         float frameHeight = Math.max(1.0f, bitmapHeight);
         float maxArea = width * height * 0.25f;
@@ -15,7 +18,6 @@ public final class CollageLayout {
             frameWidth *= scale;
             frameHeight *= scale;
         }
-        Random random = new Random(index * 1103515245L + 12345L);
         float minX = -frameWidth * 0.10f;
         float maxX = width - frameWidth * 0.90f;
         float minY = -frameHeight * 0.10f;
@@ -26,7 +28,7 @@ public final class CollageLayout {
     }
 
     public float rotationForIndex(int index) {
-        Random random = new Random(index * 1664525L + 1013904223L);
+        random.setSeed(index * 1664525L + 1013904223L);
         return -8.0f + random.nextFloat() * 16.0f;
     }
 }

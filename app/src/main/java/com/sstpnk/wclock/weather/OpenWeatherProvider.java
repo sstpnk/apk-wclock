@@ -45,11 +45,9 @@ public final class OpenWeatherProvider implements WeatherProvider {
             forecast.add(new ForecastDay(
                     Long.toString(day.optLong("dt", 0L)),
                     code,
-                    weather.optString("description", WeatherCodeMapper.openMeteoDescription(code)),
                     temp.optDouble("night", temp.optDouble("min", 0.0)),
                     temp.optDouble("day", temp.optDouble("max", 0.0)),
-                    (int) Math.round(day.optDouble("pop", 0.0) * 100.0),
-                    day.optDouble("wind_speed", 0.0)));
+                    (int) Math.round(day.optDouble("pop", 0.0) * 100.0)));
         }
         int currentCode = mapWeatherId(currentWeather.optInt("id", 800));
         WeatherData data = new WeatherData(
@@ -58,12 +56,8 @@ public final class OpenWeatherProvider implements WeatherProvider {
                 updatedAtMillis,
                 false,
                 current.getDouble("temp"),
-                current.optDouble("feels_like", current.getDouble("temp")),
                 currentCode,
                 currentWeather.optString("description", WeatherCodeMapper.openMeteoDescription(currentCode)),
-                current.optDouble("rain", 0.0),
-                current.optDouble("wind_speed", 0.0),
-                current.optInt("wind_deg", 0),
                 forecast);
         if (forecast.size() > 0) {
             data.todayMinTempC = forecast.get(0).minTempC;

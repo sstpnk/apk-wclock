@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 public class WttrInProviderTest {
     @Test
     public void buildUrlUsesEncodedCoordinateSeparator() {
-        assertEquals("http://wttr.in/55.75580%2C37.61730?format=j1", new WttrInProvider().buildUrl(55.7558, 37.6173));
+        assertEquals("https://wttr.in/55.75580%2C37.61730?format=j1", new WttrInProvider().buildUrl(55.7558, 37.6173));
     }
 
     @Test
@@ -21,7 +21,6 @@ public class WttrInProviderTest {
 
         assertEquals("wttr.in", data.providerName);
         assertEquals(14.0, data.temperatureC, 0.01);
-        assertEquals(12.0, data.feelsLikeC, 0.01);
         assertEquals(2, data.weatherCode);
         assertEquals(1, data.forecast.size());
         assertEquals(61, data.forecast.get(0).weatherCode);

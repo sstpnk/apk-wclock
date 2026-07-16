@@ -15,7 +15,7 @@ public final class WttrInProvider implements WeatherProvider {
 
     @Override
     public String buildUrl(double latitude, double longitude) {
-        return String.format(Locale.US, "http://wttr.in/%.5f%%2C%.5f?format=j1", latitude, longitude);
+        return String.format(Locale.US, "https://wttr.in/%.5f%%2C%.5f?format=j1", latitude, longitude);
     }
 
     @Override
@@ -33,11 +33,9 @@ public final class WttrInProvider implements WeatherProvider {
                 forecast.add(new ForecastDay(
                         day.optString("date"),
                         code,
-                        WeatherCodeMapper.openMeteoDescription(code),
                         parseDouble(day.optString("mintempC"), 0.0),
                         parseDouble(day.optString("maxtempC"), 0.0),
-                        chanceFromHourly(day.optJSONArray("hourly")),
-                        0.0));
+                        chanceFromHourly(day.optJSONArray("hourly"))));
             }
         }
         WeatherData data = new WeatherData(
@@ -46,12 +44,8 @@ public final class WttrInProvider implements WeatherProvider {
                 updatedAtMillis,
                 false,
                 parseDouble(current.optString("temp_C"), 0.0),
-                parseDouble(current.optString("FeelsLikeC"), parseDouble(current.optString("temp_C"), 0.0)),
                 currentCode,
                 WeatherCodeMapper.openMeteoDescription(currentCode),
-                parseDouble(current.optString("precipMM"), 0.0),
-                parseDouble(current.optString("windspeedKmph"), 0.0),
-                parseInt(current.optString("winddirDegree"), 0),
                 forecast);
         data.humidityPercent = parseInt(current.optString("humidity"), 0);
         data.pressureHpa = parseDouble(current.optString("pressure"), 0.0);

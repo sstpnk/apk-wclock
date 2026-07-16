@@ -29,7 +29,6 @@ public class WeatherRepositoryTest {
         assertEquals("http", data.providerName);
         assertEquals(3.0, data.temperatureC, 0.01);
         assertEquals("primary: fail; fallback: fail; http: OK", repository.lastDiagnostics());
-        assertEquals("primary: fail; fallback: fail; http: OK", WeatherRepository.lastDiagnosticsText());
     }
 
     @Test
@@ -77,7 +76,7 @@ public class WeatherRepositoryTest {
             if (fail) {
                 throw new RuntimeException("fail");
             }
-            return new WeatherData(name, cityName, updatedAtMillis, false, temp, temp, 0, "Ясно", 0.0, 0.0, 0, java.util.Collections.<ForecastDay>emptyList());
+            return new WeatherData(name, cityName, updatedAtMillis, false, temp, 0, "Ясно", java.util.Collections.<ForecastDay>emptyList());
         }
     }
 

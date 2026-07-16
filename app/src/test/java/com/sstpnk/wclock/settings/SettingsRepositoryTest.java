@@ -30,9 +30,6 @@ public class SettingsRepositoryTest {
         assertEquals(0.08f, settings.autoBrightnessMin, 0.001f);
         assertEquals(0.90f, settings.autoBrightnessMax, 0.001f);
         assertTrue(settings.burnInMinMinutes >= 5);
-        assertTrue(settings.burnInMaxMinutes <= 15);
-        assertTrue(settings.nightOverlayAlpha >= 0.0f);
-        assertTrue(settings.nightOverlayAlpha <= 1.0f);
         assertEquals(0.56f, settings.clockPanelBackgroundAlpha, 0.001f);
         assertEquals(0.56f, settings.weatherPanelBackgroundAlpha, 0.001f);
     }

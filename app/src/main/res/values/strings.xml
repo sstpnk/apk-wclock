@@ -1,5 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">WClock</string>
-    <string name="settings_title">Настройки WClock</string>
-    <string name="dream_settings_title">WClock</string>
 </resources>

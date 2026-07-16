@@ -24,13 +24,6 @@ public class RenderControllerTest {
     }
 
     @Test
-    public void api16AndLaterUseVsyncInvalidation() {
-        assertEquals(false, RenderController.useVsyncInvalidationForSdk(15));
-        assertEquals(true, RenderController.useVsyncInvalidationForSdk(16));
-        assertEquals(true, RenderController.useVsyncInvalidationForSdk(19));
-    }
-
-    @Test
     public void weatherStatusCompletionIsDelayedLongEnoughToBeVisible() {
         assertEquals(1500L, RenderController.weatherCompletionDelayMillis(1000L, 1000L));
         assertEquals(500L, RenderController.weatherCompletionDelayMillis(1000L, 2000L));
@@ -100,7 +93,7 @@ public class RenderControllerTest {
     }
 
     private WeatherData weather(boolean stale) {
-        return new WeatherData("test", "Moscow", 1L, stale, 1.0, 1.0, 0, "Clear", 0.0, 0.0, 0, Collections.<ForecastDay>emptyList());
+        return new WeatherData("test", "Moscow", 1L, stale, 1.0, 0, "Clear", Collections.<ForecastDay>emptyList());
     }
 
     private static final class CountingSettingsSource implements RenderController.SettingsSource {

@@ -43,11 +43,9 @@ public final class OpenMeteoProvider implements WeatherProvider {
             forecast.add(new ForecastDay(
                     dates.getString(i),
                     code,
-                    WeatherCodeMapper.openMeteoDescription(code),
                     minTemps.getDouble(i),
                     maxTemps.getDouble(i),
-                    precipitation.optInt(i, 0),
-                    wind.optDouble(i, 0.0)));
+                    precipitation.optInt(i, 0)));
         }
         WeatherData data = new WeatherData(
                 "Open-Meteo",
@@ -55,12 +53,8 @@ public final class OpenMeteoProvider implements WeatherProvider {
                 updatedAtMillis,
                 false,
                 current.getDouble("temperature_2m"),
-                current.optDouble("apparent_temperature", current.getDouble("temperature_2m")),
                 currentCode,
                 WeatherCodeMapper.openMeteoDescription(currentCode),
-                current.optDouble("precipitation", 0.0),
-                current.optDouble("wind_speed_10m", 0.0),
-                current.optInt("wind_direction_10m", 0),
                 forecast);
         if (forecast.size() > 0) {
             data.todayMinTempC = forecast.get(0).minTempC;

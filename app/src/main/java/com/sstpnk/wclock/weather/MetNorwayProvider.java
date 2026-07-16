@@ -71,12 +71,8 @@ public final class MetNorwayProvider implements WeatherProvider {
                 updatedAtMillis,
                 false,
                 instant.getDouble("air_temperature"),
-                instant.getDouble("air_temperature"),
                 code,
                 WeatherCodeMapper.openMeteoDescription(code),
-                0.0,
-                instant.optDouble("wind_speed", 0.0),
-                (int) instant.optDouble("wind_from_direction", 0.0),
                 forecast);
         if (forecast.size() > 0) {
             data.todayMinTempC = forecast.get(0).minTempC;
@@ -113,11 +109,9 @@ public final class MetNorwayProvider implements WeatherProvider {
             return new ForecastDay(
                     date,
                     weatherCode,
-                    WeatherCodeMapper.openMeteoDescription(weatherCode),
                     minTemp,
                     maxTemp,
-                    0,
-                    maxWindSpeed);
+                    0);
         }
     }
 

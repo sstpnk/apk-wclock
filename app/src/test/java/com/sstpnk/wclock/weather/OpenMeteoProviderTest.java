@@ -19,7 +19,6 @@ public class OpenMeteoProviderTest {
         assertEquals("Переменная облачность", data.descriptionRu);
         assertEquals(5, data.forecast.size());
         assertEquals("2026-06-24", data.forecast.get(1).date);
-        assertEquals("Дождь", data.forecast.get(1).descriptionRu);
     }
 
     private static String readResource(String name) {

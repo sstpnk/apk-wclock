@@ -48,6 +48,7 @@ public final class ClockWeatherCollageView extends View {
     private String weatherStatus = "\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043f\u043e\u0433\u043e\u0434\u044b";
     private long weatherStatusMillis;
     private boolean drawCollage = true;
+    private final Calendar calendar = Calendar.getInstance();
 
     public ClockWeatherCollageView(Context context) {
         super(context);
@@ -71,26 +72,6 @@ public final class ClockWeatherCollageView extends View {
 
     public void setBurnInZoneIndex(int burnInZoneIndex) {
         this.burnInZoneIndex = burnInZoneIndex;
-    }
-
-    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle) {
-        setDisplaySettings(collageEnabled, photoDisplayMode, "random", maxVisiblePhotos, photoChangeSeconds, showSeconds, weatherIconStyle);
-    }
-
-    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle) {
-        setDisplaySettings(collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, clockPanelBackgroundAlpha);
-    }
-
-    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
-        setDisplaySettings(collageEnabled, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, panelBackgroundAlpha);
-    }
-
-    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
-        setDisplaySettings(collageEnabled, true, true, true, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, panelBackgroundAlpha);
-    }
-
-    public void setDisplaySettings(boolean collageEnabled, boolean showClock, boolean showWeather, boolean showForecast, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond, boolean showSeconds, String weatherIconStyle, float panelBackgroundAlpha) {
-        setDisplaySettings(collageEnabled, showClock, showWeather, showForecast, photoDisplayMode, photoOrderMode, maxVisiblePhotos, photoChangeSeconds, framePanSpeedPxPerSecond, showSeconds, weatherIconStyle, panelBackgroundAlpha, panelBackgroundAlpha);
     }
 
     public void setDisplaySettings(boolean collageEnabled, boolean showClock, boolean showWeather, boolean showForecast, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond, boolean showSeconds, String weatherIconStyle, float clockPanelBackgroundAlpha, float weatherPanelBackgroundAlpha) {
@@ -193,7 +174,6 @@ public final class ClockWeatherCollageView extends View {
     }
 
     private void drawClock(Canvas canvas, RectF bounds, long now, int width) {
-        Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(now);
         String hour = twoDigits(calendar.get(Calendar.HOUR_OF_DAY));
         String minute = twoDigits(calendar.get(Calendar.MINUTE));

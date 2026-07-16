@@ -55,7 +55,7 @@ public final class NetworkClient {
     }
 
     private void enableModernTls(HttpURLConnection connection) throws Exception {
-        if (!(connection instanceof HttpsURLConnection) || Build.VERSION.SDK_INT < 16 || Build.VERSION.SDK_INT > 20) {
+        if (!(connection instanceof HttpsURLConnection) || Build.VERSION.SDK_INT > 20) {
             return;
         }
         HttpsURLConnection https = (HttpsURLConnection) connection;
