@@ -79,6 +79,15 @@ public final class MainActivity extends Activity implements SensorEventListener 
     }
 
     @Override
+    protected void onDestroy() {
+        if (renderController != null) {
+            renderController.dispose();
+            renderController = null;
+        }
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_ENTER) {
             openSettings();
@@ -99,7 +108,8 @@ public final class MainActivity extends Activity implements SensorEventListener 
 
     private void rebuildRenderHost(SettingsRepository.Settings settings) {
         if (renderController != null) {
-            renderController.stop();
+            renderController.dispose();
+            renderController = null;
         }
         clockView = new ClockWeatherCollageView(this);
         clockView.setOnTouchListener(new View.OnTouchListener() {
@@ -124,7 +134,7 @@ public final class MainActivity extends Activity implements SensorEventListener 
 
     private void resetRenderController(SettingsRepository.Settings settings, PhotoRenderer photoRenderer) {
         if (renderController != null) {
-            renderController.stop();
+            renderController.dispose();
         }
         weatherRepositorySignature = weatherSignature(settings);
         renderController = new RenderController(clockView, photoRenderer, settingsRepository, WeatherRepository.create(settings));

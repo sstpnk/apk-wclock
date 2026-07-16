@@ -77,10 +77,14 @@ public final class RenderController {
     public void stop() {
         running = false;
         handler.removeCallbacksAndMessages(null);
-        weatherExecutor.shutdownNow();
         if (photoRenderer != null) {
             photoRenderer.recycle();
         }
+    }
+
+    public void dispose() {
+        stop();
+        weatherExecutor.shutdownNow();
     }
 
     public void forceRefreshNow() {

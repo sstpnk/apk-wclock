@@ -64,6 +64,10 @@ public final class WClockDreamService extends DreamService implements SensorEven
     @Override
     public void onDetachedFromWindow() {
         unregisterLightSensor();
+        if (renderController != null) {
+            renderController.dispose();
+            renderController = null;
+        }
         super.onDetachedFromWindow();
     }
 

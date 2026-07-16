@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.6 - Code hardening and repository cleanup
+
+### Fixed
+
+- Remove global cleartext traffic allowance by switching the wttr.in fallback provider from HTTP to HTTPS.
+- Avoid per-frame `Calendar.getInstance()` allocation in the main render view.
+- Use a single weather refresh executor instead of creating a new thread for every refresh.
+
+### Changed
+
+- Remove dead render/time helper classes and unused weather/settings fields.
+- Consolidate duplicated weather repository creation in one factory method.
+- Simplify render controller setup and display settings propagation.
+- Keep the original launcher PNG assets because the vector icon experiment did not reduce the final APK size in a meaningful way.
+- Replace the custom project license with the standard MIT License.
+- Rework the README into a bilingual Russian/English product page.
+
 ## v0.1.4 - Vsync render pacing
 
 ### Fixed
