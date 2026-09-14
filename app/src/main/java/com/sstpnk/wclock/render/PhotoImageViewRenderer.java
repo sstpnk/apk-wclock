@@ -1,6 +1,9 @@
 package com.sstpnk.wclock.render;
 
 import android.content.Context;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.RectF;
@@ -34,6 +37,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<PhotoItem> photos = new ArrayList<PhotoItem>();
     private final List<ImageView> activeViews = new ArrayList<ImageView>();
+    private final List<ImageView> retiringViews = new ArrayList<ImageView>();
     private final List<Integer> activeSourceIndexes = new ArrayList<Integer>();
     private final Random random = new Random();
     private String loadedPath = "";
@@ -45,10 +49,14 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
     private int photoChangeSeconds = 5;
     private int framePanSpeedPxPerSecond = 20;
     private boolean loading;
+    private int generation;
     private int nextPhotoIndex;
     private int nextLayoutIndex;
     private long lastAddMillis;
     private long currentFrameDisplayMillis;
+    private FocusState focusState;
+    private ValueAnimator focusAnimator;
+    private boolean focusTransitionRunning;
 
     public PhotoImageViewRenderer(Context context) {
         super(context);
@@ -85,7 +93,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
 
     @Override
     public void renderFrame() {
-        if (!collageEnabled || photos.size() == 0 || getWidth() <= 0 || getHeight() <= 0 || loading) {
+        if (!collageEnabled || photos.size() == 0 || getWidth() <= 0 || getHeight() <= 0 || loading || focusState != null || focusTransitionRunning) {
             return;
         }
         if (CollageEngine.MODE_FRAME.equals(photoDisplayMode)) {
@@ -127,6 +135,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
             return;
         }
         loading = true;
+        final int requestGeneration = generation;
         final int sourceIndex = nextPhotoIndex();
         if (CollageEngine.ORDER_SEQUENTIAL.equals(photoOrderMode)) {
             nextPhotoIndex = (sourceIndex + 1) % photos.size();
@@ -142,6 +151,10 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
+                        if (requestGeneration != generation) {
+                            recycleBitmap(bitmap);
+                            return;
+                        }
                         loading = false;
                         if (bitmap == null) {
                             return;
@@ -222,6 +235,25 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
         lastAddMillis = System.currentTimeMillis();
     }
 
+    public boolean handlePhotoWallTap(float x, float y) {
+        if (focusState != null) {
+            collapseFocusedPhoto();
+            return true;
+        }
+        if (focusTransitionRunning) {
+            return true;
+        }
+        if (!collageEnabled || !CollageEngine.MODE_PHOTOWALL.equals(photoDisplayMode)) {
+            return false;
+        }
+        ImageView tapped = findTopmostPhotoAt(x, y);
+        if (tapped == null) {
+            return false;
+        }
+        expandPhoto(tapped);
+        return true;
+    }
+
     private ImageView imageView(Bitmap bitmap, boolean bordered) {
         ImageView view = new ImageView(getContext());
         if (bordered) {
@@ -273,6 +305,14 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
             return;
         }
         final ImageView old = activeViews.get(0);
+        int index = activeViews.indexOf(old);
+        if (index >= 0) {
+            activeViews.remove(index);
+            activeSourceIndexes.remove(index);
+        }
+        if (!retiringViews.contains(old)) {
+            retiringViews.add(old);
+        }
         old.animate().alpha(0.0f).setDuration(WALL_ENTRANCE_MS).withEndAction(new Runnable() {
             @Override
             public void run() {
@@ -282,29 +322,46 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
     }
 
     private void removeViewAndRecycle(ImageView view) {
+        view.animate().cancel();
+        boolean removingFocusedView = focusState != null && focusState.view == view;
+        if (removingFocusedView) {
+            cancelFocusAnimator();
+            focusState = null;
+            focusTransitionRunning = false;
+        }
         int index = activeViews.indexOf(view);
         if (index >= 0) {
             activeViews.remove(index);
             activeSourceIndexes.remove(index);
         }
+        retiringViews.remove(view);
         Bitmap bitmap = null;
         if (view.getDrawable() instanceof BitmapDrawable) {
             bitmap = ((BitmapDrawable) view.getDrawable()).getBitmap();
         }
         view.setImageDrawable(null);
         removeView(view);
-        if (bitmap != null && !bitmap.isRecycled()) {
-            bitmap.recycle();
-        }
+        recycleBitmap(bitmap);
     }
 
     private void clearPhotos() {
+        generation++;
         loading = false;
         handler.removeCallbacksAndMessages(null);
+        if (focusAnimator != null) {
+            focusAnimator.cancel();
+            focusAnimator = null;
+        }
+        focusState = null;
+        focusTransitionRunning = false;
         for (int i = activeViews.size() - 1; i >= 0; i--) {
             removeViewAndRecycle(activeViews.get(i));
         }
+        for (int i = retiringViews.size() - 1; i >= 0; i--) {
+            removeViewAndRecycle(retiringViews.get(i));
+        }
         activeViews.clear();
+        retiringViews.clear();
         activeSourceIndexes.clear();
         photos.clear();
         nextPhotoIndex = 0;
@@ -324,5 +381,179 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
         float maxPanPx = Math.max(0.0f, Math.max(drawWidth - getWidth(), drawHeight - getHeight()));
         long panDuration = (long) Math.ceil(maxPanPx / Math.max(4.0f, Math.min(48.0f, panSpeedPxPerSecond)) * 1000.0f);
         return Math.max(intervalMs, panDuration);
+    }
+
+    private ImageView findTopmostPhotoAt(float x, float y) {
+        for (int i = activeViews.size() - 1; i >= 0; i--) {
+            ImageView view = activeViews.get(i);
+            if (view.getAlpha() > 0.05f && x >= view.getX() && x <= view.getX() + view.getWidth()
+                    && y >= view.getY() && y <= view.getY() + view.getHeight()) {
+                return view;
+            }
+        }
+        return null;
+    }
+
+    private void expandPhoto(final ImageView view) {
+        final Bitmap bitmap = bitmapForView(view);
+        if (bitmap == null || bitmap.isRecycled()) {
+            return;
+        }
+        cancelFocusAnimator();
+        view.animate().cancel();
+        view.bringToFront();
+        final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
+        final FocusState state = new FocusState(view, params.leftMargin, params.topMargin, params.width, params.height, view.getRotation());
+        focusState = state;
+        view.setAlpha(1.0f);
+        view.setBackgroundColor(Color.TRANSPARENT);
+        view.setPadding(0, 0, 0, 0);
+        view.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        RectF target = expandedFrame(bitmap);
+        animatePhotoFrame(state, target, 260L, new Runnable() {
+            @Override
+            public void run() {
+                focusTransitionRunning = false;
+            }
+        });
+    }
+
+    private void collapseFocusedPhoto() {
+        final FocusState state = focusState;
+        if (state == null) {
+            return;
+        }
+        focusState = null;
+        cancelFocusAnimator();
+        RectF target = new RectF(state.leftMargin, state.topMargin, state.leftMargin + state.width, state.topMargin + state.height);
+        animatePhotoFrame(state, target, 220L, new Runnable() {
+            @Override
+            public void run() {
+                state.view.setBackgroundColor(0xFFF4F1EA);
+                int border = borderSize();
+                state.view.setPadding(border, border, border, border);
+                state.view.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                focusTransitionRunning = false;
+                lastAddMillis = System.currentTimeMillis();
+            }
+        });
+    }
+
+    private void animatePhotoFrame(final FocusState state, final RectF target, long duration, final Runnable endAction) {
+        final ImageView view = state.view;
+        final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
+        final float startLeft = params.leftMargin;
+        final float startTop = params.topMargin;
+        final float startWidth = params.width;
+        final float startHeight = params.height;
+        final float startRotation = view.getRotation();
+        final float targetRotation = focusState == state ? 0.0f : state.rotation;
+        focusTransitionRunning = true;
+        focusAnimator = ValueAnimator.ofFloat(0.0f, 1.0f);
+        focusAnimator.setDuration(duration);
+        focusAnimator.setInterpolator(new DecelerateInterpolator());
+        focusAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float progress = ((Float) animation.getAnimatedValue()).floatValue();
+                params.leftMargin = Math.round(lerp(startLeft, target.left, progress));
+                params.topMargin = Math.round(lerp(startTop, target.top, progress));
+                params.width = Math.max(1, Math.round(lerp(startWidth, target.width(), progress)));
+                params.height = Math.max(1, Math.round(lerp(startHeight, target.height(), progress)));
+                view.setLayoutParams(params);
+                view.setRotation(lerp(startRotation, targetRotation, progress));
+            }
+        });
+        focusAnimator.addListener(new AnimatorListenerAdapter() {
+            private boolean canceled;
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                canceled = true;
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (focusAnimator == animation) {
+                    focusAnimator = null;
+                }
+                if (!canceled && endAction != null) {
+                    endAction.run();
+                }
+            }
+        });
+        focusAnimator.start();
+    }
+
+    private RectF expandedFrame(Bitmap bitmap) {
+        float scale = Math.min(getWidth() / (float) Math.max(1, bitmap.getWidth()), getHeight() / (float) Math.max(1, bitmap.getHeight()));
+        int width = Math.max(1, Math.round(bitmap.getWidth() * scale));
+        int height = Math.max(1, Math.round(bitmap.getHeight() * scale));
+        float left = (getWidth() - width) * 0.5f;
+        float top = (getHeight() - height) * 0.5f;
+        return new RectF(left, top, left + width, top + height);
+    }
+
+    private Bitmap bitmapForView(ImageView view) {
+        return view.getDrawable() instanceof BitmapDrawable ? ((BitmapDrawable) view.getDrawable()).getBitmap() : null;
+    }
+
+    private void cancelFocusAnimator() {
+        if (focusAnimator != null) {
+            focusAnimator.cancel();
+            focusAnimator = null;
+        }
+    }
+
+    private void recycleBitmap(Bitmap bitmap) {
+        if (bitmap != null && !bitmap.isRecycled()) {
+            bitmap.recycle();
+        }
+    }
+
+    private float lerp(float start, float end, float progress) {
+        return start + (end - start) * progress;
+    }
+
+    void showWallBitmapForTest(Bitmap bitmap, int layoutIndex, int sourceIndex) {
+        showWallBitmap(bitmap, layoutIndex, sourceIndex);
+    }
+
+    void fadeOutOldestViewForTest() {
+        fadeOutOldestView();
+    }
+
+    int activePhotoCountForTest() {
+        return activeViews.size();
+    }
+
+    int retiringPhotoCountForTest() {
+        return retiringViews.size();
+    }
+
+    boolean focusedForTest() {
+        return focusState != null;
+    }
+
+    RectF expandedFrameForTest(Bitmap bitmap) {
+        return expandedFrame(bitmap);
+    }
+
+    private static final class FocusState {
+        final ImageView view;
+        final int leftMargin;
+        final int topMargin;
+        final int width;
+        final int height;
+        final float rotation;
+
+        FocusState(ImageView view, int leftMargin, int topMargin, int width, int height, float rotation) {
+            this.view = view;
+            this.leftMargin = leftMargin;
+            this.topMargin = topMargin;
+            this.width = width;
+            this.height = height;
+            this.rotation = rotation;
+        }
     }
 }

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.7 - Photo wall focus and stability
+
+### Added
+
+- Add tap-to-focus for photo wall images: tapping a photo pauses new photo entries and expands the selected image to fit the screen without stretching; the next tap returns to the normal photo wall cycle.
+
+### Fixed
+
+- Prevent repeated fade-out scheduling from leaving retired photo views active, which could cause short flicker, missing photos, or white photo cards.
+- Ignore stale asynchronous bitmap decode results after the photo renderer is cleared or recycled.
+
 ## v0.1.6 - Code hardening and repository cleanup
 
 ### Fixed

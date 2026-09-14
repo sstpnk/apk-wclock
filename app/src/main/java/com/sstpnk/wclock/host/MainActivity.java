@@ -119,6 +119,10 @@ public final class MainActivity extends Activity implements SensorEventListener 
                     openSettings();
                     return true;
                 }
+                if (event.getAction() == MotionEvent.ACTION_UP && photoRenderer instanceof PhotoImageViewRenderer) {
+                    ((PhotoImageViewRenderer) photoRenderer).handlePhotoWallTap(event.getX(), event.getY());
+                    return true;
+                }
                 return true;
             }
         });

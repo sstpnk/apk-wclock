@@ -1,6 +1,6 @@
 # Release Checklist
 
-Target: `v0.1.6`
+Target: `v0.1.7`
 
 ## Before Publishing
 
@@ -14,6 +14,7 @@ Target: `v0.1.6`
   - Screensaver service is visible in Android settings.
   - Settings open by touch and TV remote/menu key.
   - Photo wall renders real images and animates at 30 FPS target.
+  - Tapping a photo wall image pauses the cycle, expands the image within the screen, and the next tap resumes the wall.
   - Photo frame pans oversized images before switching.
   - Weather provider change shows `Запрос погоды` at the bottom and refreshes data.
   - Weather failure shows a short user-facing error for about one minute.
@@ -24,6 +25,6 @@ Target: `v0.1.6`
 
 ## Versioning
 
-- Android `versionName`: `0.1.6`.
-- Android `versionCode`: `7`.
+- Android `versionName`: `0.1.7`.
+- Android `versionCode`: `8`.
 - Runtime build number is generated at build time in UTC.

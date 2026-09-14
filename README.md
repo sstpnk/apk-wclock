@@ -10,12 +10,12 @@ WClock — Android-приложение для настольных часов, 
 
 ## Текущий релиз
 
-- Последний релиз: `v0.1.6`.
-- APK: [WClock-v0.1.6.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.6/WClock-v0.1.6.apk).
-- AAB: [WClock-v0.1.6.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.6/WClock-v0.1.6.aab).
+- Последний релиз: `v0.1.7`.
+- APK: [WClock-v0.1.7.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.7/WClock-v0.1.7.apk).
+- AAB: [WClock-v0.1.7.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.7/WClock-v0.1.7.aab).
 - Минимальная версия Android: 4.4 KitKat (`minSdk 19`).
-- `versionName`: `0.1.6`.
-- `versionCode`: `7`.
+- `versionName`: `0.1.7`.
+- `versionCode`: `8`.
 
 ## Зачем нужен WClock
 
@@ -58,6 +58,7 @@ WClock превращает старый или свободный Android-пл�
 - Рамка вокруг фотографии.
 - Случайный или последовательный порядок.
 - Защита от одновременного показа одной и той же фотографии, если в папке достаточно изображений.
+- Tap-to-focus: выбранное фото можно развернуть во весь доступный экран без растягивания, а следующим касанием вернуться к циклу фотостены.
 
 ### Режим фоторамки
 
@@ -245,12 +246,12 @@ The app can run as a regular fullscreen clock or as an Android Daydream/screensa
 
 ## Current Release
 
-- Latest release: `v0.1.6`.
-- APK: [WClock-v0.1.6.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.6/WClock-v0.1.6.apk).
-- AAB: [WClock-v0.1.6.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.6/WClock-v0.1.6.aab).
+- Latest release: `v0.1.7`.
+- APK: [WClock-v0.1.7.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.7/WClock-v0.1.7.apk).
+- AAB: [WClock-v0.1.7.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.7/WClock-v0.1.7.aab).
 - Minimum Android version: 4.4 KitKat (`minSdk 19`).
-- `versionName`: `0.1.6`.
-- `versionCode`: `7`.
+- `versionName`: `0.1.7`.
+- `versionCode`: `8`.
 
 ## What WClock Is For
 
@@ -293,6 +294,7 @@ Photos are read only from the selected local folder. Weather is fetched directly
 - Photo borders.
 - Random or sequential order.
 - Avoids showing the same photo in multiple cards when enough photos are available.
+- Tap-to-focus: expand a selected photo to the largest size that fits the screen without stretching, then tap again to return to the photo wall cycle.
 
 ### Photo Frame Mode
 
