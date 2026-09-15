@@ -1,15 +1,21 @@
 package com.sstpnk.wclock.render;
 
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.RectF;
 import android.widget.ImageView;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
+import java.io.File;
+import java.io.FileOutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -17,6 +23,9 @@ import static org.junit.Assert.assertTrue;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28)
 public class PhotoImageViewRendererTest {
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     @Test
     public void frameDisplayWaitsUntilPanCanFinish() {
         PhotoImageViewRenderer renderer = new PhotoImageViewRenderer(ApplicationProvider.getApplicationContext());
@@ -69,5 +78,33 @@ public class PhotoImageViewRendererTest {
 
         assertTrue(handled);
         assertTrue(renderer.focusedForTest());
+    }
+
+    @Test
+    public void recycleAllowsSameSourceToBeLoadedAgain() throws Exception {
+        File folder = temporaryFolder.newFolder("photos");
+        createImageFile(folder, "source.png");
+        PhotoImageViewRenderer renderer = new PhotoImageViewRenderer(ApplicationProvider.getApplicationContext());
+
+        renderer.setPhotoSource(folder.getAbsolutePath(), "");
+        assertEquals(1, renderer.sourcePhotoCountForTest());
+
+        renderer.recycle();
+        assertEquals(0, renderer.sourcePhotoCountForTest());
+
+        renderer.setPhotoSource(folder.getAbsolutePath(), "");
+        assertEquals(1, renderer.sourcePhotoCountForTest());
+    }
+
+    private void createImageFile(File folder, String name) throws Exception {
+        Bitmap bitmap = Bitmap.createBitmap(16, 16, Bitmap.Config.ARGB_8888);
+        bitmap.eraseColor(Color.rgb(230, 40, 40));
+        FileOutputStream output = new FileOutputStream(new File(folder, name));
+        try {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+        } finally {
+            output.close();
+            bitmap.recycle();
+        }
     }
 }

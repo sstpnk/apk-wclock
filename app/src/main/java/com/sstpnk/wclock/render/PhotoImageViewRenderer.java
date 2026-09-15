@@ -347,6 +347,8 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
     private void clearPhotos() {
         generation++;
         loading = false;
+        loadedPath = "";
+        loadedUri = "";
         handler.removeCallbacksAndMessages(null);
         if (focusAnimator != null) {
             focusAnimator.cancel();
@@ -529,6 +531,10 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
 
     int retiringPhotoCountForTest() {
         return retiringViews.size();
+    }
+
+    int sourcePhotoCountForTest() {
+        return photos.size();
     }
 
     boolean focusedForTest() {
