@@ -17,12 +17,13 @@ public final class WeatherRepository {
     private static String cachedKey = "";
     private static long cachedAtMillis;
 
-    public WeatherRepository(NetworkClient networkClient, WeatherProvider primary, WeatherProvider fallback, WeatherProvider... extraFallbacks) {
+    public WeatherRepository(NetworkClient networkClient, WeatherProvider primary, WeatherProvider... fallbacks) {
         this.networkClient = networkClient;
-        this.providers.add(primary);
-        this.providers.add(fallback);
-        if (extraFallbacks != null) {
-            for (WeatherProvider provider : extraFallbacks) {
+        if (primary != null) {
+            this.providers.add(primary);
+        }
+        if (fallbacks != null) {
+            for (WeatherProvider provider : fallbacks) {
                 if (provider != null) {
                     this.providers.add(provider);
                 }
@@ -33,16 +34,25 @@ public final class WeatherRepository {
     public static WeatherRepository create(SettingsRepository.Settings settings) {
         NetworkClient networkClient = new NetworkClient("WClock/0.1 contact: github.com/sstpnk/apk-wclock", 10000);
         if ("met-norway".equals(settings.weatherProvider)) {
-            return new WeatherRepository(networkClient, new MetNorwayProvider(), new OpenMeteoProvider(), new WttrInProvider());
+            return new WeatherRepository(networkClient, new MetNorwayProvider());
         }
         if ("weatherapi".equals(settings.weatherProvider)) {
-            return new WeatherRepository(networkClient, new WeatherApiProvider(settings.weatherApiKey), new OpenMeteoProvider(), new WttrInProvider());
+            return new WeatherRepository(networkClient, new WeatherApiProvider(settings.weatherApiKey));
         }
         if ("openweather".equals(settings.weatherProvider)) {
-            return new WeatherRepository(networkClient, new OpenWeatherProvider(settings.openWeatherApiKey), new OpenMeteoProvider(), new WttrInProvider());
+            return new WeatherRepository(networkClient, new OpenWeatherProvider(settings.openWeatherApiKey));
         }
         if ("wttr-in".equals(settings.weatherProvider)) {
-            return new WeatherRepository(networkClient, new WttrInProvider(), new OpenMeteoProvider(), new MetNorwayProvider());
+            return new WeatherRepository(networkClient, new WttrInProvider());
+        }
+        if ("yandex".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new YandexWeatherProvider(settings.yandexWeatherApiKey));
+        }
+        if ("visualcrossing".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new VisualCrossingProvider(settings.visualCrossingApiKey));
+        }
+        if ("tomorrowio".equals(settings.weatherProvider)) {
+            return new WeatherRepository(networkClient, new TomorrowIoProvider(settings.tomorrowIoApiKey));
         }
         return new WeatherRepository(networkClient, new OpenMeteoProvider(), new MetNorwayProvider(), new WttrInProvider());
     }
@@ -127,7 +137,7 @@ public final class WeatherRepository {
     }
 
     private WeatherData fetch(WeatherProvider provider, String cityName, double latitude, double longitude, long nowMillis, boolean fetchNetwork) throws Exception {
-        String body = fetchNetwork ? networkClient.get(provider.buildUrl(latitude, longitude)) : "";
+        String body = fetchNetwork ? networkClient.get(provider.buildUrl(latitude, longitude), provider.headers()) : "";
         return provider.parse(cityName, body, nowMillis);
     }
 

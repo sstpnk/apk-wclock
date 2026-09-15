@@ -16,6 +16,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -35,12 +37,25 @@ public final class NetworkClient {
     }
 
     public String get(String url) throws Exception {
+        return get(url, Collections.<String, String>emptyMap());
+    }
+
+    public String get(String url, Map<String, String> headers) throws Exception {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         enableModernTls(connection);
         connection.setConnectTimeout(timeoutMillis);
         connection.setReadTimeout(timeoutMillis);
         connection.setRequestProperty("User-Agent", userAgent);
         connection.setRequestProperty("Accept", "application/json");
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                String name = header.getKey();
+                String value = header.getValue();
+                if (name != null && name.length() > 0 && value != null && value.length() > 0) {
+                    connection.setRequestProperty(name, value);
+                }
+            }
+        }
         try {
             int code = connection.getResponseCode();
             InputStream stream = code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream();

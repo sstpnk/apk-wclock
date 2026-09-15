@@ -57,17 +57,26 @@ public class SettingsRepositoryTest {
     }
 
     @Test
-    public void weatherProviderGroupsFreeFallbackProvidersAsAutomatic() {
+    public void weatherProviderAcceptsExplicitSources() {
         SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
 
         settings.weatherProvider = "wttr-in";
-        assertEquals("open-meteo", settings.normalized().weatherProvider);
+        assertEquals("wttr-in", settings.normalized().weatherProvider);
 
         settings.weatherProvider = "met-norway";
-        assertEquals("open-meteo", settings.normalized().weatherProvider);
+        assertEquals("met-norway", settings.normalized().weatherProvider);
 
         settings.weatherProvider = "open-meteo";
         assertEquals("open-meteo", settings.normalized().weatherProvider);
+
+        settings.weatherProvider = "yandex";
+        assertEquals("yandex", settings.normalized().weatherProvider);
+
+        settings.weatherProvider = "visualcrossing";
+        assertEquals("visualcrossing", settings.normalized().weatherProvider);
+
+        settings.weatherProvider = "tomorrowio";
+        assertEquals("tomorrowio", settings.normalized().weatherProvider);
     }
 
     @Test

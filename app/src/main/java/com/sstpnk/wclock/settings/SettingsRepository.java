@@ -35,6 +35,9 @@ public final class SettingsRepository {
         settings.weatherIconStyle = prefs.getString("weatherIconStyle", defaults.weatherIconStyle);
         settings.weatherApiKey = prefs.getString("weatherApiKey", defaults.weatherApiKey);
         settings.openWeatherApiKey = prefs.getString("openWeatherApiKey", defaults.openWeatherApiKey);
+        settings.yandexWeatherApiKey = prefs.getString("yandexWeatherApiKey", defaults.yandexWeatherApiKey);
+        settings.visualCrossingApiKey = prefs.getString("visualCrossingApiKey", defaults.visualCrossingApiKey);
+        settings.tomorrowIoApiKey = prefs.getString("tomorrowIoApiKey", defaults.tomorrowIoApiKey);
         settings.showSeconds = prefs.getBoolean("showSeconds", defaults.showSeconds);
         settings.burnInMinMinutes = prefs.getInt("burnInMinMinutes", defaults.burnInMinMinutes);
         settings.dayBrightness = prefs.getFloat("dayBrightness", defaults.dayBrightness);
@@ -73,6 +76,9 @@ public final class SettingsRepository {
                 .putString("weatherIconStyle", safe.weatherIconStyle)
                 .putString("weatherApiKey", safe.weatherApiKey)
                 .putString("openWeatherApiKey", safe.openWeatherApiKey)
+                .putString("yandexWeatherApiKey", safe.yandexWeatherApiKey)
+                .putString("visualCrossingApiKey", safe.visualCrossingApiKey)
+                .putString("tomorrowIoApiKey", safe.tomorrowIoApiKey)
                 .putBoolean("showSeconds", safe.showSeconds)
                 .putInt("burnInMinMinutes", safe.burnInMinMinutes)
                 .putFloat("dayBrightness", safe.dayBrightness)
@@ -145,6 +151,9 @@ public final class SettingsRepository {
         public String weatherIconStyle;
         public String weatherApiKey;
         public String openWeatherApiKey;
+        public String yandexWeatherApiKey;
+        public String visualCrossingApiKey;
+        public String tomorrowIoApiKey;
         public boolean showSeconds;
         public int burnInMinMinutes;
         public float dayBrightness;
@@ -177,6 +186,9 @@ public final class SettingsRepository {
             settings.weatherIconStyle = "outline";
             settings.weatherApiKey = "";
             settings.openWeatherApiKey = "";
+            settings.yandexWeatherApiKey = "";
+            settings.visualCrossingApiKey = "";
+            settings.tomorrowIoApiKey = "";
             settings.showSeconds = false;
             settings.burnInMinMinutes = 5;
             settings.dayBrightness = 0.85f;
@@ -212,6 +224,9 @@ public final class SettingsRepository {
             safe.weatherIconStyle = normalizeIconStyle(weatherIconStyle);
             safe.weatherApiKey = weatherApiKey == null ? "" : weatherApiKey.trim();
             safe.openWeatherApiKey = openWeatherApiKey == null ? "" : openWeatherApiKey.trim();
+            safe.yandexWeatherApiKey = yandexWeatherApiKey == null ? "" : yandexWeatherApiKey.trim();
+            safe.visualCrossingApiKey = visualCrossingApiKey == null ? "" : visualCrossingApiKey.trim();
+            safe.tomorrowIoApiKey = tomorrowIoApiKey == null ? "" : tomorrowIoApiKey.trim();
             safe.showSeconds = showSeconds;
             safe.burnInMinMinutes = clampInt(burnInMinMinutes, 5, 15);
             safe.dayBrightness = clampFloat(dayBrightness, 0.05f, 1.0f);
@@ -231,7 +246,14 @@ public final class SettingsRepository {
             return "open-meteo";
         }
         String value = provider.trim().toLowerCase();
-        if ("weatherapi".equals(value) || "openweather".equals(value)) {
+        if ("open-meteo".equals(value)
+                || "met-norway".equals(value)
+                || "wttr-in".equals(value)
+                || "weatherapi".equals(value)
+                || "openweather".equals(value)
+                || "yandex".equals(value)
+                || "visualcrossing".equals(value)
+                || "tomorrowio".equals(value)) {
             return value;
         }
         return "open-meteo";

@@ -42,6 +42,12 @@ public class SettingsActivityTest {
         assertTrue(text.contains("Коллаж"));
         assertTrue(text.contains("Локация"));
         assertTrue(text.contains("Автоматически"));
+        assertTrue(text.contains("Open-Meteo"));
+        assertTrue(text.contains("MET Norway"));
+        assertTrue(text.contains("wttr.in"));
+        assertTrue(text.contains("Яндекс Погода"));
+        assertTrue(text.contains("Visual Crossing"));
+        assertTrue(text.contains("Tomorrow.io"));
         assertTrue(text.contains("Координаты"));
         assertTrue(text.contains("Локация для подписи"));
         assertTrue(text.contains("Количество фото на экране"));
@@ -75,13 +81,28 @@ public class SettingsActivityTest {
         assertEquals(View.GONE, keyRow.getVisibility());
 
         provider.setSelection(1);
+        assertEquals(View.GONE, keyRow.getVisibility());
+
+        provider.setSelection(4);
         assertEquals(View.VISIBLE, keyRow.getVisibility());
         assertEquals(View.VISIBLE, ((ViewGroup) keyRow).getChildAt(0).getVisibility());
         assertEquals(View.GONE, ((ViewGroup) keyRow).getChildAt(1).getVisibility());
 
-        provider.setSelection(2);
+        provider.setSelection(5);
         assertEquals(View.GONE, ((ViewGroup) keyRow).getChildAt(0).getVisibility());
         assertEquals(View.VISIBLE, ((ViewGroup) keyRow).getChildAt(1).getVisibility());
+
+        provider.setSelection(6);
+        assertEquals(View.GONE, ((ViewGroup) keyRow).getChildAt(1).getVisibility());
+        assertEquals(View.VISIBLE, ((ViewGroup) keyRow).getChildAt(2).getVisibility());
+
+        provider.setSelection(7);
+        assertEquals(View.GONE, ((ViewGroup) keyRow).getChildAt(2).getVisibility());
+        assertEquals(View.VISIBLE, ((ViewGroup) keyRow).getChildAt(3).getVisibility());
+
+        provider.setSelection(8);
+        assertEquals(View.GONE, ((ViewGroup) keyRow).getChildAt(3).getVisibility());
+        assertEquals(View.VISIBLE, ((ViewGroup) keyRow).getChildAt(4).getVisibility());
     }
 
     @Test

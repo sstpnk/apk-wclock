@@ -46,6 +46,9 @@ public final class SettingsActivity extends Activity {
     private EditText framePanSpeed;
     private EditText weatherApiKey;
     private EditText openWeatherApiKey;
+    private EditText yandexWeatherApiKey;
+    private EditText visualCrossingApiKey;
+    private EditText tomorrowIoApiKey;
     private EditText autoBrightnessMin;
     private EditText autoBrightnessMax;
     private EditText dayBrightness;
@@ -72,6 +75,9 @@ public final class SettingsActivity extends Activity {
     private LinearLayout weatherKeysRow;
     private LinearLayout weatherApiColumn;
     private LinearLayout openWeatherColumn;
+    private LinearLayout yandexWeatherColumn;
+    private LinearLayout visualCrossingColumn;
+    private LinearLayout tomorrowIoColumn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -245,7 +251,7 @@ public final class SettingsActivity extends Activity {
         LinearLayout weatherControls = row();
         LinearLayout providerColumn = column();
         providerColumn.addView(fieldLabel("Источник погоды"));
-        weatherProvider = spinner(new String[]{"Автоматически", "WeatherAPI.com", "OpenWeather"}, providerIndex(settings.weatherProvider));
+        weatherProvider = spinner(new String[]{"Автоматически", "Open-Meteo", "MET Norway", "wttr.in", "WeatherAPI.com", "OpenWeather", "Яндекс Погода", "Visual Crossing", "Tomorrow.io"}, providerIndex(settings.weatherProvider));
         providerColumn.addView(weatherProvider);
         weatherControls.addView(providerColumn);
         LinearLayout refreshColumn = column();
@@ -285,6 +291,21 @@ public final class SettingsActivity extends Activity {
         openWeatherApiKey = edit("если выбран OpenWeather", settings.openWeatherApiKey);
         openWeatherColumn.addView(openWeatherApiKey);
         weatherKeysRow.addView(openWeatherColumn);
+        yandexWeatherColumn = column();
+        yandexWeatherColumn.addView(fieldLabel("Яндекс Погода ключ"));
+        yandexWeatherApiKey = edit("если выбрана Яндекс Погода", settings.yandexWeatherApiKey);
+        yandexWeatherColumn.addView(yandexWeatherApiKey);
+        weatherKeysRow.addView(yandexWeatherColumn);
+        visualCrossingColumn = column();
+        visualCrossingColumn.addView(fieldLabel("Visual Crossing ключ"));
+        visualCrossingApiKey = edit("если выбран Visual Crossing", settings.visualCrossingApiKey);
+        visualCrossingColumn.addView(visualCrossingApiKey);
+        weatherKeysRow.addView(visualCrossingColumn);
+        tomorrowIoColumn = column();
+        tomorrowIoColumn.addView(fieldLabel("Tomorrow.io ключ"));
+        tomorrowIoApiKey = edit("если выбран Tomorrow.io", settings.tomorrowIoApiKey);
+        tomorrowIoColumn.addView(tomorrowIoApiKey);
+        weatherKeysRow.addView(tomorrowIoColumn);
         weatherSettingsGroup.addView(weatherKeysRow);
         updateWeatherKeyVisibility();
         weatherProvider.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -326,9 +347,13 @@ public final class SettingsActivity extends Activity {
             return;
         }
         int selected = weatherProvider.getSelectedItemPosition();
-        weatherKeysRow.setVisibility(selected == 0 ? View.GONE : View.VISIBLE);
-        weatherApiColumn.setVisibility(selected == 1 ? View.VISIBLE : View.GONE);
-        openWeatherColumn.setVisibility(selected == 2 ? View.VISIBLE : View.GONE);
+        boolean needsKey = selected >= 4;
+        weatherKeysRow.setVisibility(needsKey ? View.VISIBLE : View.GONE);
+        weatherApiColumn.setVisibility(selected == 4 ? View.VISIBLE : View.GONE);
+        openWeatherColumn.setVisibility(selected == 5 ? View.VISIBLE : View.GONE);
+        yandexWeatherColumn.setVisibility(selected == 6 ? View.VISIBLE : View.GONE);
+        visualCrossingColumn.setVisibility(selected == 7 ? View.VISIBLE : View.GONE);
+        tomorrowIoColumn.setVisibility(selected == 8 ? View.VISIBLE : View.GONE);
     }
 
     private void attachDependentVisibilityHandlers() {
@@ -457,6 +482,9 @@ public final class SettingsActivity extends Activity {
         settings.weatherIconStyle = iconStyleValue(weatherIconStyle.getSelectedItemPosition());
         settings.weatherApiKey = weatherApiKey.getText().toString();
         settings.openWeatherApiKey = openWeatherApiKey.getText().toString();
+        settings.yandexWeatherApiKey = yandexWeatherApiKey.getText().toString();
+        settings.visualCrossingApiKey = visualCrossingApiKey.getText().toString();
+        settings.tomorrowIoApiKey = tomorrowIoApiKey.getText().toString();
         settings.autoBrightnessEnabled = autoBrightnessEnabled.isChecked();
         settings.autoBrightnessMin = parseFloat(autoBrightnessMin.getText().toString(), settings.autoBrightnessMin);
         settings.autoBrightnessMax = parseFloat(autoBrightnessMax.getText().toString(), settings.autoBrightnessMax);
@@ -482,21 +510,57 @@ public final class SettingsActivity extends Activity {
     }
 
     private int providerIndex(String value) {
-        if ("weatherapi".equals(value)) {
+        if ("open-meteo".equals(value)) {
             return 1;
         }
-        if ("openweather".equals(value)) {
+        if ("met-norway".equals(value)) {
             return 2;
+        }
+        if ("wttr-in".equals(value)) {
+            return 3;
+        }
+        if ("weatherapi".equals(value)) {
+            return 4;
+        }
+        if ("openweather".equals(value)) {
+            return 5;
+        }
+        if ("yandex".equals(value)) {
+            return 6;
+        }
+        if ("visualcrossing".equals(value)) {
+            return 7;
+        }
+        if ("tomorrowio".equals(value)) {
+            return 8;
         }
         return 0;
     }
 
     private String providerValue(int index) {
         if (index == 1) {
-            return "weatherapi";
+            return "open-meteo";
         }
         if (index == 2) {
+            return "met-norway";
+        }
+        if (index == 3) {
+            return "wttr-in";
+        }
+        if (index == 4) {
+            return "weatherapi";
+        }
+        if (index == 5) {
             return "openweather";
+        }
+        if (index == 6) {
+            return "yandex";
+        }
+        if (index == 7) {
+            return "visualcrossing";
+        }
+        if (index == 8) {
+            return "tomorrowio";
         }
         return "open-meteo";
     }
