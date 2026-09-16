@@ -1,6 +1,6 @@
 # Release Checklist
 
-Target: `v0.1.7`
+Target: `v0.1.8`
 
 ## Before Publishing
 
@@ -14,9 +14,11 @@ Target: `v0.1.7`
   - Screensaver service is visible in Android settings.
   - Settings open by touch and TV remote/menu key.
   - Photo wall renders real images and animates at 30 FPS target.
+  - Photos return after app pause/resume or screensaver stop/start with the same selected source.
   - Tapping a photo wall image pauses the cycle, expands the image within the screen, and the next tap resumes the wall.
   - Photo frame pans oversized images before switching.
   - Weather provider change shows `Запрос погоды` at the bottom and refreshes data.
+  - Weather provider dropdown includes Yandex Weather, Visual Crossing, and Tomorrow.io with the correct key field visibility.
   - Weather failure shows a short user-facing error for about one minute.
   - Brightness schedule applies without Google Play Services.
 - Publish signed release APK and AAB.
@@ -25,6 +27,6 @@ Target: `v0.1.7`
 
 ## Versioning
 
-- Android `versionName`: `0.1.7`.
-- Android `versionCode`: `8`.
+- Android `versionName`: `0.1.8`.
+- Android `versionCode`: `9`.
 - Runtime build number is generated at build time in UTC.

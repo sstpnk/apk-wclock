@@ -10,12 +10,12 @@ WClock — Android-приложение для настольных часов, 
 
 ## Текущий релиз
 
-- Последний релиз: `v0.1.7`.
-- APK: [WClock-v0.1.7.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.7/WClock-v0.1.7.apk).
-- AAB: [WClock-v0.1.7.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.7/WClock-v0.1.7.aab).
+- Последний релиз: `v0.1.8`.
+- APK: [WClock-v0.1.8.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.8/WClock-v0.1.8.apk).
+- AAB: [WClock-v0.1.8.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.8/WClock-v0.1.8.aab).
 - Минимальная версия Android: 4.4 KitKat (`minSdk 19`).
-- `versionName`: `0.1.7`.
-- `versionCode`: `8`.
+- `versionName`: `0.1.8`.
+- `versionCode`: `9`.
 
 ## Зачем нужен WClock
 
@@ -85,7 +85,10 @@ WClock превращает старый или свободный Android-пл�
 - MET Norway, без API-ключа;
 - wttr.in, без API-ключа;
 - WeatherAPI.com, нужен API-ключ;
-- OpenWeather, нужен API-ключ.
+- OpenWeather, нужен API-ключ;
+- Яндекс Погода, нужен API-ключ;
+- Visual Crossing, нужен API-ключ;
+- Tomorrow.io, нужен API-ключ.
 
 ### Яркость
 
@@ -141,7 +144,10 @@ WClock превращает старый или свободный Android-пл�
 
 - `wttr.in` — fallback без API-ключа;
 - `WeatherAPI.com` — нужен API-ключ;
-- `OpenWeather` — нужен API-ключ.
+- `OpenWeather` — нужен API-ключ;
+- `Яндекс Погода` — нужен API-ключ;
+- `Visual Crossing` — нужен API-ключ;
+- `Tomorrow.io` — нужен API-ключ.
 
 Если выбранный источник не отвечает, приложение пробует fallback-источники. В настройках показывается строка `Последняя попытка`, где видны результаты последнего запроса по провайдерам.
 
@@ -178,7 +184,7 @@ WClock можно оставить открытым как обычное при
 | Место | Широта и долгота | Координаты для погодных API. |
 | Погода | Источник | Основной провайдер погоды. |
 | Погода | Частота обновления | Интервал между сетевыми запросами. |
-| Погода | API-ключи | Используются только для WeatherAPI.com и OpenWeather. |
+| Погода | API-ключи | Используются только для провайдеров, которым нужен ключ. |
 | Погода | Стиль иконок | Переключает контурные и цветные погодные иконки. |
 | Яркость | Автояркость | Включает управление яркостью по датчику освещенности. |
 | Яркость | Диапазон автояркости | Минимальная и максимальная яркость для датчика освещенности. |
@@ -246,12 +252,12 @@ The app can run as a regular fullscreen clock or as an Android Daydream/screensa
 
 ## Current Release
 
-- Latest release: `v0.1.7`.
-- APK: [WClock-v0.1.7.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.7/WClock-v0.1.7.apk).
-- AAB: [WClock-v0.1.7.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.7/WClock-v0.1.7.aab).
+- Latest release: `v0.1.8`.
+- APK: [WClock-v0.1.8.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.8/WClock-v0.1.8.apk).
+- AAB: [WClock-v0.1.8.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.8/WClock-v0.1.8.aab).
 - Minimum Android version: 4.4 KitKat (`minSdk 19`).
-- `versionName`: `0.1.7`.
-- `versionCode`: `8`.
+- `versionName`: `0.1.8`.
+- `versionCode`: `9`.
 
 ## What WClock Is For
 
@@ -321,7 +327,10 @@ Supported weather providers:
 - MET Norway, no API key required;
 - wttr.in, no API key required;
 - WeatherAPI.com, API key required;
-- OpenWeather, API key required.
+- OpenWeather, API key required;
+- Yandex Weather, API key required;
+- Visual Crossing, API key required;
+- Tomorrow.io, API key required.
 
 ### Brightness
 
@@ -377,7 +386,10 @@ Additional providers:
 
 - `wttr.in` — no-key fallback;
 - `WeatherAPI.com` — API key required;
-- `OpenWeather` — API key required.
+- `OpenWeather` — API key required;
+- `Yandex Weather` — API key required;
+- `Visual Crossing` — API key required;
+- `Tomorrow.io` — API key required.
 
 If the selected provider does not respond, the app tries fallback providers. Settings show the `Last attempt` line with per-provider results from the last request.
 
@@ -414,7 +426,7 @@ To reduce burn-in risk, WClock slightly shifts the clock and weather panels over
 | Location | Latitude and longitude | Coordinates used for weather APIs. |
 | Weather | Provider | Primary weather provider. |
 | Weather | Refresh interval | Interval between network requests. |
-| Weather | API keys | Used only for WeatherAPI.com and OpenWeather. |
+| Weather | API keys | Used only for providers that require a key. |
 | Weather | Icon style | Switches between outline and colored weather icons. |
 | Brightness | Auto-brightness | Enables ambient light sensor brightness control. |
 | Brightness | Auto range | Minimum and maximum brightness for the light sensor. |

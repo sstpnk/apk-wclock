@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.8 - Weather providers and photo reload fix
+
+### Added
+
+- Add selectable weather providers for Yandex Weather, Visual Crossing, and Tomorrow.io, including provider-specific API key fields.
+
+### Fixed
+
+- Reload the selected photo source after the ImageView photo renderer is recycled, so photos return reliably after pause/resume or screensaver stop/start.
+
 ## v0.1.7 - Photo wall focus and stability
 
 ### Added
