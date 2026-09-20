@@ -68,6 +68,7 @@ public class RenderControllerTest {
         settings.photoFolderPath = "/tmp/photos";
         settings.photoDisplayMode = "frame";
         settings.photoOrderMode = "sequential";
+        settings.focusedPhotoTimeoutSeconds = 45;
         RecordingPhotoRenderer photoRenderer = new RecordingPhotoRenderer();
         RenderController controller = new RenderController(
                 new ClockWeatherCollageView(ApplicationProvider.getApplicationContext()),
@@ -80,6 +81,7 @@ public class RenderControllerTest {
         assertEquals("/tmp/photos", photoRenderer.path);
         assertEquals("frame", photoRenderer.mode);
         assertEquals("sequential", photoRenderer.order);
+        assertEquals(45, photoRenderer.focusTimeout);
     }
 
     @Test
@@ -115,6 +117,7 @@ public class RenderControllerTest {
         String path;
         String mode;
         String order;
+        int focusTimeout;
 
         @Override
         public void setPhotoSource(String path, String uri) {
@@ -122,9 +125,10 @@ public class RenderControllerTest {
         }
 
         @Override
-        public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond) {
+        public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int focusedPhotoTimeoutSeconds, int framePanSpeedPxPerSecond) {
             this.mode = photoDisplayMode;
             this.order = photoOrderMode;
+            this.focusTimeout = focusedPhotoTimeoutSeconds;
         }
 
         @Override

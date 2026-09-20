@@ -51,6 +51,7 @@ public class SettingsActivityTest {
         assertTrue(text.contains("Координаты"));
         assertTrue(text.contains("Локация для подписи"));
         assertTrue(text.contains("Количество фото на экране"));
+        assertTrue(text.contains("Автосворачивание открытого фото"));
         assertTrue(text.contains("Частота обновления погоды"));
         assertTrue(text.contains("Стиль погодных иконок"));
         assertTrue(text.contains("Автояркость использует"));

@@ -29,6 +29,7 @@ public final class SettingsRepository {
         settings.photoOrderMode = prefs.getString("photoOrderMode", defaults.photoOrderMode);
         settings.maxVisiblePhotos = prefs.getInt("maxVisiblePhotos", defaults.maxVisiblePhotos);
         settings.photoChangeSeconds = prefs.getInt("photoChangeSeconds", defaults.photoChangeSeconds);
+        settings.focusedPhotoTimeoutSeconds = prefs.getInt("focusedPhotoTimeoutSeconds", defaults.focusedPhotoTimeoutSeconds);
         settings.framePanSpeedPxPerSecond = prefs.getInt("framePanSpeedPxPerSecond", defaults.framePanSpeedPxPerSecond);
         settings.locationMode = prefs.getString("locationMode", defaults.locationMode);
         settings.weatherProvider = prefs.getString("weatherProvider", defaults.weatherProvider);
@@ -70,6 +71,7 @@ public final class SettingsRepository {
                 .putString("photoOrderMode", safe.photoOrderMode)
                 .putInt("maxVisiblePhotos", safe.maxVisiblePhotos)
                 .putInt("photoChangeSeconds", safe.photoChangeSeconds)
+                .putInt("focusedPhotoTimeoutSeconds", safe.focusedPhotoTimeoutSeconds)
                 .putInt("framePanSpeedPxPerSecond", safe.framePanSpeedPxPerSecond)
                 .putString("locationMode", safe.locationMode)
                 .putString("weatherProvider", safe.weatherProvider)
@@ -145,6 +147,7 @@ public final class SettingsRepository {
         public String photoOrderMode;
         public int maxVisiblePhotos;
         public int photoChangeSeconds;
+        public int focusedPhotoTimeoutSeconds;
         public int framePanSpeedPxPerSecond;
         public String locationMode;
         public String weatherProvider;
@@ -180,6 +183,7 @@ public final class SettingsRepository {
             settings.photoOrderMode = "random";
             settings.maxVisiblePhotos = 18;
             settings.photoChangeSeconds = 5;
+            settings.focusedPhotoTimeoutSeconds = 60;
             settings.framePanSpeedPxPerSecond = 20;
             settings.locationMode = "coordinates";
             settings.weatherProvider = "open-meteo";
@@ -218,6 +222,7 @@ public final class SettingsRepository {
             safe.photoOrderMode = normalizePhotoOrderMode(photoOrderMode);
             safe.maxVisiblePhotos = clampInt(maxVisiblePhotos, 1, recommendedMaxVisiblePhotos(Runtime.getRuntime().maxMemory()));
             safe.photoChangeSeconds = clampInt(photoChangeSeconds, 1, 60);
+            safe.focusedPhotoTimeoutSeconds = clampInt(focusedPhotoTimeoutSeconds, 0, 3600);
             safe.framePanSpeedPxPerSecond = clampInt(framePanSpeedPxPerSecond, 4, 48);
             safe.locationMode = normalizeLocationMode(locationMode);
             safe.weatherProvider = normalizeProvider(weatherProvider);

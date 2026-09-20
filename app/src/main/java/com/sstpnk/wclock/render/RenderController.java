@@ -112,7 +112,7 @@ public final class RenderController {
         view.setDisplaySettings(settings.collageEnabled, settings.showClock, settings.showWeather, settings.showForecast, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.framePanSpeedPxPerSecond, settings.showSeconds, settings.weatherIconStyle, settings.clockPanelBackgroundAlpha, settings.weatherPanelBackgroundAlpha);
         if (photoRenderer != null) {
             photoRenderer.setPhotoSource(settings.photoFolderPath, settings.photoFolderUri);
-            photoRenderer.setDisplaySettings(settings.collageEnabled, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.framePanSpeedPxPerSecond);
+            photoRenderer.setDisplaySettings(settings.collageEnabled, settings.photoDisplayMode, settings.photoOrderMode, settings.maxVisiblePhotos, settings.photoChangeSeconds, settings.focusedPhotoTimeoutSeconds, settings.framePanSpeedPxPerSecond);
         }
         int intervalMillis = Math.max(1, settings.burnInMinMinutes) * 60 * 1000;
         int zoneIndex = (int) ((now / intervalMillis) % 6);

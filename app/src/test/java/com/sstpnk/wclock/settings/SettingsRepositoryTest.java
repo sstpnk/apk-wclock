@@ -22,6 +22,7 @@ public class SettingsRepositoryTest {
         assertEquals("random", settings.photoOrderMode);
         assertEquals(18, settings.maxVisiblePhotos);
         assertEquals(5, settings.photoChangeSeconds);
+        assertEquals(60, settings.focusedPhotoTimeoutSeconds);
         assertEquals(20, settings.framePanSpeedPxPerSecond);
         assertEquals("coordinates", settings.locationMode);
         assertEquals("open-meteo", settings.weatherProvider);
@@ -91,6 +92,23 @@ public class SettingsRepositoryTest {
 
         settings.framePanSpeedPxPerSecond = 28;
         assertEquals(28, settings.normalized().framePanSpeedPxPerSecond);
+    }
+
+    @Test
+    public void focusedPhotoTimeoutAllowsZeroToDisableAutoCollapse() {
+        SettingsRepository.Settings settings = SettingsRepository.Settings.defaults();
+
+        settings.focusedPhotoTimeoutSeconds = -5;
+        assertEquals(0, settings.normalized().focusedPhotoTimeoutSeconds);
+
+        settings.focusedPhotoTimeoutSeconds = 0;
+        assertEquals(0, settings.normalized().focusedPhotoTimeoutSeconds);
+
+        settings.focusedPhotoTimeoutSeconds = 120;
+        assertEquals(120, settings.normalized().focusedPhotoTimeoutSeconds);
+
+        settings.focusedPhotoTimeoutSeconds = 7200;
+        assertEquals(3600, settings.normalized().focusedPhotoTimeoutSeconds);
     }
 
     @Test

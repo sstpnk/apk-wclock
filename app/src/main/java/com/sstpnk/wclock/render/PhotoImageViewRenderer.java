@@ -47,6 +47,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
     private String photoOrderMode = CollageEngine.ORDER_RANDOM;
     private int maxVisiblePhotos = 18;
     private int photoChangeSeconds = 5;
+    private int focusedPhotoTimeoutSeconds = 60;
     private int framePanSpeedPxPerSecond = 20;
     private boolean loading;
     private int generation;
@@ -57,6 +58,14 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
     private FocusState focusState;
     private ValueAnimator focusAnimator;
     private boolean focusTransitionRunning;
+    private final Runnable focusedPhotoTimeout = new Runnable() {
+        @Override
+        public void run() {
+            if (focusState != null && !focusTransitionRunning) {
+                collapseFocusedPhoto();
+            }
+        }
+    };
 
     public PhotoImageViewRenderer(Context context) {
         super(context);
@@ -82,13 +91,19 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
     }
 
     @Override
-    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int framePanSpeedPxPerSecond) {
+    public void setDisplaySettings(boolean collageEnabled, String photoDisplayMode, String photoOrderMode, int maxVisiblePhotos, int photoChangeSeconds, int focusedPhotoTimeoutSeconds, int framePanSpeedPxPerSecond) {
+        int safeFocusedPhotoTimeoutSeconds = Math.max(0, Math.min(3600, focusedPhotoTimeoutSeconds));
+        boolean focusedPhotoTimeoutChanged = this.focusedPhotoTimeoutSeconds != safeFocusedPhotoTimeoutSeconds;
         this.collageEnabled = collageEnabled;
         this.photoDisplayMode = CollageEngine.MODE_FRAME.equals(photoDisplayMode) ? CollageEngine.MODE_FRAME : CollageEngine.MODE_PHOTOWALL;
         this.photoOrderMode = CollageEngine.ORDER_SEQUENTIAL.equals(photoOrderMode) ? CollageEngine.ORDER_SEQUENTIAL : CollageEngine.ORDER_RANDOM;
         this.maxVisiblePhotos = Math.max(1, Math.min(50, maxVisiblePhotos));
         this.photoChangeSeconds = Math.max(1, photoChangeSeconds);
+        this.focusedPhotoTimeoutSeconds = safeFocusedPhotoTimeoutSeconds;
         this.framePanSpeedPxPerSecond = Math.max(4, Math.min(48, framePanSpeedPxPerSecond));
+        if (focusState != null && focusedPhotoTimeoutChanged) {
+            scheduleFocusedPhotoTimeout();
+        }
     }
 
     @Override
@@ -326,6 +341,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
         boolean removingFocusedView = focusState != null && focusState.view == view;
         if (removingFocusedView) {
             cancelFocusAnimator();
+            cancelFocusedPhotoTimeout();
             focusState = null;
             focusTransitionRunning = false;
         }
@@ -350,6 +366,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
         loadedPath = "";
         loadedUri = "";
         handler.removeCallbacksAndMessages(null);
+        cancelFocusedPhotoTimeout();
         if (focusAnimator != null) {
             focusAnimator.cancel();
             focusAnimator = null;
@@ -402,6 +419,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
             return;
         }
         cancelFocusAnimator();
+        cancelFocusedPhotoTimeout();
         view.animate().cancel();
         view.bringToFront();
         final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
@@ -416,6 +434,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
             @Override
             public void run() {
                 focusTransitionRunning = false;
+                scheduleFocusedPhotoTimeout();
             }
         });
     }
@@ -426,6 +445,7 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
             return;
         }
         focusState = null;
+        cancelFocusedPhotoTimeout();
         cancelFocusAnimator();
         RectF target = new RectF(state.leftMargin, state.topMargin, state.leftMargin + state.width, state.topMargin + state.height);
         animatePhotoFrame(state, target, 220L, new Runnable() {
@@ -505,6 +525,18 @@ public final class PhotoImageViewRenderer extends FrameLayout implements PhotoRe
             focusAnimator.cancel();
             focusAnimator = null;
         }
+    }
+
+    private void scheduleFocusedPhotoTimeout() {
+        cancelFocusedPhotoTimeout();
+        if (focusedPhotoTimeoutSeconds <= 0 || focusState == null || focusTransitionRunning) {
+            return;
+        }
+        handler.postDelayed(focusedPhotoTimeout, focusedPhotoTimeoutSeconds * 1000L);
+    }
+
+    private void cancelFocusedPhotoTimeout() {
+        handler.removeCallbacks(focusedPhotoTimeout);
     }
 
     private void recycleBitmap(Bitmap bitmap) {

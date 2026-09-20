@@ -43,6 +43,7 @@ public final class SettingsActivity extends Activity {
     private EditText longitude;
     private EditText maxPhotos;
     private EditText photoInterval;
+    private EditText focusedPhotoTimeout;
     private EditText framePanSpeed;
     private EditText weatherApiKey;
     private EditText openWeatherApiKey;
@@ -145,6 +146,11 @@ public final class SettingsActivity extends Activity {
         photoInterval = edit("1-60", Integer.toString(settings.photoChangeSeconds));
         intervalColumn.addView(photoInterval);
         photoNumbers.addView(intervalColumn);
+        LinearLayout focusTimeoutColumn = column();
+        focusTimeoutColumn.addView(fieldLabel("Автосворачивание открытого фото, сек"));
+        focusedPhotoTimeout = edit("0 = не сворачивать", Integer.toString(settings.focusedPhotoTimeoutSeconds));
+        focusTimeoutColumn.addView(focusedPhotoTimeout);
+        photoNumbers.addView(focusTimeoutColumn);
         LinearLayout speedColumn = column();
         speedColumn.addView(fieldLabel("Скорость панорамы, px/с"));
         framePanSpeed = edit("4-48", Integer.toString(settings.framePanSpeedPxPerSecond));
@@ -474,6 +480,7 @@ public final class SettingsActivity extends Activity {
         settings.longitude = parseDouble(longitude.getText().toString(), settings.longitude);
         settings.maxVisiblePhotos = Math.min(parseInt(maxPhotos.getText().toString(), settings.maxVisiblePhotos), SettingsRepository.recommendedMaxVisiblePhotos(Runtime.getRuntime().maxMemory()));
         settings.photoChangeSeconds = parseInt(photoInterval.getText().toString(), settings.photoChangeSeconds);
+        settings.focusedPhotoTimeoutSeconds = parseInt(focusedPhotoTimeout.getText().toString(), settings.focusedPhotoTimeoutSeconds);
         settings.framePanSpeedPxPerSecond = parseInt(framePanSpeed.getText().toString(), settings.framePanSpeedPxPerSecond);
         settings.showSeconds = showSeconds.isChecked();
         settings.locationMode = locationMode.getSelectedItemPosition() == 1 ? "city" : "coordinates";
