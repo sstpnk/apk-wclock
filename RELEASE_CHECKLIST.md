@@ -1,6 +1,6 @@
 # Release Checklist
 
-Target: `v0.1.8`
+Target: `v0.1.9`
 
 ## Before Publishing
 
@@ -16,6 +16,7 @@ Target: `v0.1.8`
   - Photo wall renders real images and animates at 30 FPS target.
   - Photos return after app pause/resume or screensaver stop/start with the same selected source.
   - Tapping a photo wall image pauses the cycle, expands the image within the screen, and the next tap resumes the wall.
+  - An expanded photo wall image returns to the normal cycle after the configured timeout, while timeout `0` waits for an explicit tap.
   - Photo frame pans oversized images before switching.
   - Weather provider change shows `Запрос погоды` at the bottom and refreshes data.
   - Weather provider dropdown includes Yandex Weather, Visual Crossing, and Tomorrow.io with the correct key field visibility.
@@ -27,6 +28,6 @@ Target: `v0.1.8`
 
 ## Versioning
 
-- Android `versionName`: `0.1.8`.
-- Android `versionCode`: `9`.
+- Android `versionName`: `0.1.9`.
+- Android `versionCode`: `10`.
 - Runtime build number is generated at build time in UTC.

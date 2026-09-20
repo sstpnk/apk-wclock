@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.9 - Photo wall focus timeout
+
+### Added
+
+- Add a configurable auto-collapse timeout for expanded photo wall images, defaulting to 60 seconds.
+- Allow timeout `0` to keep expanded photo wall images open until the next explicit tap.
+
 ## v0.1.8 - Weather providers and photo reload fix
 
 ### Added

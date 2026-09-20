@@ -10,12 +10,12 @@ WClock — Android-приложение для настольных часов, 
 
 ## Текущий релиз
 
-- Последний релиз: `v0.1.8`.
-- APK: [WClock-v0.1.8.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.8/WClock-v0.1.8.apk).
-- AAB: [WClock-v0.1.8.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.8/WClock-v0.1.8.aab).
+- Последний релиз: `v0.1.9`.
+- APK: [WClock-v0.1.9.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.9/WClock-v0.1.9.apk).
+- AAB: [WClock-v0.1.9.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.9/WClock-v0.1.9.aab).
 - Минимальная версия Android: 4.4 KitKat (`minSdk 19`).
-- `versionName`: `0.1.8`.
-- `versionCode`: `9`.
+- `versionName`: `0.1.9`.
+- `versionCode`: `10`.
 
 ## Зачем нужен WClock
 
@@ -252,12 +252,12 @@ The app can run as a regular fullscreen clock or as an Android Daydream/screensa
 
 ## Current Release
 
-- Latest release: `v0.1.8`.
-- APK: [WClock-v0.1.8.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.8/WClock-v0.1.8.apk).
-- AAB: [WClock-v0.1.8.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.8/WClock-v0.1.8.aab).
+- Latest release: `v0.1.9`.
+- APK: [WClock-v0.1.9.apk](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.9/WClock-v0.1.9.apk).
+- AAB: [WClock-v0.1.9.aab](https://github.com/sstpnk/apk-wclock/releases/download/v0.1.9/WClock-v0.1.9.aab).
 - Minimum Android version: 4.4 KitKat (`minSdk 19`).
-- `versionName`: `0.1.8`.
-- `versionCode`: `9`.
+- `versionName`: `0.1.9`.
+- `versionCode`: `10`.
 
 ## What WClock Is For
 
